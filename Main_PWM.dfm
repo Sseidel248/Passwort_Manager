@@ -28,7 +28,6 @@ object Form1: TForm1
     Color = clSkyBlue
     ParentBackground = False
     TabOrder = 0
-    ExplicitHeight = 754
     object LUser: TLabel
       Left = 16
       Top = 16
@@ -85,24 +84,17 @@ object Form1: TForm1
     Color = cl3DLight
     ParentBackground = False
     TabOrder = 1
-    ExplicitLeft = 472
-    ExplicitTop = 376
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object PageControl1: TPageControl
       Left = 1
       Top = 1
       Width = 925
       Height = 723
-      ActivePage = TabSheet1
+      ActivePage = PW_Manager
       Align = alClient
       TabOrder = 0
-      ExplicitHeight = 752
-      object TabSheet1: TTabSheet
+      object PW_Manager: TTabSheet
         Caption = 'PasswortMTab'
         TabVisible = False
-        ExplicitLeft = 5
-        ExplicitTop = 10
         DesignSize = (
           917
           713)
@@ -122,7 +114,7 @@ object Form1: TForm1
         end
         object LBenutzername: TLabel
           Left = 480
-          Top = 160
+          Top = 173
           Width = 87
           Height = 16
           Anchors = [akTop, akRight]
@@ -136,7 +128,7 @@ object Form1: TForm1
         end
         object LPasswort: TLabel
           Left = 480
-          Top = 200
+          Top = 209
           Width = 57
           Height = 16
           Anchors = [akTop, akRight]
@@ -150,7 +142,7 @@ object Form1: TForm1
         end
         object LInfo: TLabel
           Left = 480
-          Top = 237
+          Top = 248
           Width = 27
           Height = 16
           Anchors = [akTop, akRight]
@@ -202,69 +194,9 @@ object Form1: TForm1
           TabOrder = 1
           Text = 'Suchen'
         end
-        object Memo1: TMemo
-          Left = 480
-          Top = 259
-          Width = 409
-          Height = 129
-          Anchors = [akTop, akRight]
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ScrollBars = ssVertical
-          TabOrder = 2
-        end
-        object PasswortEdit: TEdit
-          Left = 576
-          Top = 197
-          Width = 249
-          Height = 24
-          Anchors = [akTop, akRight]
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clScrollBar
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 3
-          Text = 'Bitte Passwort eingeben'
-        end
-        object Username: TEdit
-          Left = 576
-          Top = 157
-          Width = 313
-          Height = 24
-          Anchors = [akTop, akRight]
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clScrollBar
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 4
-          Text = 'Bitte Benutzername eingeben'
-        end
-        object Edit1: TEdit
-          Left = 576
-          Top = 117
-          Width = 313
-          Height = 24
-          Anchors = [akTop, akRight]
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clScrollBar
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 5
-          Text = 'Bitte Bezeichnung eingeben'
-        end
         object SaveDataBtn: TBitBtn
           Left = 480
-          Top = 394
+          Top = 405
           Width = 57
           Height = 57
           Anchors = [akRight, akBottom]
@@ -399,14 +331,16 @@ object Form1: TForm1
             000000000000001036414141414141410000413B2B0C00000000000000000000
             0000000000000000000000000000000000000000000000000000000000022539
             41414141414141410000}
-          TabOrder = 6
+          TabOrder = 2
+          OnClick = SaveDataBtnClick
         end
         object SeePWBtn: TBitBtn
-          Left = 831
-          Top = 197
+          Left = 828
+          Top = 206
           Width = 25
           Height = 25
           Anchors = [akTop, akRight]
+          Enabled = False
           Glyph.Data = {
             F6060000424DF606000000000000360000002800000018000000180000000100
             180000000000C0060000B5000000B50000000000000000000000FFFFFFFFFFFF
@@ -464,7 +398,7 @@ object Form1: TForm1
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-          TabOrder = 7
+          TabOrder = 3
         end
         object DelBtn: TBitBtn
           Left = 299
@@ -533,7 +467,7 @@ object Form1: TForm1
             0404040404040404040404040404040404040404040404040404040404040404
             0404040404040404040404040404040404040404040404040404}
           ParentFont = False
-          TabOrder = 8
+          TabOrder = 4
         end
         object AddBtn: TBitBtn
           Left = 31
@@ -602,15 +536,14 @@ object Form1: TForm1
             0800090909090909090909090909090909090900050101010800090909090909
             0909090909090909090909000000000000000909090909090909}
           ParentFont = False
-          TabOrder = 9
+          TabOrder = 5
         end
         object HidePWBtn: TBitBtn
-          Left = 862
-          Top = 197
+          Left = 859
+          Top = 206
           Width = 25
           Height = 25
           Anchors = [akTop, akRight]
-          Enabled = False
           Glyph.Data = {
             F6060000424DF606000000000000360000002800000018000000180000000100
             180000000000C0060000B5000000B50000000000000000000000FFFFFFFFFFFF
@@ -668,24 +601,155 @@ object Form1: TForm1
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+          TabOrder = 6
+        end
+        object DBEditBenutzer: TDBEdit
+          Left = 573
+          Top = 170
+          Width = 311
+          Height = 24
+          Anchors = [akTop, akRight]
+          DataField = 'Benutzername'
+          DataSource = DataSource1
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 7
+        end
+        object DBEditBezeichnung: TDBEdit
+          Left = 573
+          Top = 117
+          Width = 313
+          Height = 24
+          Anchors = [akTop, akRight]
+          DataField = 'Bezeichnung'
+          DataSource = DataSource1
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 8
+        end
+        object DBEditPasswort: TDBEdit
+          Left = 573
+          Top = 206
+          Width = 249
+          Height = 24
+          DataField = 'Passwort'
+          DataSource = DataSource1
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          PasswordChar = '*'
+          TabOrder = 9
+        end
+        object DBMemoInfo: TDBMemo
+          Left = 480
+          Top = 270
+          Width = 407
+          Height = 129
+          DataField = 'Info'
+          DataSource = DataSource1
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          ScrollBars = ssHorizontal
           TabOrder = 10
         end
+        object DBCheckBox1: TDBCheckBox
+          Left = 573
+          Top = 147
+          Width = 126
+          Height = 17
+          Caption = 'Als Favorit markieren'
+          DataField = 'Favorit'
+          DataSource = DataSource1
+          TabOrder = 11
+          ValueChecked = 'Ja'
+          ValueUnchecked = 'Nein'
+        end
       end
-      object TabSheet2: TTabSheet
+      object Options: TTabSheet
         Caption = 'EinstellTab'
         ImageIndex = 1
         TabVisible = False
-        ExplicitTop = 24
-        ExplicitWidth = 281
-        ExplicitHeight = 165
       end
       object TabSheet3: TTabSheet
         Caption = 'Button3Tab'
         ImageIndex = 2
         TabVisible = False
+      end
+      object DB_Tabelle: TTabSheet
+        Caption = 'DB_Tabelle'
+        ImageIndex = 3
+        TabVisible = False
         ExplicitTop = 24
-        ExplicitHeight = 724
+        ExplicitHeight = 695
+        object DBGrid1: TDBGrid
+          Left = 0
+          Top = 0
+          Width = 917
+          Height = 713
+          Align = alClient
+          DataSource = DataSource1
+          TabOrder = 0
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -11
+          TitleFont.Name = 'Tahoma'
+          TitleFont.Style = []
+        end
       end
     end
+  end
+  object ClientDataSet1: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 416
+    Top = 440
+    object ClientDataSet1ID: TAutoIncField
+      DisplayWidth = 10
+      FieldName = 'ID'
+    end
+    object ClientDataSet1Bezeichnung: TStringField
+      DisplayWidth = 15
+      FieldName = 'Bezeichnung'
+      Size = 100
+    end
+    object ClientDataSet1Benutzername: TStringField
+      DisplayWidth = 16
+      FieldName = 'Benutzername'
+      Size = 100
+    end
+    object ClientDataSet1Passwort: TStringField
+      DisplayWidth = 12
+      FieldName = 'Passwort'
+      Size = 50
+    end
+    object ClientDataSet1Info: TStringField
+      DisplayWidth = 500
+      FieldName = 'Info'
+      Size = 500
+    end
+    object ClientDataSet1Test: TBooleanField
+      FieldKind = fkInternalCalc
+      FieldName = 'Favorit'
+    end
+  end
+  object DataSource1: TDataSource
+    DataSet = ClientDataSet1
+    Left = 416
+    Top = 504
   end
 end

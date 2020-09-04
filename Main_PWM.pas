@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.StdCtrls, Vcl.Buttons,
-  Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees;
+  Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees, Data.DB,
+  Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls;
 
 type
   TFonts = class
@@ -35,8 +36,8 @@ type
     EinstellBtn: TButton;
     Button3: TButton;
     PageControl1: TPageControl;
-    TabSheet1: TTabSheet;
-    TabSheet2: TTabSheet;
+    PW_Manager: TTabSheet;
+    Options: TTabSheet;
     TabSheet3: TTabSheet;
     VST: TVirtualStringTree;
     SuchenEdit: TEdit;
@@ -44,20 +45,32 @@ type
     LBenutzername: TLabel;
     LPasswort: TLabel;
     LInfo: TLabel;
-    Memo1: TMemo;
-    PasswortEdit: TEdit;
     SeePWBtn: TBitBtn;
     HidePWBtn: TBitBtn;
-    Username: TEdit;
-    Edit1: TEdit;
     LBenutzerDaten: TLabel;
     SaveDataBtn: TBitBtn;
     AddBtn: TBitBtn;
     DelBtn: TBitBtn;
+    ClientDataSet1: TClientDataSet;
+    DB_Tabelle: TTabSheet;
+    ClientDataSet1ID: TAutoIncField;
+    ClientDataSet1Bezeichnung: TStringField;
+    ClientDataSet1Benutzername: TStringField;
+    ClientDataSet1Passwort: TStringField;
+    ClientDataSet1Info: TStringField;
+    DBGrid1: TDBGrid;
+    DataSource1: TDataSource;
+    DBEditBezeichnung: TDBEdit;
+    DBEditBenutzer: TDBEdit;
+    DBEditPasswort: TDBEdit;
+    DBMemoInfo: TDBMemo;
+    DBCheckBox1: TDBCheckBox;
+    ClientDataSet1Test: TBooleanField;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure SaveDataBtnClick(Sender: TObject);
   private
     AFonts : TFonts;
     { Private-Deklarationen }
@@ -108,17 +121,25 @@ end;
 
 procedure TForm1.EinstellBtnClick(Sender: TObject);
 begin
-  PageControl1.ActivePage := TabSheet2;
+  PageControl1.ActivePage := Options;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
 //TODO: Methode hinzufügen welche alle Fonts (Größe) dynamisch ändern lässt
+
+  ClientDataSet1.LoadFromFile('D:\Delphi embarcadero\Passwort_Manager\DB\firstTry.xml');
 end;
 
 procedure TForm1.PasswortBtnClick(Sender: TObject);
 begin
-  PageControl1.ActivePage := TabSheet1;
+  PageControl1.ActivePage := PW_Manager;
+end;
+
+procedure TForm1.SaveDataBtnClick(Sender: TObject);
+begin
+//TODO: der Pfad zu der Datei kann in ClientDataSet1.FileName gespeichert werden!
+  ClientDataSet1.SaveToFile('D:\Delphi embarcadero\Passwort_Manager\DB\firstTry.xml', dfXML);
 end;
 
 end.
