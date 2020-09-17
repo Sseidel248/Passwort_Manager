@@ -13,9 +13,11 @@ Type
       procedure SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = '');
     public
       Constructor Create( VST : TVirtualStringTree ); overload; virtual;
-      procedure AddDBNodeAtStandart;
+//      procedure AddDBNodeAtStandart;
+      function AddDBNodeAtStandart : PVirtualNode;
       //TODO: AddDBNode bei einem bestimmten Ordner
       procedure FirstOpen;
+      procedure TryExpandNode( pNode : PVirtualNode);
   end;
 
 procedure TogglePWSign( Edit : TCustomEdit; hide : Boolean );
@@ -115,7 +117,17 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
-procedure TDBTree.AddDBNodeAtStandart;
+procedure TDBTree.TryExpandNode( pNode : PVirtualNode );
+begin
+  if not AVST.Expanded[ pNode ] then
+    AVST.FullExpand( PNode );
+
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-06
+-------------------------------------------------------------------------------}
+function TDBTree.AddDBNodeAtStandart : PVirtualNode;
 var
 pNode : PVirtualNode;
 pData : pVTNodeData;
@@ -123,6 +135,7 @@ Nodes :TVTVirtualNodeEnumeration;
 pChildNode : PVirtualNode;
 Bezeichnung : String;
 begin
+  //suche nach dem Ordner 'Alle'
   Nodes := AVST.nodes;
   for pNode in Nodes do
   begin
@@ -136,6 +149,7 @@ begin
 
   pChildNode := AVST.AddChild( pNode );
   SetData( pChildNode, false );
+  Result := pChildNode;
 end;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

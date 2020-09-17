@@ -104,10 +104,23 @@ type
     procedure VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
       var HintText: string);
+    procedure HidePWBtnClick(Sender: TObject);
+    procedure SeePWBtnClick(Sender: TObject);
+    procedure DBMemoInfoClick(Sender: TObject);
+    procedure DBEditBezeichnungExit(Sender: TObject);
+    procedure DBEditBezeichnungClick(Sender: TObject);
+    procedure DBEditBenutzerClick(Sender: TObject);
+    procedure DBEditPasswortClick(Sender: TObject);
+    procedure DBEditBenutzerExit(Sender: TObject);
+    procedure DBEditPasswortExit(Sender: TObject);
+    procedure DBMemoInfoExit(Sender: TObject);
+    procedure DBCheckBox1Click(Sender: TObject);
   private
     AFonts : TFonts;
     DBTree : TDBTree;
-    procedure InitNewData;
+    procedure InitNewData( pNode : pVirtualNode = nil);
+    procedure UpdateNodeEntry( Sender : TObject );
+    procedure EnableDBFields( enable : Boolean );
     { Private-Deklarationen }
   public
     { Public-Deklarationen }
@@ -116,7 +129,6 @@ type
 var
   Main: TMain;
   XMLFile : String;
-  //TODO: Drag and Drop innerhalb des VST
 
 implementation
 
@@ -161,11 +173,62 @@ end;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //*****************************************************************************
 
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.UpdateNodeEntry( Sender : TObject );
+var
+pNode : PVirtualNode;
+pData : pVTNodeData;
+begin
+  pNode := DBTree.AVST.FocusedNode;
+  pData := DBTree.AVST.GetNodeData( pNode );
+
+  if (Sender as TComponent).Name = 'DBEditBezeichnung' then
+  begin
+    pData^.Bezeichnung := ClientDataSet1Bezeichnung.AsString;
+  end
+  else if (Sender as TComponent).Name = 'DBEditBenutzer' then
+  begin
+    pData^.Benutzername := ClientDataSet1Benutzername.AsString;
+  end
+  else if (Sender as TComponent).Name = 'DBEditPasswort' then
+  begin
+    pData^.Passwort := ClientDataSet1Passwort.AsString;
+  end
+  else if (Sender as TComponent).Name = 'DBMemoInfo' then
+  begin
+    pData^.Info := ClientDataSet1Info.AsString;
+  end
+  else if (Sender as TComponent).Name = 'DBCheckBox1' then
+  begin
+    pData^.isFavorit := DBCheckBox1.Checked;
+  end;
+
+  DBTree.AVST.Repaint;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.EnableDBFields( enable : Boolean );
+begin
+  DBEditBezeichnung.Enabled := enable;
+  DBEditBenutzer.Enabled := enable;
+  DBEditPasswort.Enabled := enable;
+  DBMemoInfo.Enabled := enable;
+  DBCheckBox1.Enabled := enable;
+end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
+Change: 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.InitNewData;
+procedure TMain.InitNewData( pNode : pVirtualNode = nil);
+var
+ParentData, pNodeData : pVTNodeData;
 begin
+
   ClientDataSet1ID.Value := ClientDataSet1.IndexFieldCount;
   ClientDataSet1Bezeichnung.AsString := 'Bezeichnung eingeben...' ;
   ClientDataSet1Benutzername.AsString := 'Benutzername eingeben...';
@@ -173,6 +236,25 @@ begin
   ClientDataSet1Info.AsString := 'Ihre Notiz';
   ClientDataSet1isFavorit.AsBoolean := false;
   DBCheckBox1.Checked := false;
+
+  pNodeData := DBTree.AVST.GetNodeData( pNode );
+  if Assigned(pNodeData) then
+  begin
+    ParentData := DBTree.AVST.GetNodeData( pNode.Parent );
+
+    pNodeData.Bezeichnung := ClientDataSet1Bezeichnung.AsString;
+    pNodeData.Benutzername := ClientDataSet1Benutzername.AsString;
+    pNodeData.Passwort := ClientDataSet1Passwort.AsString;
+    pNodeData.Info := ClientDataSet1Info.AsString;
+    pNodeData.isFavorit := ClientDataSet1isFavorit.AsBoolean;
+    pNodeData.NodeIdx := DBTree.AVST.AbsoluteIndex( pNode );
+    ClientDataSet1NodeIndex.AsString := IntToStr( pNodeData.NodeIdx );
+
+    pNodeData.Ordner := ParentData.Bezeichnung;
+    ClientDataSet1Ordner.AsString :=  pNodeData.Ordner;
+
+    DBTree.TryExpandNode( pNode.Parent );
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -187,9 +269,16 @@ end;
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddNewDatasetBtnClick(Sender: TObject);
+var
+pNode : PVirtualNode;
 begin
+  DBCheckBox1.Enabled := true;
+  pNode := DBTree.AddDBNodeAtStandart;
   ClientDataSet1.Insert;
-  InitNewData;
+  InitNewData( pNode );
+  DBTree.AVST.AddToSelection( PNode, false );
+
+  EnableDBFields( true );
 end;
 
 {------------------------------------------------------------------------------
@@ -201,7 +290,7 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-06
+Author: Seidel 2020-09-06 Test zum hinzufügen von Nodes
 -------------------------------------------------------------------------------}
 procedure TMain.AddNodeTestClick(Sender: TObject);
 begin
@@ -217,6 +306,98 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+Change: 2020-09-17 -Toggle Fehler das false nicht in den Node Daten
+        geschrieben wurde
+-------------------------------------------------------------------------------}
+procedure TMain.DBCheckBox1Click(Sender: TObject);
+var
+pNode, pNodeFav : PVirtualNode;
+pData : pVTNodeData;
+begin
+  //fängt eine Exception beim Start ab
+  if not Assigned( DBTree ) then
+    Exit;
+
+  pNode := DBTree.AVST.FocusedNode;
+  pData := DBTree.AVST.GetNodeData( pNode );
+  if Assigned( pData ) then
+  begin
+    pNodeFav := DBTree.AVST.GetFirstLevel( 1 );
+    DBTree.AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
+
+    DBTree.TryExpandNode( pNodeFav );
+
+    UpdateNodeEntry( Sender );
+  end;
+end;
+
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBenutzerClick(Sender: TObject);
+begin
+  DBEditBenutzer.SelectAll;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBenutzerExit(Sender: TObject);
+begin
+  UpdateNodeEntry( Sender );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBezeichnungClick(Sender: TObject);
+begin
+  DBEditBezeichnung.SelectAll;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBezeichnungExit(Sender: TObject);
+begin
+  UpdateNodeEntry( Sender );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditPasswortClick(Sender: TObject);
+begin
+  DBEditPasswort.SelectAll;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditPasswortExit(Sender: TObject);
+begin
+  UpdateNodeEntry( Sender );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBMemoInfoClick(Sender: TObject);
+begin
+  DBMemoInfo.SelectAll;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.DBMemoInfoExit(Sender: TObject);
+begin
+  UpdateNodeEntry( Sender );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.EinstellBtnClick(Sender: TObject);
@@ -228,8 +409,9 @@ end;
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.FormCreate(Sender: TObject);
+var
+opendialog : TFileOpenDialog;
 begin
-//TODO: Methode hinzufügen welche alle Fonts (Größe) dynamisch ändern lässt
 
   Application.HintHidePause := 10000;
 
@@ -237,8 +419,36 @@ begin
   DBTree.Create( VST );
   DBTree.FirstOpen;
 
-  {ClientDataSet1.FileName}XMLFile := 'D:\Delphi embarcadero\Passwort_Manager\DB\Versuch4.xml';
+  //XMLFile := 'D:\Delphi Embarcadero\Passwort_Manager\DB\Versuch4.xml';
+  XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\Versuch4.xml';
+
+  if not FileExists(XMLFile) then
+  begin
+    opendialog := TFileOpenDialog.Create( nil );
+    try
+      openDialog.Title := 'Bitte Datenbank *.xml auswählen';
+      if opendialog.Execute then
+        XMLFile := opendialog.FileName;
+    finally
+      opendialog.Free;
+    end;
+  end;
+
+
+  //{ClientDataSet1.FileName}XMLFile := 'D:\Delphi embarcadero\Passwort_Manager\DB\Versuch4.xml';
   ClientDataSet1.LoadFromFile( {ClientDataSet1.FileName}XMLFile );
+
+  EnableDBFields( false );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.HidePWBtnClick(Sender: TObject);
+begin
+  DBEditPasswort.PasswordChar := '*';
+  SeePWBtn.Enabled := true;
+  HidePWBtn.Enabled := false;
 end;
 
 {------------------------------------------------------------------------------
@@ -256,6 +466,16 @@ procedure TMain.SaveDataBtnClick(Sender: TObject);
 begin
 //TODO: der Pfad zu der Datei kann in ClientDataSet1.FileName gespeichert werden!
   ClientDataSet1.SaveToFile( {ClientDataSet1.FileName}XMLFile , dfXML);
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-16
+-------------------------------------------------------------------------------}
+procedure TMain.SeePWBtnClick(Sender: TObject);
+begin
+  DBEditPasswort.PasswordChar := #0;
+  SeePWBtn.Enabled := false;
+  HidePWBtn.Enabled := true;
 end;
 
 {------------------------------------------------------------------------------
@@ -322,7 +542,10 @@ var
 pData :pVTNodeData;
 begin
   pData := VST.GetNodeData( Node );
-  CellText := pData^.Bezeichnung;
+  if pData^.Bezeichnung.Equals('Bezeichnung eingeben...') then
+    CellText := '*Neuer Schlüssel'
+  else
+    CellText := pData^.Bezeichnung;
 end;
 
 end.

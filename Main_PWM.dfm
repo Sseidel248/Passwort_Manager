@@ -4,7 +4,7 @@ object Main: TMain
   BiDiMode = bdLeftToRight
   Caption = 'Passwort-Manager'
   ClientHeight = 725
-  ClientWidth = 1112
+  ClientWidth = 1114
   Color = clWhite
   Constraints.MinHeight = 764
   Constraints.MinWidth = 1128
@@ -78,7 +78,7 @@ object Main: TMain
   object Panel2: TPanel
     Left = 185
     Top = 0
-    Width = 927
+    Width = 929
     Height = 725
     Align = alClient
     Color = cl3DLight
@@ -87,7 +87,7 @@ object Main: TMain
     object PageControl1: TPageControl
       Left = 1
       Top = 1
-      Width = 925
+      Width = 927
       Height = 723
       ActivePage = PW_Manager
       Align = alClient
@@ -95,10 +95,10 @@ object Main: TMain
       object PW_Manager: TTabSheet
         Caption = 'PasswortMTab'
         DesignSize = (
-          917
+          919
           695)
         object LBezeichnung: TLabel
-          Left = 480
+          Left = 482
           Top = 120
           Width = 76
           Height = 16
@@ -110,9 +110,10 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ExplicitLeft = 480
         end
         object LBenutzername: TLabel
-          Left = 480
+          Left = 482
           Top = 173
           Width = 87
           Height = 16
@@ -124,9 +125,10 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ExplicitLeft = 480
         end
         object LPasswort: TLabel
-          Left = 480
+          Left = 482
           Top = 209
           Width = 57
           Height = 16
@@ -138,9 +140,10 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ExplicitLeft = 480
         end
         object LInfo: TLabel
-          Left = 480
+          Left = 482
           Top = 248
           Width = 27
           Height = 16
@@ -152,9 +155,10 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ExplicitLeft = 480
         end
         object LBenutzerDaten: TLabel
-          Left = 480
+          Left = 482
           Top = 72
           Width = 100
           Height = 19
@@ -166,11 +170,12 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
+          ExplicitLeft = 480
         end
         object VST: TVirtualStringTree
           Left = 31
           Top = 73
-          Width = 418
+          Width = 420
           Height = 559
           Anchors = [akLeft, akTop, akRight, akBottom]
           DefaultNodeHeight = 24
@@ -195,7 +200,7 @@ object Main: TMain
         object SuchenEdit: TEdit
           Left = 31
           Top = 24
-          Width = 418
+          Width = 420
           Height = 24
           Anchors = [akLeft, akTop, akRight]
           Font.Charset = DEFAULT_CHARSET
@@ -208,7 +213,7 @@ object Main: TMain
           Text = 'Suchen'
         end
         object SaveDataBtn: TBitBtn
-          Left = 824
+          Left = 826
           Top = 613
           Width = 57
           Height = 57
@@ -347,8 +352,8 @@ object Main: TMain
           OnClick = SaveDataBtnClick
         end
         object SeePWBtn: TBitBtn
-          Left = 828
-          Top = 206
+          Left = 830
+          Top = 200
           Width = 25
           Height = 25
           Anchors = [akTop, akRight]
@@ -411,9 +416,10 @@ object Main: TMain
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
           TabOrder = 3
+          OnClick = SeePWBtnClick
         end
         object DelFolderBtn: TBitBtn
-          Left = 299
+          Left = 301
           Top = 638
           Width = 150
           Height = 34
@@ -551,8 +557,8 @@ object Main: TMain
           OnClick = AddFolderBtnClick
         end
         object HidePWBtn: TBitBtn
-          Left = 859
-          Top = 206
+          Left = 861
+          Top = 200
           Width = 25
           Height = 25
           Anchors = [akTop, akRight]
@@ -614,9 +620,10 @@ object Main: TMain
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
           TabOrder = 6
+          OnClick = HidePWBtnClick
         end
         object DBEditBenutzer: TDBEdit
-          Left = 573
+          Left = 575
           Top = 170
           Width = 311
           Height = 24
@@ -630,9 +637,11 @@ object Main: TMain
           Font.Style = []
           ParentFont = False
           TabOrder = 7
+          OnClick = DBEditBenutzerClick
+          OnExit = DBEditBenutzerExit
         end
         object DBEditBezeichnung: TDBEdit
-          Left = 573
+          Left = 575
           Top = 117
           Width = 313
           Height = 24
@@ -646,11 +655,13 @@ object Main: TMain
           Font.Style = []
           ParentFont = False
           TabOrder = 8
+          OnClick = DBEditBezeichnungClick
+          OnExit = DBEditBezeichnungExit
         end
         object DBEditPasswort: TDBEdit
-          Left = 573
-          Top = 206
-          Width = 249
+          Left = 579
+          Top = 200
+          Width = 245
           Height = 24
           DataField = 'Passwort'
           DataSource = DataSource1
@@ -660,11 +671,12 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
-          PasswordChar = '*'
           TabOrder = 9
+          OnClick = DBEditPasswortClick
+          OnExit = DBEditPasswortExit
         end
         object DBMemoInfo: TDBMemo
-          Left = 480
+          Left = 482
           Top = 270
           Width = 407
           Height = 129
@@ -678,9 +690,11 @@ object Main: TMain
           ParentFont = False
           ScrollBars = ssHorizontal
           TabOrder = 10
+          OnClick = DBMemoInfoClick
+          OnExit = DBMemoInfoExit
         end
         object DBCheckBox1: TDBCheckBox
-          Left = 573
+          Left = 589
           Top = 147
           Width = 126
           Height = 17
@@ -690,6 +704,7 @@ object Main: TMain
           TabOrder = 11
           ValueChecked = 'Ja'
           ValueUnchecked = 'Nein'
+          OnClick = DBCheckBox1Click
         end
         object AddNewDatasetBtn: TButton
           Left = 320
@@ -723,19 +738,31 @@ object Main: TMain
         Caption = 'EinstellTab'
         ImageIndex = 1
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
       end
       object TabSheet3: TTabSheet
         Caption = 'Button3Tab'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
       end
       object DB_Tabelle: TTabSheet
         Caption = 'DB_Tabelle'
         ImageIndex = 3
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
-          Width = 917
+          Width = 919
           Height = 695
           Align = alClient
           DataSource = DataSource1
@@ -751,27 +778,29 @@ object Main: TMain
   end
   object ClientDataSet1: TClientDataSet
     PersistDataPacket.Data = {
-      990200009619E0BD010000001800000007000500000003000000410102494404
+      C90200009619E0BD010000001800000007000500000003000000710102494404
       0001001200010007535542545950450200490008004175746F696E63000B4265
       7A656963686E756E6701004900100001000557494454480200020064000C4265
       6E75747A65726E616D6501004900100001000557494454480200020064000850
       617373776F7274010049001000010005574944544802000200320004496E666F
       020049001000010005574944544802000200F401064F72646E65720100490010
       000100055749445448020002003200074661766F726974020003001000000002
-      000A4348414E47455F4C4F47040082000F000000010000000000000004000000
+      000A4348414E47455F4C4F47040082001B000000010000000000000004000000
       0200000000000000040000000300000000000000040000000400000000000000
-      040000000500000002000000080000000C4155544F494E4356414C5545040001
-      000500000004541501000000050014020000001742657A656963686E756E6720
-      65696E676562656E2E2E2E1842656E75747A65726E616D652065696E67656265
-      6E2E2E2E1450617373776F72742065696E676562656E2E2E2E0A004968726520
-      4E6F74697A040014030000001742657A656963686E756E672065696E67656265
-      6E2E2E2E1842656E75747A65726E616D652065696E676562656E2E2E2E145061
-      7373776F72742065696E676562656E2E2E2E0A0049687265204E6F74697A0400
-      14040000001742657A656963686E756E672065696E676562656E2E2E2E184265
-      6E75747A65726E616D652065696E676562656E2E2E2E1450617373776F727420
-      65696E676562656E2E2E2E0A0049687265204E6F74697A0C0014020000000454
-      6573741842656E75747A65726E616D652065696E676562656E2E2E2E14506173
-      73776F72742065696E676562656E2E2E2E0A0049687265204E6F74697A}
+      0400000005000000020000000800000001000000000000000200000003000000
+      0000000002000000040000000000000002000000050000000000000002000000
+      0C4155544F494E4356414C554504000100050000000654150100000005001402
+      0000001742657A656963686E756E672065696E676562656E2E2E2E1842656E75
+      747A65726E616D652065696E676562656E2E2E2E1450617373776F7274206569
+      6E676562656E2E2E2E0A0049687265204E6F74697A060014030000001742657A
+      656963686E756E672065696E676562656E2E2E2E1842656E75747A65726E616D
+      652065696E676562656E2E2E2E1450617373776F72742065696E676562656E2E
+      2E2E0A0049687265204E6F74697A060014040000001742657A656963686E756E
+      672065696E676562656E2E2E2E1842656E75747A65726E616D652065696E6765
+      62656E2E2E2E1450617373776F72742065696E676562656E2E2E2E0A00496872
+      65204E6F74697A0E00140200000004546573741842656E75747A65726E616D65
+      2065696E676562656E2E2E2E1450617373776F72742065696E676562656E2E2E
+      2E0A0049687265204E6F74697A}
     Active = True
     Aggregates = <>
     Params = <>
