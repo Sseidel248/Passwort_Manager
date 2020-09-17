@@ -27,11 +27,12 @@ const
   SC_FOLDER     = 'FOLDER';
   SC_FILE       = 'FILE';
 
-  IC_FOLDER_OPEN  = 0;
-  IC_FOLDER_CLOSE = 1;
-  IC_KEY          = 2;
-  IC_KEY_SEL      = 3;
-  IC_FAVORIT      = 4;
+  IC_FOLDER_OPEN      = 0;
+  IC_FOLDER_CLOSE     = 1;
+  IC_FAV_FOLDER_CLOSE = 2;
+  IC_KEY              = 3;
+  IC_KEY_SEL          = 4;
+  IC_FAVORIT          = 5;
 
 implementation
 

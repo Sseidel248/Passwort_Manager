@@ -205,6 +205,7 @@ begin
   begin
     pData^.isFavorit := DBCheckBox1.Checked;
   end;
+  ClientDataSet1NodeImageIndex.AsInteger := pData^.NodeImageIdx;
 
   DBTree.AVST.Repaint;
 end;
@@ -253,6 +254,8 @@ begin
     pNodeData.Ordner := ParentData.Bezeichnung;
     ClientDataSet1Ordner.AsString :=  pNodeData.Ordner;
 
+    ClientDataSet1NodeImageIndex.AsInteger := pNodeData^.NodeImageIdx;
+
     DBTree.TryExpandNode( pNode.Parent );
   end;
 end;
@@ -276,7 +279,6 @@ begin
   pNode := DBTree.AddDBNodeAtStandart;
   ClientDataSet1.Insert;
   InitNewData( pNode );
-  DBTree.AVST.AddToSelection( PNode, false );
 
   EnableDBFields( true );
 end;
@@ -499,6 +501,7 @@ end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
+Change: 2020-09-17 - Favoriten Ordner geschlossen Image hinzugefügt
 -------------------------------------------------------------------------------}
 procedure TMain.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
@@ -517,7 +520,12 @@ begin
         if VST.Expanded[Node] then
           ImageIndex := IC_FOLDER_OPEN
         else
-          ImageIndex := IC_FOLDER_CLOSE;
+        begin
+          if pData.Bezeichnung.Equals('Favoriten') then
+            ImageIndex := IC_FAV_FOLDER_CLOSE
+          else
+            ImageIndex := IC_FOLDER_CLOSE;
+        end;
       end
       else
         ImageIndex := IC_FOLDER_OPEN;
@@ -529,7 +537,7 @@ begin
         ikSelected : ImageIndex := IC_KEY_SEL;
       end
     end;
-    pData^.NodeImageIdx := ImageIndex;;
+    pData^.NodeImageIdx := ImageIndex;
   end;
 end;
 
