@@ -195,6 +195,7 @@ object Main: TMain
           OnGetText = VSTGetText
           OnGetImageIndex = VSTGetImageIndex
           OnGetHint = VSTGetHint
+          OnNodeClick = VSTNodeClick
           Columns = <>
         end
         object SuchenEdit: TEdit
@@ -659,7 +660,7 @@ object Main: TMain
           OnExit = DBEditBezeichnungExit
         end
         object DBEditPasswort: TDBEdit
-          Left = 579
+          Left = 575
           Top = 200
           Width = 245
           Height = 24
@@ -704,7 +705,7 @@ object Main: TMain
           TabOrder = 11
           ValueChecked = 'Ja'
           ValueUnchecked = 'Nein'
-          OnClick = DBCheckBox1Click
+          OnMouseUp = DBCheckBox1MouseUp
         end
         object AddNewDatasetBtn: TButton
           Left = 320
@@ -765,8 +766,63 @@ object Main: TMain
     end
   end
   object ClientDataSet1: TClientDataSet
+    PersistDataPacket.Data = {
+      0B0100009619E0BD0100000018000000080000000000030000000B0102494404
+      0001000000010007535542545950450200490008004175746F696E63000B4265
+      7A656963686E756E6701004900000001000557494454480200020040000C4265
+      6E75747A65726E616D6501004900000001000557494454480200020040000850
+      617373776F7274010049000000010005574944544802000200320004496E666F
+      020049000000010005574944544802000200FF00064F72646E65720100490000
+      000100055749445448020002002000094E6F6465496E64657804000100000000
+      000E4E6F6465496D616765496E646578040001000000000001000C4155544F49
+      4E4356414C55450400010001000000}
+    Active = True
     Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'ID'
+        DataType = ftAutoInc
+      end
+      item
+        Name = 'Bezeichnung'
+        DataType = ftString
+        Size = 64
+      end
+      item
+        Name = 'Benutzername'
+        DataType = ftString
+        Size = 64
+      end
+      item
+        Name = 'Passwort'
+        DataType = ftString
+        Size = 50
+      end
+      item
+        Name = 'Info'
+        DataType = ftString
+        Size = 255
+      end
+      item
+        Name = 'Ordner'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'NodeIndex'
+        DataType = ftInteger
+      end
+      item
+        Name = 'NodeImageIndex'
+        DataType = ftInteger
+      end
+      item
+        Name = 'isFavorit'
+        DataType = ftBoolean
+      end>
+    IndexDefs = <>
     Params = <>
+    StoreDefs = True
     Left = 272
     Top = 152
     object ClientDataSet1ID: TAutoIncField
@@ -804,22 +860,16 @@ object Main: TMain
     end
     object ClientDataSet1Ordner: TStringField
       DisplayWidth = 10
-      FieldKind = fkCalculated
       FieldName = 'Ordner'
       Size = 32
-      Calculated = True
     end
     object ClientDataSet1NodeIndex: TIntegerField
       DisplayWidth = 10
-      FieldKind = fkCalculated
       FieldName = 'NodeIndex'
-      Calculated = True
     end
     object ClientDataSet1NodeImageIndex: TIntegerField
       DisplayWidth = 13
-      FieldKind = fkCalculated
       FieldName = 'NodeImageIndex'
-      Calculated = True
     end
   end
   object DataSource1: TDataSource

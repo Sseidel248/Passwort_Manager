@@ -12,6 +12,7 @@ uses
 type
   pVTNodeData = ^rVTNodeData; // Zeiger auf die Daten-Struktur
   rVTNodeData = record
+         ID : Integer;
          Bezeichnung : String;
          Benutzername : String;
          Passwort : String;
@@ -114,11 +115,13 @@ type
     procedure DBEditBenutzerExit(Sender: TObject);
     procedure DBEditPasswortExit(Sender: TObject);
     procedure DBMemoInfoExit(Sender: TObject);
-    procedure DBCheckBox1Click(Sender: TObject);
+    procedure VSTNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+    procedure DBCheckBox1MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     AFonts : TFonts;
     DBTree : TDBTree;
-    procedure InitNewData( pNode : pVirtualNode = nil);
+    procedure InitNewData( pNode : pVirtualNode = nil; AddedInFav : Boolean = false);
     procedure UpdateNodeEntry( Sender : TObject );
     procedure EnableDBFields( enable : Boolean );
     { Private-Deklarationen }
@@ -225,18 +228,17 @@ end;
 Author: Seidel 2020-09-06
 Change: 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.InitNewData( pNode : pVirtualNode = nil);
+procedure TMain.InitNewData( pNode : pVirtualNode = nil; AddedInFav : Boolean = false);
 var
 ParentData, pNodeData : pVTNodeData;
 begin
 
-  ClientDataSet1ID.Value := ClientDataSet1.IndexFieldCount;
   ClientDataSet1Bezeichnung.AsString := 'Bezeichnung eingeben...' ;
   ClientDataSet1Benutzername.AsString := 'Benutzername eingeben...';
   ClientDataSet1Passwort.AsString := 'Passwort eingeben...';
   ClientDataSet1Info.AsString := 'Ihre Notiz';
-  ClientDataSet1isFavorit.AsBoolean := false;
-  DBCheckBox1.Checked := false;
+  ClientDataSet1isFavorit.AsBoolean := AddedInFav;
+  DBCheckBox1.Checked := AddedInFav;
 
   pNodeData := DBTree.AVST.GetNodeData( pNode );
   if Assigned(pNodeData) then
@@ -265,7 +267,7 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddFolderBtnClick(Sender: TObject);
 begin
-//
+  DBTree.AddDBNodeFolder;
 end;
 
 {------------------------------------------------------------------------------
@@ -273,12 +275,31 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddNewDatasetBtnClick(Sender: TObject);
 var
-pNode : PVirtualNode;
+pNode, pParentNode : PVirtualNode;
 begin
-  DBCheckBox1.Enabled := true;
-  pNode := DBTree.AddDBNodeAtStandart;
-  ClientDataSet1.Insert;
-  InitNewData( pNode );
+  pParentNode := DBTree.AVST.FocusedNode;
+
+  ClientDataSet1.Append;
+  //in den EditierModus Wechseln
+  ClientDataSet1.Edit;
+  if DBTree.AVST.GetNodeLevel( pParentNode ) > 0 then
+  begin
+    pNode := DBTree.AddDBNodeAt( pParentNode );
+    if DBTree.IsAddedInFav( pNode ) then
+      InitNewData( pNode, true )
+    else
+      InitNewData( pNode );
+  end
+  else
+  begin
+    pNode := DBTree.AddDBNodeAtStandart;
+    InitNewData( pNode );
+  end;
+
+  //dient dem zwischenspeichern der DB Einträge
+  ClientDataSet1.Next;
+  //dem Node seine DB ID geben
+  DBTree.SetNodeDBID( pNode, ClientDataSet1ID.AsInteger );
 
   EnableDBFields( true );
 end;
@@ -308,32 +329,43 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-16
-Change: 2020-09-17 -Toggle Fehler das false nicht in den Node Daten
-        geschrieben wurde
+Author: Seidel 2020-09-17
 -------------------------------------------------------------------------------}
-procedure TMain.DBCheckBox1Click(Sender: TObject);
+procedure TMain.DBCheckBox1MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
 var
 pNode, pNodeFav : PVirtualNode;
-pData : pVTNodeData;
+pData, pDataFav : pVTNodeData;
+Nodes :TVTVirtualNodeEnumeration;
 begin
   //fängt eine Exception beim Start ab
   if not Assigned( DBTree ) then
     Exit;
+  //fängt einen Node ab der Nil ist
+  pNode := DBTree.AVST.FocusedNode;
+  if not Assigned( pNode ) then
+    Exit;
+  //fängt einen Verschieben eines Ordner ab
+  if DBTree.AVST.GetNodeLevel( pNode ) <= 1 then
+    Exit;
 
   pNode := DBTree.AVST.FocusedNode;
   pData := DBTree.AVST.GetNodeData( pNode );
-  if Assigned( pData ) then
+  if pData.isFavorit = false then
   begin
-    pNodeFav := DBTree.AVST.GetFirstLevel( 1 );
-    DBTree.AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
-
-    DBTree.TryExpandNode( pNodeFav );
-
-    UpdateNodeEntry( Sender );
+    Nodes := DBTree.AVST.Nodes();
+    for pNodeFav in Nodes do
+    begin
+      pDataFav := DBTree.AVST.GetNodeData( pNodeFav );
+      if pDataFav^.Bezeichnung.Equals( 'Favoriten' ) then
+      begin
+        DBTree.AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
+        DBTree.TryExpandNode( pNodeFav );
+        UpdateNodeEntry( Sender );
+      end;
+    end;
   end;
 end;
-
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
@@ -365,6 +397,7 @@ Author: Seidel 2020-09-16
 procedure TMain.DBEditBezeichnungExit(Sender: TObject);
 begin
   UpdateNodeEntry( Sender );
+
 end;
 
 {------------------------------------------------------------------------------
@@ -421,8 +454,8 @@ begin
   DBTree.Create( VST );
   DBTree.FirstOpen;
 
-  //XMLFile := 'D:\Delphi Embarcadero\Passwort_Manager\DB\Versuch4.xml';
-  XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\Versuch4.xml';
+  XMLFile := 'D:\Delphi Embarcadero\Passwort_Manager\DB\Table5.xml';
+  //XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\Table5.xml';
 
   if not FileExists(XMLFile) then
   begin
@@ -490,10 +523,11 @@ var
 pData : pVTNodeData;
 begin
   pData := VST.GetNodeData( Node );
-  HintText := 'Bezeichnung: ' + pData^.Bezeichnung + sLineBreak
+  HintText := 'ID: ' + IntToStr( pData^.ID ) + sLineBreak
+              +'Bezeichnung: ' + pData^.Bezeichnung + sLineBreak
               +'Benutzername: ' +  pData^.Benutzername + sLineBreak
               +'Passwort: ' +  pData^.Passwort + sLineBreak
-              +'Typ: ' +  pData^.Ordner + sLineBreak
+              +'Ordner: ' +  pData^.Ordner + sLineBreak
               +'Nodeindex: ' +  IntToStr ( pData^.NodeIdx ) + sLineBreak
               +'Node-Imageindex: ' + IntToStr (  pData^.NodeImageIdx ) + sLineBreak
               +'Favorit: ' +  BoolToStr ( pData^.isFavorit, true );
@@ -507,7 +541,7 @@ procedure TMain.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
   var ImageIndex: TImageIndex);
 var
-pData :pVTNodeData;
+pData, pParentData :pVTNodeData;
 begin
   //TODO:Wenn es geht ein paar Sachen auslagern
   pData := VST.GetNodeData( Node );
@@ -532,10 +566,17 @@ begin
     end
     else
     begin
-      case Kind of
-        ikNormal : ImageIndex := IC_KEY;
-        ikSelected : ImageIndex := IC_KEY_SEL;
-      end
+      //Abfrage ob der Eltern Node Favoriten heißt
+      pParentData := VST.GetNodeData( Node.Parent );
+      if pParentData.Bezeichnung.Equals('Favoriten') then
+        ImageIndex := IC_FAVORIT
+      else
+      begin
+        case Kind of
+          ikNormal : ImageIndex := IC_KEY;
+          ikSelected : ImageIndex := IC_KEY_SEL;
+        end
+      end;
     end;
     pData^.NodeImageIdx := ImageIndex;
   end;
@@ -554,6 +595,26 @@ begin
     CellText := '*Neuer Schlüssel'
   else
     CellText := pData^.Bezeichnung;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-17
+-------------------------------------------------------------------------------}
+procedure TMain.VSTNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+var
+pData : pVTNodeData;
+begin
+  if DBTree.AVST.GetNodeLevel( HitInfo.HitNode ) <= 1 then
+  Begin
+    EnableDBFields( false );
+  End
+  else
+  begin
+    EnableDBFields( true );
+    pData := DBTree.AVST.GetNodeData( HitInfo.HitNode );
+    ClientDataSet1.Locate( 'ID', pData^.ID , [] );
+  end;
+
 end;
 
 end.

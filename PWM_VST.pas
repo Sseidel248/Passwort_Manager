@@ -13,9 +13,12 @@ Type
       procedure SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = '');
     public
       Constructor Create( VST : TVirtualStringTree ); overload; virtual;
-//      procedure AddDBNodeAtStandart;
       function AddDBNodeAtStandart : PVirtualNode;
+      function AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
+      procedure SetNodeDBID( Node : PVirtualNode; ID : Integer );
       //TODO: AddDBNode bei einem bestimmten Ordner
+      function AddDBNodeFolder : PVirtualNode;
+      function IsAddedInFav( pNode : PVirtualNode) : Boolean;
       procedure FirstOpen;
       procedure TryExpandNode( pNode : PVirtualNode);
   end;
@@ -55,6 +58,39 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-17
+-------------------------------------------------------------------------------}
+function TDBTree.AddDBNodeFolder : PVirtualNode;
+var
+pNode : PVirtualNode;
+pData : pVTNodeData;
+begin
+  AVST.ClearSelection;
+  AVST.Refresh;
+  pNode := AVST.GetFirst();
+  pData := AVST.GetNodeData(PNode);
+  Result := AVST.AddChild( pNode );
+
+  SetData( Result, true, 'Neuer Ordner' );
+
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-17
+-------------------------------------------------------------------------------}
+function TDBTree.IsAddedInFav( pNode : PVirtualNode) : Boolean;
+var
+pData : pVTNodeData;
+begin
+  Result := false;
+  pData := AVST.GetNodeData( pNode.Parent );
+  if pData^.Bezeichnung.Equals('Favoriten') then
+  begin
+    Result := true;
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TDBTree.SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = '');
@@ -78,7 +114,7 @@ begin
   else
   begin
     pData := AVST.GetNodeData( pNode );
-    pData^.Bezeichnung := 'Neuer Schlüssel';
+    pData^.Bezeichnung := '*Neuer Schlüssel';
     pData^.Benutzername := Main.DBEditBenutzer.Text;
     pData^.Passwort := Main.DBEditPasswort.Text;
     pData^.Info := Main.DBMemoInfo.Text;
@@ -136,6 +172,8 @@ Nodes :TVTVirtualNodeEnumeration;
 pChildNode : PVirtualNode;
 Bezeichnung : String;
 begin
+  AVST.ClearSelection;
+  AVST.Refresh;
   //suche nach dem Ordner 'Alle'
   Nodes := AVST.nodes;
   for pNode in Nodes do
@@ -144,13 +182,40 @@ begin
     Bezeichnung := pData^.Bezeichnung;
     if Bezeichnung.Equals('Alle') then
     begin
+      pChildNode := AVST.InsertNode( pNode, amAddChildLast );
       break;
     end;
   end;
 
-  pChildNode := AVST.AddChild( pNode );
   SetData( pChildNode, false );
   Result := pChildNode;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-17
+-------------------------------------------------------------------------------}
+function TDBTree.AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
+var
+pChildNode : PVirtualNode;
+pData, pChildData : pVTNodeData;
+begin
+  AVST.ClearSelection;
+  AVST.Refresh;
+  pChildNode := AVST.InsertNode( ParentNode, amAddChildFirst );
+  SetData( pChildNode, false );
+
+  Result := pChildNode;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-17
+-------------------------------------------------------------------------------}
+procedure TDBTree.SetNodeDBID( Node : PVirtualNode; ID : Integer );
+var
+pData : pVTNodeData;
+begin
+  pData := AVST.GetNodeData( Node );
+  pData^.ID := ID;
 end;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
