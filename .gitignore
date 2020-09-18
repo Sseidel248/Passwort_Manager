@@ -6,3 +6,8 @@ Win32/
 *.identcache
 *.local
 __history/
+*.identcache
+*.identcache
+*.dcu
+*.exe
+Passwort_Manager.identcache

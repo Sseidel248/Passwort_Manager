@@ -190,6 +190,7 @@ object Main: TMain
           Images = ImageList1
           ParentFont = False
           ParentShowHint = False
+          PopupMenu = PopupMenu1
           ShowHint = True
           TabOrder = 0
           OnGetText = VSTGetText
@@ -732,6 +733,7 @@ object Main: TMain
           Height = 33
           Caption = 'Node Add test'
           TabOrder = 14
+          Visible = False
           OnClick = AddNodeTestClick
         end
       end
@@ -768,7 +770,7 @@ object Main: TMain
   object ClientDataSet1: TClientDataSet
     PersistDataPacket.Data = {
       0B0100009619E0BD0100000018000000080000000000030000000B0102494404
-      0001000000010007535542545950450200490008004175746F696E63000B4265
+      0001000200010007535542545950450200490008004175746F696E63000B4265
       7A656963686E756E6701004900000001000557494454480200020040000C4265
       6E75747A65726E616D6501004900000001000557494454480200020040000850
       617373776F7274010049000000010005574944544802000200320004496E666F
@@ -781,6 +783,7 @@ object Main: TMain
     FieldDefs = <
       item
         Name = 'ID'
+        Attributes = [faReadonly]
         DataType = ftAutoInc
       end
       item
@@ -1483,5 +1486,33 @@ object Main: TMain
       FFFFFFF9FE7FFCFF3F000000FFFFFFFC00FFFE007F000000FFFFFFFFFFFFFFFF
       FF000000FFFFFFFFFFFFFFFFFF00000000000000000000000000000000000000
       000000000000}
+  end
+  object PopupMenu1: TPopupMenu
+    OnPopup = PopupMenu1Popup
+    Left = 272
+    Top = 344
+    object NeuerSchlssel1: TMenuItem
+      Caption = 'Neuer Schl'#252'ssel'
+      OnClick = NeuerSchlssel1Click
+    end
+    object NeuerOrdner1: TMenuItem
+      Caption = 'Neuer Ordner'
+      OnClick = NeuerOrdner1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object ZuFavoritenhinzufgen1: TMenuItem
+      Caption = 'Zu Favoriten hinzuf'#252'gen'
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Schlssellschen1: TMenuItem
+      Caption = 'Schl'#252'ssel l'#246'schen'
+    end
+    object Ordnerlschen1: TMenuItem
+      Caption = 'Ordner l'#246'schen'
+    end
   end
 end

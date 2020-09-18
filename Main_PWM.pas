@@ -88,6 +88,14 @@ type
     Button1: TButton;
     ImageList1: TImageList;
     AddNodeTest: TButton;
+    PopupMenu1: TPopupMenu;
+    NeuerOrdner1: TMenuItem;
+    NeuerSchlssel1: TMenuItem;
+    N1: TMenuItem;
+    ZuFavoritenhinzufgen1: TMenuItem;
+    N2: TMenuItem;
+    Ordnerlschen1: TMenuItem;
+    Schlssellschen1: TMenuItem;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -118,9 +126,13 @@ type
     procedure VSTNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
     procedure DBCheckBox1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure NeuerOrdner1Click(Sender: TObject);
+    procedure NeuerSchlssel1Click(Sender: TObject);
+    procedure PopupMenu1Popup(Sender: TObject);
   private
     AFonts : TFonts;
     DBTree : TDBTree;
+    procedure AddNewDataSet;
     procedure InitNewData( pNode : pVirtualNode = nil; AddedInFav : Boolean = false);
     procedure UpdateNodeEntry( Sender : TObject );
     procedure EnableDBFields( enable : Boolean );
@@ -224,6 +236,42 @@ begin
   DBMemoInfo.Enabled := enable;
   DBCheckBox1.Enabled := enable;
 end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.AddNewDataSet;
+var
+pNode, pParentNode : PVirtualNode;
+begin
+  pParentNode := DBTree.AVST.FocusedNode;
+
+  ClientDataSet1.Append;
+  //in den EditierModus Wechseln
+  ClientDataSet1.Edit;
+  //erzeugt einen neuen DatenSatz
+  if DBTree.AVST.GetNodeLevel( pParentNode ) > 0 then
+  begin
+    pNode := DBTree.AddDBNodeAt( pParentNode );
+    if DBTree.IsAddedInFav( pNode ) then
+      InitNewData( pNode, true )
+    else
+      InitNewData( pNode );
+  end
+  else
+  begin
+    pNode := DBTree.AddDBNodeAtStandart;
+    InitNewData( pNode );
+  end;
+//  pNode := AddNewDataSet( pParentNode );
+  //dient dem zwischenspeichern der DB Einträge
+  ClientDataSet1.Next;
+  //dem Node seine DB ID geben
+  DBTree.SetNodeDBID( pNode, ClientDataSet1ID.AsInteger );
+  //aktiviert die Datensatz Felder
+  EnableDBFields( true );
+end;
+
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 Change: 2020-09-16
@@ -263,6 +311,22 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.NeuerOrdner1Click(Sender: TObject);
+begin
+  DBTree.AddDBNodeFolder;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.NeuerSchlssel1Click(Sender: TObject);
+begin
+  AddNewDataSet;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddFolderBtnClick(Sender: TObject);
@@ -274,34 +338,8 @@ end;
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddNewDatasetBtnClick(Sender: TObject);
-var
-pNode, pParentNode : PVirtualNode;
 begin
-  pParentNode := DBTree.AVST.FocusedNode;
-
-  ClientDataSet1.Append;
-  //in den EditierModus Wechseln
-  ClientDataSet1.Edit;
-  if DBTree.AVST.GetNodeLevel( pParentNode ) > 0 then
-  begin
-    pNode := DBTree.AddDBNodeAt( pParentNode );
-    if DBTree.IsAddedInFav( pNode ) then
-      InitNewData( pNode, true )
-    else
-      InitNewData( pNode );
-  end
-  else
-  begin
-    pNode := DBTree.AddDBNodeAtStandart;
-    InitNewData( pNode );
-  end;
-
-  //dient dem zwischenspeichern der DB Einträge
-  ClientDataSet1.Next;
-  //dem Node seine DB ID geben
-  DBTree.SetNodeDBID( pNode, ClientDataSet1ID.AsInteger );
-
-  EnableDBFields( true );
+  AddNewDataSet;
 end;
 
 {------------------------------------------------------------------------------
@@ -349,22 +387,9 @@ begin
   if DBTree.AVST.GetNodeLevel( pNode ) <= 1 then
     Exit;
 
-  pNode := DBTree.AVST.FocusedNode;
-  pData := DBTree.AVST.GetNodeData( pNode );
-  if pData.isFavorit = false then
-  begin
-    Nodes := DBTree.AVST.Nodes();
-    for pNodeFav in Nodes do
-    begin
-      pDataFav := DBTree.AVST.GetNodeData( pNodeFav );
-      if pDataFav^.Bezeichnung.Equals( 'Favoriten' ) then
-      begin
-        DBTree.AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
-        DBTree.TryExpandNode( pNodeFav );
-        UpdateNodeEntry( Sender );
-      end;
-    end;
-  end;
+  DBTree.MoveNodeToFav( pNode );
+
+  UpdateNodeEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -495,6 +520,61 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.PopupMenu1Popup(Sender: TObject);
+var
+pNode : PVirtualNode;
+begin
+  pNode := DBTree.AVST.FocusedNode;
+  if not Assigned( pNode ) then
+  begin
+    NeuerSchlssel1.Enabled          := false;
+    NeuerOrdner1.Enabled            := true;
+    ZuFavoritenhinzufgen1.Enabled   := false;
+    Ordnerlschen1.Enabled           := false;
+    Schlssellschen1.Enabled         := false;
+  end
+  else
+  begin
+    //Nodelevel = 1 -> Odner der einzelnen Schlüssel
+    if DBTree.AVST.GetNodeLevel( pNode ) = 1 then
+    begin
+      NeuerSchlssel1.Enabled        := true;
+      NeuerOrdner1.Enabled          := true;
+      ZuFavoritenhinzufgen1.Enabled := false;
+      Ordnerlschen1.Enabled         := true;
+      Schlssellschen1.Enabled       := false;
+
+      NeuerOrdner1.Caption := 'Neuer Ordner';
+    end
+    //Nodelevel = 2 -> Schlüssel in einem Ordner
+    else if DBTree.AVST.GetNodeLevel( pNode ) = 2 then
+    begin
+      NeuerSchlssel1.Enabled        := false;
+      NeuerOrdner1.Enabled          := false;
+      ZuFavoritenhinzufgen1.Enabled := true;
+      Ordnerlschen1.Enabled         := false;
+      Schlssellschen1.Enabled       := true;
+
+      NeuerOrdner1.Caption := 'Neuer Ordner';
+    end
+    //Nodelevel = 0 -> HauptOrdner
+    else if DBTree.AVST.GetNodeLevel( pNode ) = 0 then
+    begin
+      NeuerSchlssel1.Enabled := false;
+      //Ordner hinzufügen ist aktiv
+      ZuFavoritenhinzufgen1.Enabled := false;
+      Ordnerlschen1.Enabled := false;
+      Schlssellschen1.Enabled := false;
+
+      NeuerOrdner1.Caption := 'Neuer Unterordner';
+    end;
+
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.SaveDataBtnClick(Sender: TObject);
@@ -617,4 +697,7 @@ begin
 
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
 end.

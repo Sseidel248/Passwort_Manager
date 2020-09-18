@@ -16,6 +16,7 @@ Type
       function AddDBNodeAtStandart : PVirtualNode;
       function AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
       procedure SetNodeDBID( Node : PVirtualNode; ID : Integer );
+      procedure MoveNodeToFav( pNode : PVirtualNode );
       //TODO: AddDBNode bei einem bestimmten Ordner
       function AddDBNodeFolder : PVirtualNode;
       function IsAddedInFav( pNode : PVirtualNode) : Boolean;
@@ -216,6 +217,31 @@ pData : pVTNodeData;
 begin
   pData := AVST.GetNodeData( Node );
   pData^.ID := ID;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TDBTree.MoveNodeToFav( pNode : PVirtualNode );
+var
+pData, pDataFav : pVTNodeData;
+Nodes : TVTVirtualNodeEnumeration;
+pNodeFav : PVirtualNode;
+begin
+  pData := AVST.GetNodeData( pNode );
+  if pData.isFavorit = false then
+  begin
+    Nodes := AVST.Nodes();
+    for pNodeFav in Nodes do
+    begin
+      pDataFav := AVST.GetNodeData( pNodeFav );
+      if pDataFav^.Bezeichnung.Equals( 'Favoriten' ) then
+      begin
+        AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
+        TryExpandNode( pNodeFav );
+      end;
+    end;
+  end;
 end;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
