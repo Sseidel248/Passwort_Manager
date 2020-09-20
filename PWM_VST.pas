@@ -3,25 +3,44 @@ unit PWM_VST;
 interface
 
 uses
-  Vcl.StdCtrls, Vcl.DBCtrls, Virtualtrees, System.SysUtils;
+  Vcl.StdCtrls, Vcl.DBCtrls, Virtualtrees, System.SysUtils, System.Classes,
+  Datasnap.DBClient;
 
 Type
   TDBTree = class(Tobject)
     var AVST : TVirtualStringTree;
     private
       procedure SetFirstData;
-      procedure SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = '');
+      procedure SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = ''); overload;
+      procedure SetData( pNode : PVirtualNode; CDS : TClientDataSet); overload;
+      procedure CreateNodeAfterLoad( CDS : TClientDataSet;
+                                        Nodes : TVTVirtualNodeEnumeration );
+      procedure MoveNodeAfterLoad;
+      procedure CreateFolderNodeAfterLoad( Nodes : TVTVirtualNodeEnumeration;
+                                              FolderNameList : TStringList );
+      function AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
+      function AddDBNodeWithoutDataAt( Nodes : TVTVirtualNodeEnumeration; Ordner : String ) : PVirtualNode;
+
     public
       Constructor Create( VST : TVirtualStringTree ); overload; virtual;
+      procedure FirstOpen;
       function AddDBNodeAtStandart : PVirtualNode;
       function AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
       procedure SetNodeDBID( Node : PVirtualNode; ID : Integer );
       procedure MoveNodeToFav( pNode : PVirtualNode );
-      //TODO: AddDBNode bei einem bestimmten Ordner
       function AddDBNodeFolder : PVirtualNode;
       function IsAddedInFav( pNode : PVirtualNode) : Boolean;
-      procedure FirstOpen;
+      function IsFavFolder( pNode : PVirtualNode ) : Boolean;
+      function IsAddedInAll( pNode : PVirtualNode) : Boolean;
+      function IsAllFolder( pNode : PVirtualNode ) : Boolean;
       procedure TryExpandNode( pNode : PVirtualNode);
+      procedure DelFolder;
+      procedure DelDBNode;
+      procedure RenameDBFolder;
+      procedure LoadNodes( Nodes : TVTVirtualNodeEnumeration;
+                             FolderNameList : TStringList;
+                             CDS : TClientDataSet );
+
   end;
 
 procedure TogglePWSign( Edit : TCustomEdit; hide : Boolean );
@@ -79,7 +98,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-17
 -------------------------------------------------------------------------------}
-function TDBTree.IsAddedInFav( pNode : PVirtualNode) : Boolean;
+function TDBTree.IsAddedInFav( pNode : PVirtualNode ) : Boolean;
 var
 pData : pVTNodeData;
 begin
@@ -92,14 +111,57 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+function TDBTree.IsFavFolder( pNode : PVirtualNode ) : Boolean;
+var
+pData : pVTNodeData;
+begin
+  Result := false;
+  pData := AVST.GetNodeData( pNode );
+  if pData^.Bezeichnung.Equals('Favoriten') then
+  begin
+    Result := true;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+function TDBTree.IsAddedInAll( pNode : PVirtualNode) : Boolean;
+  var
+pData : pVTNodeData;
+begin
+  Result := false;
+  pData := AVST.GetNodeData( pNode.Parent );
+  if pData^.Bezeichnung.Equals( 'Alle' ) then
+  begin
+    Result := true;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+function TDBTree.IsAllFolder( pNode : PVirtualNode ) : Boolean;
+var
+pData : pVTNodeData;
+begin
+  Result := false;
+  pData := AVST.GetNodeData( pNode );
+  if pData^.Bezeichnung.Equals('Alle') then
+  begin
+    Result := true;
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TDBTree.SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = '');
 var
 pData : pVTNodeData;
 begin
-  //TODO: wenn es soweit ist, dann muss dem Node noch die ID des Datensatzen zugewiesen werden damit
-  //dieser den DatenSatz ändert
   if isFolder then
   begin
     pData := AVST.GetNodeData( pNode );
@@ -109,7 +171,6 @@ begin
     pData^.Info := SC_NO_DATA;
     pData^.isFavorit := false;
     pData^.Ordner := SC_FOLDER;
-    pData^.NodeIdx := AVST.AbsoluteIndex( pNode );
     pData^.NodeImageIdx := IC_FOLDER_OPEN;
   end
   else
@@ -121,10 +182,27 @@ begin
     pData^.Info := Main.DBMemoInfo.Text;
     pData^.isFavorit := false;
     pData^.Ordner := SC_FILE;
-    pData^.NodeIdx := AVST.AbsoluteIndex( pNode );
     pData^.NodeImageIdx := IC_KEY;
   end;
 
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TDBTree.SetData( pNode : PVirtualNode; CDS : TClientDataSet);
+var
+pData : pVTNodeData;
+begin
+  pData := AVST.GetNodeData( pNode );
+  pData^.ID           := CDS.Fields[0].AsInteger;
+  pData^.Bezeichnung  := CDS.Fields[1].AsString;
+  pData^.Benutzername := CDS.Fields[2].AsString;
+  pData^.Passwort     := CDS.Fields[3].AsString;
+  pData^.Info         := CDS.Fields[4].AsString;
+  pData^.isFavorit    := CDS.Fields[7].AsBoolean;
+  pData^.Ordner       := SC_FILE;
+  pData^.NodeImageIdx := CDS.Fields[6].AsInteger;
 end;
 
 {------------------------------------------------------------------------------
@@ -163,6 +241,216 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TDBTree.DelFolder;
+var
+pNode, pChild : PVirtualNode;
+pData, pDataChild : pVTNodeData;
+begin
+  pNode := AVST.FocusedNode;
+  pData := AVST.GetNodeData( pNode );
+  if AVST.HasChildren[ pNode ] then
+  begin
+    if MessageDlg( 'Sind Sie sich sicher, dass Sie diesen Ordner löschen wollen?' + sLineBreak
+                + 'Alle darin enthaltenden Schlüssel werden ebenfalls gelöscht!'
+                + sLineBreak + sLineBreak
+                + 'Zu löschender Ordner: "'
+                + pData^.Bezeichnung + '"',
+                mtWarning,
+                [mbYes, mbNo], 0, mbNo ) = 6 then //Ja Btn gedrückt
+    begin
+      while AVST.HasChildren[ pNode ] do
+      begin
+        pChild := AVST.GetFirstChild( pNode );
+        pDataChild := AVST.GetNodeData( pChild );
+        Main.ClientDataSet1.Locate( 'ID', pDataChild^.ID , [] );
+        Main.ClientDataSet1.Delete;
+        //ShowMessage( 'Node mit idx: ' + inttoStr(pDataChild^.NodeIdx) + ' und Dataset mit ID: ' + inttoStr(pDataChild^.ID) + ' gelöscht');
+        AVST.DeleteNode( pChild );
+      end;
+      AVST.DeleteNode( pNode );
+    end;
+  end
+  else
+  begin
+    AVST.DeleteNode( pNode );
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TDBTree.DelDBNode;
+var
+pNode, pChild : PVirtualNode;
+pData : pVTNodeData;
+begin
+  pNode := AVST.FocusedNode;
+  pData := AVST.GetNodeData( pNode );
+  if MessageDlg( 'Sind Sie sich sicher, dass Sie den Schlüssel löschen unwiderruflich wollen?'
+                + sLineBreak + sLineBreak
+                + 'Zu löschender Schlüssel: "'
+                + pData^.Bezeichnung + '"',
+                mtWarning,
+                [mbYes, mbNo], 0, mbNo ) = 6 then //Ja Btn gedrückt
+  begin
+    Main.ClientDataSet1.Locate( 'ID', pData^.ID , [] );
+    Main.ClientDataSet1.Delete;
+    AVST.DeleteNode( pNode );
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TDBTree.RenameDBFolder;
+var
+pNode, pChild : PVirtualNode;
+pDataChild, pData : pVTNodeData;
+Children : TVTVirtualNodeEnumeration;
+begin
+  AVST.TreeOptions.MiscOptions := AVST.TreeOptions.MiscOptions + [toEditable];
+
+  pNode := AVST.FocusedNode;
+  AVST.EditNode( pNode, -1 ); //benennt den Ordner um
+
+  AVST.TreeOptions.MiscOptions := AVST.TreeOptions.MiscOptions - [toEditable];
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+function TDBTree.AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
+var
+pNode : PVirtualNode;
+pData : pVTNodeData;
+pChildNode : PVirtualNode;
+Bezeichnung : String;
+begin
+  AVST.ClearSelection;
+  AVST.Refresh;
+  //suche nach dem Ordner 'Alle'
+  for pNode in Nodes do
+  begin
+    pData := AVST.GetNodeData( pNode );
+    Bezeichnung := pData^.Bezeichnung;
+    if Bezeichnung.Equals('Alle') then
+    begin
+      pChildNode := AVST.AddChild( pNode );
+      break;
+    end;
+  end;
+
+  Result := pChildNode;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+function TDBTree.AddDBNodeWithoutDataAt( Nodes : TVTVirtualNodeEnumeration; Ordner : String ) : PVirtualNode;
+var
+pNode : PVirtualNode;
+pData : pVTNodeData;
+pChildNode : PVirtualNode;
+Bezeichnung : String;
+begin
+  AVST.ClearSelection;
+  AVST.Refresh;
+  //suche nach dem Ordner 'Alle'
+  for pNode in Nodes do
+  begin
+    pData := AVST.GetNodeData( pNode );
+    Bezeichnung := pData^.Bezeichnung;
+    if Bezeichnung.Equals( Ordner ) then
+    begin
+      pChildNode := AVST.AddChild( pNode );
+      break;
+    end;
+  end;
+
+  Result := pChildNode;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TDBTree.CreateFolderNodeAfterLoad( Nodes : TVTVirtualNodeEnumeration;
+                             FolderNameList : TStringList );
+var
+pNode, pHauptNode, pNeuerNode : PVirtualNode;
+pData : pVTNodeData;
+N: Integer;
+vorhanden : Boolean;
+begin
+  //prüfen ob in der Liste ein Ordnername steht der keine passende Node Bezeichnung hat
+  for N := 0 to FoldernameList.Count-1 do
+  begin
+    vorhanden := false;
+    //von den Standartvorhandenen Nodes wird geguckt welche es gibt und welche nicht
+    for pNode in Nodes do
+    begin
+      pData := AVST.GetNodeData( pNode );
+      //damit Nur die Unterordner genommen werden
+      if AVST.GetNodeLevel( pNode ) = 1 then
+      begin
+        //Ordner existiert nicht
+        if FolderNameList[N].Equals( pData^.Bezeichnung ) then
+        begin
+          vorhanden := true;
+        end;
+      end;
+    end;
+    if not vorhanden then
+    begin
+      pHauptNode := AVST.GetFirst();
+      pNeuernode := AVST.AddChild( pHauptNode );
+      SetData( pNeuerNode, true, FolderNameList[N] );
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TDBTree.CreateNodeAfterLoad( CDS : TClientDataSet;
+                                        Nodes : TVTVirtualNodeEnumeration );
+var
+pNodeAll, pNode : PVirtualNode;
+pData : pVTNodeData;
+Ordner : String;
+I : Integer;
+begin
+  for I := 0 to CDS.RecordCount-1 do
+  begin
+    CDS.Locate( 'ID', I+1, [] );
+    Ordner := CDS.Fields[5].AsString;
+    pNode := AddDBNodeWithoutDataAt( Nodes, Ordner );
+    SetData( pNode, CDS );
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TDBTree.MoveNodeAfterLoad;
+begin
+
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TDBTree.LoadNodes( Nodes : TVTVirtualNodeEnumeration;
+                             FolderNameList : TStringList;
+                             CDS : TClientDataSet);
+begin
+  CreateFolderNodeAfterLoad( Nodes, FolderNameList );
+  CreateNodeAfterLoad( CDS, Nodes );
+//  MoveNodeAfterLoad;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 function TDBTree.AddDBNodeAtStandart : PVirtualNode;
@@ -183,7 +471,7 @@ begin
     Bezeichnung := pData^.Bezeichnung;
     if Bezeichnung.Equals('Alle') then
     begin
-      pChildNode := AVST.InsertNode( pNode, amAddChildLast );
+      pChildNode := AVST.AddChild( pNode );
       break;
     end;
   end;
@@ -202,9 +490,8 @@ pData, pChildData : pVTNodeData;
 begin
   AVST.ClearSelection;
   AVST.Refresh;
-  pChildNode := AVST.InsertNode( ParentNode, amAddChildFirst );
+  pChildNode := AVST.AddChild( ParentNode );
   SetData( pChildNode, false );
-
   Result := pChildNode;
 end;
 

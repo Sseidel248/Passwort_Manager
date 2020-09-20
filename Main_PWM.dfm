@@ -17,6 +17,7 @@ object Main: TMain
   ParentBiDiMode = False
   Position = poMainFormCenter
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object MenuPanel: TPanel
@@ -97,86 +98,11 @@ object Main: TMain
         DesignSize = (
           919
           695)
-        object LBezeichnung: TLabel
-          Left = 482
-          Top = 120
-          Width = 76
-          Height = 16
-          Anchors = [akTop, akRight]
-          Caption = 'Bezeichnung:'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ExplicitLeft = 480
-        end
-        object LBenutzername: TLabel
-          Left = 482
-          Top = 173
-          Width = 87
-          Height = 16
-          Anchors = [akTop, akRight]
-          Caption = 'Benutzername:'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ExplicitLeft = 480
-        end
-        object LPasswort: TLabel
-          Left = 482
-          Top = 209
-          Width = 57
-          Height = 16
-          Anchors = [akTop, akRight]
-          Caption = 'Passwort:'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ExplicitLeft = 480
-        end
-        object LInfo: TLabel
-          Left = 482
-          Top = 248
-          Width = 27
-          Height = 16
-          Anchors = [akTop, akRight]
-          Caption = 'Info:'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ExplicitLeft = 480
-        end
-        object LBenutzerDaten: TLabel
-          Left = 482
-          Top = 72
-          Width = 100
-          Height = 19
-          Anchors = [akTop, akRight, akBottom]
-          Caption = 'Benutzerdaten'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -16
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ExplicitLeft = 480
-        end
         object VST: TVirtualStringTree
           Left = 31
-          Top = 73
+          Top = 72
           Width = 420
-          Height = 559
+          Height = 590
           Anchors = [akLeft, akTop, akRight, akBottom]
           DefaultNodeHeight = 24
           Font.Charset = DEFAULT_CHARSET
@@ -193,9 +119,11 @@ object Main: TMain
           PopupMenu = PopupMenu1
           ShowHint = True
           TabOrder = 0
+          OnDblClick = VSTDblClick
           OnGetText = VSTGetText
           OnGetImageIndex = VSTGetImageIndex
           OnGetHint = VSTGetHint
+          OnNewText = VSTNewText
           OnNodeClick = VSTNodeClick
           Columns = <>
         end
@@ -353,81 +281,13 @@ object Main: TMain
           TabOrder = 2
           OnClick = SaveDataBtnClick
         end
-        object SeePWBtn: TBitBtn
-          Left = 830
-          Top = 200
-          Width = 25
-          Height = 25
-          Anchors = [akTop, akRight]
-          Enabled = False
-          Glyph.Data = {
-            F6060000424DF606000000000000360000002800000018000000180000000100
-            180000000000C0060000B5000000B50000000000000000000000FFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE4E4E4E4E4E4FFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBABABA5F5F5F3636360E0E0E0000000000
-            000E0E0E3636365F5F5FBABABAFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB5B5B5383838000000000000000000
-            000000000000000000000000000000000000000000383838B5B5B5FFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6F6F64C4C4C00000000000000
-            00000000000101012828285D5D5D5D5D5D282828010101000000000000000000
-            0000004C4C4CF6F6F6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F03D3D3D0000
-            00000000000000000000212121C3C3C3FFFFFFFFFFFFFFFFFFFFFFFFC3C3C321
-            21210000000000000000000000003D3D3DF0F0F0FFFFFFFFFFFFFFFFFFF0F0F0
-            313131000000000000000000000000212121F0F0F0FFFFFFFDFDFDD4D4D4D4D4
-            D4FDFDFDFFFFFFF0F0F0212121000000000000000000000000313131F0F0F0FF
-            FFFFFFFFFF707070000000000000000000000000010101C3C3C3FFFFFFD6D6D6
-            2C2C2C0000000000002C2C2CD6D6D6FFFFFFC3C3C30101010000000000000000
-            00000000707070FFFFFFD7D7D7050505000000000000000000000000282828FF
-            FFFFFDFDFD2C2C2C0000000000000000000000002C2C2CFDFDFDFFFFFF282828
-            000000000000000000000000050505D7D7D74949490000000000000000000000
-            000000005D5D5DFFFFFFD4D4D4000000000000000000000000000000000000D4
-            D4D4FFFFFF5D5D5D000000000000000000000000000000494949494949000000
-            0000000000000000000000005D5D5DFFFFFFD4D4D40000000000000000000000
-            00000000000000D4D4D4FFFFFF5D5D5D00000000000000000000000000000049
-            4949D7D7D7050505000000000000000000000000282828FFFFFFFDFDFD2C2C2C
-            0000000000000000000000002C2C2CFDFDFDFFFFFF2828280000000000000000
-            00000000050505D7D7D7FFFFFF707070000000000000000000000000010101C3
-            C3C3FFFFFFD6D6D62C2C2C0000000000002C2C2CD6D6D6FFFFFFC3C3C3010101
-            000000000000000000000000707070FFFFFFFFFFFFF0F0F03131310000000000
-            00000000000000212121F0F0F0FFFFFFFDFDFDD4D4D4D4D4D4FDFDFDFFFFFFF0
-            F0F0212121000000000000000000000000313131F0F0F0FFFFFFFFFFFFFFFFFF
-            F0F0F03D3D3D000000000000000000000000212121C3C3C3FFFFFFFFFFFFFFFF
-            FFFFFFFFC3C3C32121210000000000000000000000003D3D3DF0F0F0FFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFF6F6F64C4C4C000000000000000000000000010101
-            2828285D5D5D5D5D5D2828280101010000000000000000000000004C4C4CF6F6
-            F6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB5B5B538383800
-            0000000000000000000000000000000000000000000000000000000000383838
-            B5B5B5FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFBABABA5F5F5F3636360E0E0E0000000000000E0E0E3636365F
-            5F5FBABABAFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE4E4E4E4E4
-            E4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-          TabOrder = 3
-          OnClick = SeePWBtnClick
-        end
         object DelFolderBtn: TBitBtn
-          Left = 301
-          Top = 638
+          Left = 478
+          Top = 624
           Width = 150
           Height = 34
           Anchors = [akRight, akBottom]
           Caption = 'Ordner L'#246'schen'
-          Enabled = False
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -13
@@ -487,11 +347,13 @@ object Main: TMain
             0404040404040404040404040404040404040404040404040404040404040404
             0404040404040404040404040404040404040404040404040404}
           ParentFont = False
-          TabOrder = 4
+          TabOrder = 3
+          Visible = False
+          OnClick = DelFolderBtnClick
         end
         object AddFolderBtn: TBitBtn
-          Left = 31
-          Top = 638
+          Left = 478
+          Top = 584
           Width = 150
           Height = 34
           Anchors = [akLeft, akBottom]
@@ -555,186 +417,360 @@ object Main: TMain
             0800090909090909090909090909090909090900050101010800090909090909
             0909090909090909090909000000000000000909090909090909}
           ParentFont = False
-          TabOrder = 5
+          TabOrder = 4
+          Visible = False
           OnClick = AddFolderBtnClick
         end
-        object HidePWBtn: TBitBtn
-          Left = 861
-          Top = 200
-          Width = 25
-          Height = 25
-          Anchors = [akTop, akRight]
-          Glyph.Data = {
-            F6060000424DF606000000000000360000002800000018000000180000000100
-            180000000000C0060000B5000000B50000000000000000000000FFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDC
-            DCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFF8F8F8F050505AFAFAFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFF8F8F8F000000030303A5A5A5FFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE8E8E8C1C1C19A9A9A7373737878
-            78A8A8A8D9D9D9FDFDFDFFFFFF8F8F8F000000030303A4A4A4FFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC0C0C0424242000000000000
-            0000000000000000000000000000000B0B0B333333000000030303A4A4A4FFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFCACACA3D3D3D00000000
-            0000000000000000000000000000000000000000000000000000000000030303
-            A4A4A4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB8B8B80A0A
-            0A000000000000000000000000393939989898CDCDCDCACACA8E8E8E19191900
-            0000030303A4A4A4FFFFFFEDEDEDB1B1B1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            ADADAD060606000000000000000000000000888888FDFDFDFFFFFFFFFFFFFFFF
-            FF8F8F8F000000030303A4A4A4FFFFFFEDEDED313131030303AFAFAFFFFFFFFF
-            FFFFFFFFFFC3C3C3030303000000000000000000000000656565FFFFFFFFFFFF
-            B2B2B2606060484848000000030303A4A4A4FFFFFFEDEDED3131310000000000
-            00070707C0C0C0FFFFFFFDFDFD3030300000000000000000000000000D0D0DF2
-            F2F2FFFFFF848484000000000000000000030303A4A4A4FFFFFFFFFFFF3D3D3D
-            000000000000000000000000262626FAFAFA9999990000000000000000000000
-            00000000404040FFFFFFECECEC040404000000000000030303A4A4A4FFFFFFFF
-            FFFFFFFFFF3D3D3D000000000000000000000000000000929292242424000000
-            000000000000000000000000696969FFFFFFC2C2C2000000000000030303A4A4
-            A4FFFFFFEDEDEDE1E1E1FFFFFF63636300000000000000000000000000000024
-            24248A8A8A0000000000000000000000000000003A3A3AFFFFFF868686000000
-            030303A4A4A4FFFFFFEDEDED343434EDEDEDFFFFFF4040400000000000000000
-            000000000000008E8E8EF8F8F820202000000000000000000000000005050585
-            8585000000030303A4A4A4FFFFFFEDEDED313131777777FFFFFFF8F8F80F0F0F
-            000000000000000000000000272727FAFAFAFFFFFFAFAFAF0101010000000000
-            00000000000000000000030303A4A4A4FFFFFFFBFBFB7A7A7A9C9C9CFFFFFFFF
-            FFFF757575000000000000000000000000000000B6B6B6FFFFFFFFFFFFFFFFFF
-            989898010101000000000000000000030303A4A4A4FFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFA0A0A0020202000000000000000000020202989898FFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFF929292000000000000030303A4A4A4FFFFFFEDEDED
-            B7B7B7E7E7E7E5E5E5B0B0B04E4E4E000000000000000000000000040404A5A5
-            A5FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF898989000000030303A4A4A4FF
-            FFFFEDEDED313131000000000000000000000000000000000000000000000000
-            282828B8B8B8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8B8B8B0000000303
-            03A4A4A4FFFFFFEEEEEE31313100000000000000000000000000000000000000
-            00002C2C2CA8A8A8FDFDFDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8E8E8E
-            000000030303A4A4A4FFFFFFFFFFFFFFFFFFE2E2E2B6B6B68A8A8A5E5E5E5B5B
-            5B828282A9A9A9D0D0D0FEFEFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFF9B9B9B040404A4A4A4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDCDCFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-          TabOrder = 6
-          OnClick = HidePWBtnClick
+        object AddNewDatasetBtn: TButton
+          Left = 634
+          Top = 585
+          Width = 113
+          Height = 33
+          Caption = 'Neuer Datensatz'
+          TabOrder = 5
+          Visible = False
+          OnClick = AddNewDatasetBtnClick
         end
-        object DBEditBenutzer: TDBEdit
-          Left = 575
-          Top = 170
-          Width = 311
-          Height = 24
+        object AddNodeTest: TButton
+          Left = 634
+          Top = 546
+          Width = 111
+          Height = 33
+          Caption = 'Node Add test'
+          TabOrder = 6
+          Visible = False
+          OnClick = AddNodeTestClick
+        end
+        object GroupBox1: TGroupBox
+          Left = 457
+          Top = 63
+          Width = 459
+          Height = 331
           Anchors = [akTop, akRight]
-          DataField = 'Benutzername'
-          DataSource = DataSource1
+          Caption = 'Benutzerdaten'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
-          Font.Height = -13
+          Font.Height = -16
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
           TabOrder = 7
-          OnClick = DBEditBenutzerClick
-          OnExit = DBEditBenutzerExit
+          DesignSize = (
+            459
+            331)
+          object LInfo: TLabel
+            Left = 14
+            Top = 146
+            Width = 27
+            Height = 16
+            Anchors = [akTop, akRight]
+            Caption = 'Info:'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+          end
+          object LPasswort: TLabel
+            Left = 14
+            Top = 124
+            Width = 57
+            Height = 16
+            Anchors = [akTop, akRight]
+            Caption = 'Passwort:'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+          end
+          object LBenutzername: TLabel
+            Left = 14
+            Top = 85
+            Width = 87
+            Height = 16
+            Anchors = [akTop, akRight]
+            Caption = 'Benutzername:'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+          end
+          object LBezeichnung: TLabel
+            Left = 14
+            Top = 35
+            Width = 76
+            Height = 16
+            Anchors = [akTop, akRight]
+            Caption = 'Bezeichnung:'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+          end
+          object DBMemoInfo: TDBMemo
+            Left = 16
+            Top = 168
+            Width = 433
+            Height = 153
+            Anchors = [akTop, akRight]
+            DataField = 'Info'
+            DataSource = DataSource1
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            ScrollBars = ssHorizontal
+            TabOrder = 0
+            OnClick = DBMemoInfoClick
+            OnExit = DBMemoInfoExit
+          end
+          object DBEditPasswort: TDBEdit
+            Left = 112
+            Top = 115
+            Width = 268
+            Height = 24
+            Anchors = [akTop, akRight]
+            DataField = 'Passwort'
+            DataSource = DataSource1
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 1
+            OnClick = DBEditPasswortClick
+            OnExit = DBEditPasswortExit
+            OnKeyPress = DBEditPasswortKeyPress
+          end
+          object SeePWBtn: TBitBtn
+            Left = 386
+            Top = 120
+            Width = 25
+            Height = 25
+            Anchors = [akTop, akRight]
+            Enabled = False
+            Glyph.Data = {
+              F6060000424DF606000000000000360000002800000018000000180000000100
+              180000000000C0060000B5000000B50000000000000000000000FFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE4E4E4E4E4E4FFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBABABA5F5F5F3636360E0E0E0000000000
+              000E0E0E3636365F5F5FBABABAFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB5B5B5383838000000000000000000
+              000000000000000000000000000000000000000000383838B5B5B5FFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6F6F64C4C4C00000000000000
+              00000000000101012828285D5D5D5D5D5D282828010101000000000000000000
+              0000004C4C4CF6F6F6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0F0F03D3D3D0000
+              00000000000000000000212121C3C3C3FFFFFFFFFFFFFFFFFFFFFFFFC3C3C321
+              21210000000000000000000000003D3D3DF0F0F0FFFFFFFFFFFFFFFFFFF0F0F0
+              313131000000000000000000000000212121F0F0F0FFFFFFFDFDFDD4D4D4D4D4
+              D4FDFDFDFFFFFFF0F0F0212121000000000000000000000000313131F0F0F0FF
+              FFFFFFFFFF707070000000000000000000000000010101C3C3C3FFFFFFD6D6D6
+              2C2C2C0000000000002C2C2CD6D6D6FFFFFFC3C3C30101010000000000000000
+              00000000707070FFFFFFD7D7D7050505000000000000000000000000282828FF
+              FFFFFDFDFD2C2C2C0000000000000000000000002C2C2CFDFDFDFFFFFF282828
+              000000000000000000000000050505D7D7D74949490000000000000000000000
+              000000005D5D5DFFFFFFD4D4D4000000000000000000000000000000000000D4
+              D4D4FFFFFF5D5D5D000000000000000000000000000000494949494949000000
+              0000000000000000000000005D5D5DFFFFFFD4D4D40000000000000000000000
+              00000000000000D4D4D4FFFFFF5D5D5D00000000000000000000000000000049
+              4949D7D7D7050505000000000000000000000000282828FFFFFFFDFDFD2C2C2C
+              0000000000000000000000002C2C2CFDFDFDFFFFFF2828280000000000000000
+              00000000050505D7D7D7FFFFFF707070000000000000000000000000010101C3
+              C3C3FFFFFFD6D6D62C2C2C0000000000002C2C2CD6D6D6FFFFFFC3C3C3010101
+              000000000000000000000000707070FFFFFFFFFFFFF0F0F03131310000000000
+              00000000000000212121F0F0F0FFFFFFFDFDFDD4D4D4D4D4D4FDFDFDFFFFFFF0
+              F0F0212121000000000000000000000000313131F0F0F0FFFFFFFFFFFFFFFFFF
+              F0F0F03D3D3D000000000000000000000000212121C3C3C3FFFFFFFFFFFFFFFF
+              FFFFFFFFC3C3C32121210000000000000000000000003D3D3DF0F0F0FFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFF6F6F64C4C4C000000000000000000000000010101
+              2828285D5D5D5D5D5D2828280101010000000000000000000000004C4C4CF6F6
+              F6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB5B5B538383800
+              0000000000000000000000000000000000000000000000000000000000383838
+              B5B5B5FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFBABABA5F5F5F3636360E0E0E0000000000000E0E0E3636365F
+              5F5FBABABAFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE4E4E4E4E4
+              E4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+            TabOrder = 2
+            OnClick = SeePWBtnClick
+          end
+          object HidePWBtn: TBitBtn
+            Left = 417
+            Top = 120
+            Width = 25
+            Height = 25
+            Anchors = [akTop, akRight]
+            Glyph.Data = {
+              F6060000424DF606000000000000360000002800000018000000180000000100
+              180000000000C0060000B5000000B50000000000000000000000FFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDC
+              DCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFF8F8F8F050505AFAFAFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFF8F8F8F000000030303A5A5A5FFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE8E8E8C1C1C19A9A9A7373737878
+              78A8A8A8D9D9D9FDFDFDFFFFFF8F8F8F000000030303A4A4A4FFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC0C0C0424242000000000000
+              0000000000000000000000000000000B0B0B333333000000030303A4A4A4FFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFCACACA3D3D3D00000000
+              0000000000000000000000000000000000000000000000000000000000030303
+              A4A4A4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB8B8B80A0A
+              0A000000000000000000000000393939989898CDCDCDCACACA8E8E8E19191900
+              0000030303A4A4A4FFFFFFEDEDEDB1B1B1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              ADADAD060606000000000000000000000000888888FDFDFDFFFFFFFFFFFFFFFF
+              FF8F8F8F000000030303A4A4A4FFFFFFEDEDED313131030303AFAFAFFFFFFFFF
+              FFFFFFFFFFC3C3C3030303000000000000000000000000656565FFFFFFFFFFFF
+              B2B2B2606060484848000000030303A4A4A4FFFFFFEDEDED3131310000000000
+              00070707C0C0C0FFFFFFFDFDFD3030300000000000000000000000000D0D0DF2
+              F2F2FFFFFF848484000000000000000000030303A4A4A4FFFFFFFFFFFF3D3D3D
+              000000000000000000000000262626FAFAFA9999990000000000000000000000
+              00000000404040FFFFFFECECEC040404000000000000030303A4A4A4FFFFFFFF
+              FFFFFFFFFF3D3D3D000000000000000000000000000000929292242424000000
+              000000000000000000000000696969FFFFFFC2C2C2000000000000030303A4A4
+              A4FFFFFFEDEDEDE1E1E1FFFFFF63636300000000000000000000000000000024
+              24248A8A8A0000000000000000000000000000003A3A3AFFFFFF868686000000
+              030303A4A4A4FFFFFFEDEDED343434EDEDEDFFFFFF4040400000000000000000
+              000000000000008E8E8EF8F8F820202000000000000000000000000005050585
+              8585000000030303A4A4A4FFFFFFEDEDED313131777777FFFFFFF8F8F80F0F0F
+              000000000000000000000000272727FAFAFAFFFFFFAFAFAF0101010000000000
+              00000000000000000000030303A4A4A4FFFFFFFBFBFB7A7A7A9C9C9CFFFFFFFF
+              FFFF757575000000000000000000000000000000B6B6B6FFFFFFFFFFFFFFFFFF
+              989898010101000000000000000000030303A4A4A4FFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFA0A0A0020202000000000000000000020202989898FFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFF929292000000000000030303A4A4A4FFFFFFEDEDED
+              B7B7B7E7E7E7E5E5E5B0B0B04E4E4E000000000000000000000000040404A5A5
+              A5FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF898989000000030303A4A4A4FF
+              FFFFEDEDED313131000000000000000000000000000000000000000000000000
+              282828B8B8B8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8B8B8B0000000303
+              03A4A4A4FFFFFFEEEEEE31313100000000000000000000000000000000000000
+              00002C2C2CA8A8A8FDFDFDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8E8E8E
+              000000030303A4A4A4FFFFFFFFFFFFFFFFFFE2E2E2B6B6B68A8A8A5E5E5E5B5B
+              5B828282A9A9A9D0D0D0FEFEFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFF9B9B9B040404A4A4A4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDCDCDCFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+            TabOrder = 3
+            OnClick = HidePWBtnClick
+          end
+          object DBEditBenutzer: TDBEdit
+            Left = 112
+            Top = 85
+            Width = 331
+            Height = 24
+            Anchors = [akTop, akRight]
+            DataField = 'Benutzername'
+            DataSource = DataSource1
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 4
+            OnClick = DBEditBenutzerClick
+            OnExit = DBEditBenutzerExit
+            OnKeyPress = DBEditBenutzerKeyPress
+          end
+          object DBCheckBox1: TDBCheckBox
+            Left = 124
+            Top = 62
+            Width = 152
+            Height = 17
+            Anchors = [akTop, akRight]
+            Caption = 'Als Favorit markieren'
+            DataField = 'isFavorit'
+            DataSource = DataSource1
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 5
+            ValueChecked = 'Ja'
+            ValueUnchecked = 'Nein'
+            OnMouseUp = DBCheckBox1MouseUp
+          end
+          object DBEditBezeichnung: TDBEdit
+            Left = 112
+            Top = 32
+            Width = 331
+            Height = 24
+            Anchors = [akTop, akRight]
+            DataField = 'Bezeichnung'
+            DataSource = DataSource1
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 6
+            OnClick = DBEditBezeichnungClick
+            OnExit = DBEditBezeichnungExit
+            OnKeyPress = DBEditBezeichnungKeyPress
+          end
         end
-        object DBEditBezeichnung: TDBEdit
-          Left = 575
-          Top = 117
-          Width = 313
-          Height = 24
-          Anchors = [akTop, akRight]
-          DataField = 'Bezeichnung'
-          DataSource = DataSource1
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 8
-          OnClick = DBEditBezeichnungClick
-          OnExit = DBEditBezeichnungExit
-        end
-        object DBEditPasswort: TDBEdit
-          Left = 575
-          Top = 200
-          Width = 245
-          Height = 24
-          DataField = 'Passwort'
-          DataSource = DataSource1
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          TabOrder = 9
-          OnClick = DBEditPasswortClick
-          OnExit = DBEditPasswortExit
-        end
-        object DBMemoInfo: TDBMemo
-          Left = 482
-          Top = 270
-          Width = 407
-          Height = 129
-          DataField = 'Info'
-          DataSource = DataSource1
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ScrollBars = ssHorizontal
-          TabOrder = 10
-          OnClick = DBMemoInfoClick
-          OnExit = DBMemoInfoExit
-        end
-        object DBCheckBox1: TDBCheckBox
-          Left = 589
-          Top = 147
-          Width = 126
-          Height = 17
-          Caption = 'Als Favorit markieren'
-          DataField = 'isFavorit'
-          DataSource = DataSource1
-          TabOrder = 11
-          ValueChecked = 'Ja'
-          ValueUnchecked = 'Nein'
-          OnMouseUp = DBCheckBox1MouseUp
-        end
-        object AddNewDatasetBtn: TButton
-          Left = 320
-          Top = 544
-          Width = 113
-          Height = 33
-          Caption = 'Neuer Datensatz'
-          TabOrder = 12
-          OnClick = AddNewDatasetBtnClick
-        end
-        object Button1: TButton
-          Left = 320
-          Top = 583
+        object DelDataSetBtn: TButton
+          Left = 634
+          Top = 624
           Width = 113
           Height = 33
           Caption = 'Datensatz l'#246'schen'
-          TabOrder = 13
-          OnClick = Button1Click
-        end
-        object AddNodeTest: TButton
-          Left = 478
-          Top = 413
-          Width = 89
-          Height = 33
-          Caption = 'Node Add test'
-          TabOrder = 14
+          TabOrder = 8
           Visible = False
-          OnClick = AddNodeTestClick
+          OnClick = DelDataSetBtnClick
+        end
+        object loadTest: TButton
+          Left = 478
+          Top = 546
+          Width = 150
+          Height = 32
+          Caption = 'Test: Laden'
+          TabOrder = 9
+          OnClick = loadTestClick
+        end
+        object saveTest: TButton
+          Left = 478
+          Top = 504
+          Width = 150
+          Height = 36
+          Caption = 'Test: Speicher in Stream'
+          TabOrder = 10
+          OnClick = saveTestClick
         end
       end
       object Options: TTabSheet
@@ -770,57 +806,60 @@ object Main: TMain
   object ClientDataSet1: TClientDataSet
     PersistDataPacket.Data = {
       0B0100009619E0BD0100000018000000080000000000030000000B0102494404
-      0001000200010007535542545950450200490008004175746F696E63000B4265
-      7A656963686E756E6701004900000001000557494454480200020040000C4265
-      6E75747A65726E616D6501004900000001000557494454480200020040000850
-      617373776F7274010049000000010005574944544802000200320004496E666F
-      020049000000010005574944544802000200FF00064F72646E65720100490000
-      000100055749445448020002002000094E6F6465496E64657804000100000000
-      000E4E6F6465496D616765496E646578040001000000000001000C4155544F49
+      0001001200010007535542545950450200490008004175746F696E63000B4265
+      7A656963686E756E6701004900100001000557494454480200020040000C4265
+      6E75747A65726E616D6501004900100001000557494454480200020040000850
+      617373776F7274010049001000010005574944544802000200320004496E666F
+      020049001000010005574944544802000200FF00064F72646E65720100490010
+      0001000557494454480200020020000E4E6F6465496D616765496E6465780400
+      0100100000000969734661766F726974020003001000000001000C4155544F49
       4E4356414C55450400010001000000}
     Active = True
     Aggregates = <>
     FieldDefs = <
       item
         Name = 'ID'
-        Attributes = [faReadonly]
+        Attributes = [faReadonly, faUnNamed]
         DataType = ftAutoInc
       end
       item
         Name = 'Bezeichnung'
+        Attributes = [faUnNamed]
         DataType = ftString
         Size = 64
       end
       item
         Name = 'Benutzername'
+        Attributes = [faUnNamed]
         DataType = ftString
         Size = 64
       end
       item
         Name = 'Passwort'
+        Attributes = [faUnNamed]
         DataType = ftString
         Size = 50
       end
       item
         Name = 'Info'
+        Attributes = [faUnNamed]
         DataType = ftString
         Size = 255
       end
       item
         Name = 'Ordner'
+        Attributes = [faUnNamed]
         DataType = ftString
         Size = 32
       end
       item
-        Name = 'NodeIndex'
-        DataType = ftInteger
-      end
-      item
         Name = 'NodeImageIndex'
+        Attributes = [faUnNamed]
         DataType = ftInteger
       end
       item
         Name = 'isFavorit'
+        Attributes = [faUnNamed]
         DataType = ftBoolean
       end>
     IndexDefs = <>
@@ -829,50 +868,42 @@ object Main: TMain
     Left = 272
     Top = 152
     object ClientDataSet1ID: TAutoIncField
-      AutoGenerateValue = arAutoInc
       DisplayWidth = 10
       FieldName = 'ID'
+      ReadOnly = True
     end
     object ClientDataSet1Bezeichnung: TStringField
-      AutoGenerateValue = arDefault
       DisplayWidth = 13
       FieldName = 'Bezeichnung'
       Size = 64
     end
     object ClientDataSet1Benutzername: TStringField
-      AutoGenerateValue = arDefault
-      DisplayWidth = 14
+      DisplayWidth = 13
       FieldName = 'Benutzername'
       Size = 64
     end
     object ClientDataSet1Passwort: TStringField
-      DisplayWidth = 13
+      DisplayWidth = 10
       FieldName = 'Passwort'
       Size = 50
     end
     object ClientDataSet1Info: TStringField
-      AutoGenerateValue = arDefault
       DisplayWidth = 9
       FieldName = 'Info'
       Size = 255
     end
-    object ClientDataSet1isFavorit: TBooleanField
-      DisplayWidth = 6
-      FieldKind = fkInternalCalc
-      FieldName = 'isFavorit'
-    end
     object ClientDataSet1Ordner: TStringField
-      DisplayWidth = 10
+      DisplayWidth = 14
       FieldName = 'Ordner'
       Size = 32
-    end
-    object ClientDataSet1NodeIndex: TIntegerField
-      DisplayWidth = 10
-      FieldName = 'NodeIndex'
     end
     object ClientDataSet1NodeImageIndex: TIntegerField
       DisplayWidth = 13
       FieldName = 'NodeImageIndex'
+    end
+    object ClientDataSet1isFavorit: TBooleanField
+      DisplayWidth = 6
+      FieldName = 'isFavorit'
     end
   end
   object DataSource1: TDataSource
@@ -1493,10 +1524,12 @@ object Main: TMain
     Top = 344
     object NeuerSchlssel1: TMenuItem
       Caption = 'Neuer Schl'#252'ssel'
+      ShortCut = 16462
       OnClick = NeuerSchlssel1Click
     end
     object NeuerOrdner1: TMenuItem
       Caption = 'Neuer Ordner'
+      ShortCut = 49230
       OnClick = NeuerOrdner1Click
     end
     object N1: TMenuItem
@@ -1504,15 +1537,28 @@ object Main: TMain
     end
     object ZuFavoritenhinzufgen1: TMenuItem
       Caption = 'Zu Favoriten hinzuf'#252'gen'
+      ShortCut = 16454
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object OrdnerUmbenennen1: TMenuItem
+      Caption = 'Ordner umbenennen'
+      ShortCut = 113
+      OnClick = OrdnerUmbenennen1Click
     end
     object N2: TMenuItem
       Caption = '-'
     end
     object Schlssellschen1: TMenuItem
       Caption = 'Schl'#252'ssel l'#246'schen'
+      ShortCut = 46
+      OnClick = Schlssellschen1Click
     end
     object Ordnerlschen1: TMenuItem
       Caption = 'Ordner l'#246'schen'
+      ShortCut = 16430
+      OnClick = Ordnerlschen1Click
     end
   end
 end

@@ -19,7 +19,6 @@ type
          Info : String;
          isFavorit : Boolean;
          Ordner : String;
-         NodeIdx : Integer;
          NodeImageIdx : Integer;
      end;
 
@@ -62,7 +61,6 @@ type
     LInfo: TLabel;
     SeePWBtn: TBitBtn;
     HidePWBtn: TBitBtn;
-    LBenutzerDaten: TLabel;
     SaveDataBtn: TBitBtn;
     AddFolderBtn: TBitBtn;
     DelFolderBtn: TBitBtn;
@@ -75,17 +73,8 @@ type
     DBEditPasswort: TDBEdit;
     DBMemoInfo: TDBMemo;
     DBCheckBox1: TDBCheckBox;
-    ClientDataSet1ID: TAutoIncField;
-    ClientDataSet1Bezeichnung: TStringField;
-    ClientDataSet1Benutzername: TStringField;
-    ClientDataSet1Passwort: TStringField;
-    ClientDataSet1Info: TStringField;
-    ClientDataSet1isFavorit: TBooleanField;
-    ClientDataSet1Ordner: TStringField;
-    ClientDataSet1NodeIndex: TIntegerField;
-    ClientDataSet1NodeImageIndex: TIntegerField;
     AddNewDatasetBtn: TButton;
-    Button1: TButton;
+    DelDataSetBtn: TButton;
     ImageList1: TImageList;
     AddNodeTest: TButton;
     PopupMenu1: TPopupMenu;
@@ -96,6 +85,19 @@ type
     N2: TMenuItem;
     Ordnerlschen1: TMenuItem;
     Schlssellschen1: TMenuItem;
+    GroupBox1: TGroupBox;
+    N3: TMenuItem;
+    OrdnerUmbenennen1: TMenuItem;
+    loadTest: TButton;
+    ClientDataSet1ID: TAutoIncField;
+    ClientDataSet1Bezeichnung: TStringField;
+    ClientDataSet1Benutzername: TStringField;
+    ClientDataSet1Passwort: TStringField;
+    ClientDataSet1Info: TStringField;
+    ClientDataSet1Ordner: TStringField;
+    ClientDataSet1NodeImageIndex: TIntegerField;
+    ClientDataSet1isFavorit: TBooleanField;
+    saveTest: TButton;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -103,7 +105,7 @@ type
     procedure SaveDataBtnClick(Sender: TObject);
     procedure AddFolderBtnClick(Sender: TObject);
     procedure AddNewDatasetBtnClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure DelDataSetBtnClick(Sender: TObject);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -129,6 +131,19 @@ type
     procedure NeuerOrdner1Click(Sender: TObject);
     procedure NeuerSchlssel1Click(Sender: TObject);
     procedure PopupMenu1Popup(Sender: TObject);
+    procedure DelFolderBtnClick(Sender: TObject);
+    procedure Ordnerlschen1Click(Sender: TObject);
+    procedure Schlssellschen1Click(Sender: TObject);
+    procedure OrdnerUmbenennen1Click(Sender: TObject);
+    procedure VSTNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; NewText: string);
+    procedure DBEditBezeichnungKeyPress(Sender: TObject; var Key: Char);
+    procedure DBEditBenutzerKeyPress(Sender: TObject; var Key: Char);
+    procedure DBEditPasswortKeyPress(Sender: TObject; var Key: Char);
+    procedure VSTDblClick(Sender: TObject);
+    procedure saveTestClick(Sender: TObject);
+    procedure loadTestClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     AFonts : TFonts;
     DBTree : TDBTree;
@@ -136,6 +151,10 @@ type
     procedure InitNewData( pNode : pVirtualNode = nil; AddedInFav : Boolean = false);
     procedure UpdateNodeEntry( Sender : TObject );
     procedure EnableDBFields( enable : Boolean );
+    procedure UpdateChildrenEntries;
+    procedure LoadPMPK( ArchivFileName : String);
+    procedure SavePMPK;
+    procedure LoadDBNodeStructur;
     { Private-Deklarationen }
   public
     { Public-Deklarationen }
@@ -145,7 +164,13 @@ var
   Main: TMain;
   XMLFile : String;
 
+const
+  PM_PW = 'pW!M3Pw1gH,A!<3D';
+
 implementation
+
+uses
+  ZipForge, Login_PWM;
 
 {$R *.dfm}
 
@@ -226,6 +251,163 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.LoadPMPK( ArchivFileName : String );
+var
+  archiver : TZipForge;
+  ArchivPath : String;
+  FileForArchiv : String;
+  archivItem : TZFArchiveItem;
+  stream : TMemoryStream;
+begin
+  //Ort der Gespeicherten und verschlüsselten Datei
+  ArchivPath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
+  // Create an instance of the TZipForge class
+  archiver := TZipForge.Create(nil);
+  //erzeugt den Stream aus dem die DB aufgebaut wird
+  stream := TMemoryStream.Create;
+  with archiver do
+  begin
+    // Set the name of the archive file we want to create
+    //TODO: später soll abhängig vom User die jeweilige PMPK Datei genommen werden
+    FileName := ArchivPath + ArchivFileName;
+
+    OpenArchive(fmOpenReadWrite);
+    // Set base (default) directory for all archive operations
+    BaseDir := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
+    // Set encryption algorithm and password
+    EncryptionMethod := caAES_256;
+    Password := 'pW!M3Pw1gH,A!<3D';
+    // by specifying its absolute path
+    if FindFirst('*.xml', archivItem, faAnyFile-faDirectory) then
+    begin
+      stream.Clear;
+      stream.Position := 0;
+      ExtractToStream( archivItem.FileName, stream );
+      stream.Position := 0;
+      ClientDataSet1.LoadFromStream( stream );
+    end;
+    CloseArchive();
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.loadTestClick(Sender: TObject);
+begin
+  //TODO: Laden so implementieren das die Nodes erstellt werden
+  LoadPMPK('test.PMPK');
+  //soll die Node entsprechend der Datenbank erzeugen
+  LoadDBNodeStructur;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TMain.LoadDBNodeStructur;
+var
+Nodes : TVTVirtualNodeEnumeration;
+FolderNameList : TStringList;
+  I: Integer;
+begin
+  Nodes := DBTree.AVST.Nodes();
+
+  //Sammeln aller Ordnernamen in der Datenbank
+  FolderNameList := TStringList.Create;
+  for I := 0 to ClientDataSet1.RecordCount-1 do
+  begin
+    ClientDataSet1.Locate( 'ID', I+1, [] );
+    FolderNameList.Add( ClientDataSet1Ordner.AsString );
+  end;
+
+  DBTree.LoadNodes( Nodes, FolderNameList, ClientDataSet1 );
+
+  DBTree.AVST.FullExpand();
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.SavePMPK;
+var
+  archiver : TZipForge;
+  ArchivFile : String;
+  FileForArchiv : String;
+  SavePath : String;
+  FileToSave : String;
+  stream : TMemoryStream;
+begin
+  //stream erzeugen worin der CDS gespeichert wird
+  stream := TMemoryStream.Create;
+  stream.Clear;
+  stream.Position := 0;
+  ClientDataSet1.SaveToStream( stream );
+  stream.Position := 0;
+
+  //erzeugen des Speicherpfades (dieser ist abhängig vvon der .Exe)
+  SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\' ;
+  if not DirectoryExists( SavePath ) then
+    ForceDirectories( SavePath );
+
+  FileForArchiv := 'test.xml';
+  // Create an instance of the TZipForge class
+  archiver := TZipForge.Create(nil);
+  with archiver do
+  begin
+    // Name des Archives was wir erstellen wollen
+    //TODO: Name des Archives später als Kombi aus Username und irgendwas
+    FileName := SavePath + 'test.PMPK';
+    // Because we create a new archive,
+    // we set Mode to fmCreate
+    OpenArchive(fmCreate);
+    // Setzen des Verzeichnisses in dem das Archiv platziert wird
+    BaseDir := SavePath;
+    // Set encryption algorithm and password
+    EncryptionMethod := caAES_256;
+    Password := 'pW!M3Pw1gH,A!<3D';
+    //hinzufügen einer Datei
+    AddFromStream( FileForArchiv, stream);
+    //AddFiles( FileForArchiv );
+    ShowMessage( FileForArchiv + ' wurde in ' + FileName + ' gepackt' );
+    CloseArchive();
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.saveTestClick(Sender: TObject);
+begin
+  SavePMPK;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.UpdateChildrenEntries;
+var
+pData, pDataChild : pVTNodeData;
+pNode, pChild : PVirtualNode;
+Children : TVTVirtualNodeEnumeration;
+begin
+  pNode := DBTree.AVST.FocusedNode;
+  if DBTree.AVST.HasChildren[ pNode ] then
+  begin
+    pData := DBTree.AVST.GetNodeData( pNode );
+    Children := DBTree.AVST.ChildNodes( pNode ); //holt alle Children von den umbenannten Ordner
+    for pChild in Children do
+    begin
+      pDataChild := DBTree.AVST.GetNodeData( pChild );
+      ClientDataSet1.Locate('ID', pDataChild^.ID, [] );     //sucht den passenden Datensatz
+      ClientDataSet1.Edit;                                  //stellt die DB auf editieren
+      ClientDataSet1Ordner.AsString := pData^.Bezeichnung;  //und benennt sie hier neu
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.EnableDBFields( enable : Boolean );
@@ -298,8 +480,6 @@ begin
     pNodeData.Passwort := ClientDataSet1Passwort.AsString;
     pNodeData.Info := ClientDataSet1Info.AsString;
     pNodeData.isFavorit := ClientDataSet1isFavorit.AsBoolean;
-    pNodeData.NodeIdx := DBTree.AVST.AbsoluteIndex( pNode );
-    ClientDataSet1NodeIndex.AsString := IntToStr( pNodeData.NodeIdx );
 
     pNodeData.Ordner := ParentData.Bezeichnung;
     ClientDataSet1Ordner.AsString :=  pNodeData.Ordner;
@@ -324,6 +504,23 @@ Author: Seidel 2020-09-18
 procedure TMain.NeuerSchlssel1Click(Sender: TObject);
 begin
   AddNewDataSet;
+  EnableDBFields( false );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.Ordnerlschen1Click(Sender: TObject);
+begin
+  DBtree.DelFolder;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.OrdnerUmbenennen1Click(Sender: TObject);
+begin
+  DBTree.RenameDBFolder;
 end;
 
 {------------------------------------------------------------------------------
@@ -345,9 +542,18 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
-procedure TMain.Button1Click(Sender: TObject);
+procedure TMain.DelDataSetBtnClick(Sender: TObject);
 begin
-  ClientDataSet1.Delete;
+  DBTree.DelDBNode;
+  EnableDBFields( false );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.DelFolderBtnClick(Sender: TObject);
+begin
+  DBTree.DelFolder;
 end;
 
 {------------------------------------------------------------------------------
@@ -409,6 +615,19 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBenutzerKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
+    DBEditPasswort.SetFocus;
+  end;
+  DBTree.AVST.Refresh;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditBezeichnungClick(Sender: TObject);
@@ -423,6 +642,19 @@ procedure TMain.DBEditBezeichnungExit(Sender: TObject);
 begin
   UpdateNodeEntry( Sender );
 
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBezeichnungKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
+    DBEditBenutzer.SetFocus;
+  end;
+  DBTree.AVST.Refresh;
 end;
 
 {------------------------------------------------------------------------------
@@ -442,6 +674,19 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditPasswortKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
+    VST.SetFocus;
+  end;
+  DBTree.AVST.Refresh;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBMemoInfoClick(Sender: TObject);
@@ -455,6 +700,7 @@ Author: Seidel 2020-09-16
 procedure TMain.DBMemoInfoExit(Sender: TObject);
 begin
   UpdateNodeEntry( Sender );
+  DBTree.AVST.Refresh;
 end;
 
 {------------------------------------------------------------------------------
@@ -471,34 +717,66 @@ Author: Seidel 2020-09-06
 procedure TMain.FormCreate(Sender: TObject);
 var
 opendialog : TFileOpenDialog;
+test : Integer;
 begin
-
   Application.HintHidePause := 10000;
 
-  DBTree := TDBTree.Create( VST );
-  DBTree.Create( VST );
-  DBTree.FirstOpen;
-
-  XMLFile := 'D:\Delphi Embarcadero\Passwort_Manager\DB\Table5.xml';
-  //XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\Table5.xml';
-
-  if not FileExists(XMLFile) then
+  Login := TLogin.Create(nil);
+  test :=  Login.ShowModal;
+  test := Login.ModalResult;
+  if test = mrCancel then
+    Application.Terminate
+  else
   begin
-    opendialog := TFileOpenDialog.Create( nil );
-    try
-      openDialog.Title := 'Bitte Datenbank *.xml auswählen';
-      if opendialog.Execute then
-        XMLFile := opendialog.FileName;
-    finally
-      opendialog.Free;
+
+    DBTree := TDBTree.Create( VST );
+    DBTree.Create( VST );
+    DBTree.FirstOpen;
+
+    XMLFile := 'D:\Delphi Embarcadero\Passwort_Manager\DB\PMTable.xml';
+    //XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\PMTable6.xml';
+  //
+    if not FileExists(XMLFile) then
+    begin
+      opendialog := TFileOpenDialog.Create( nil );
+      try
+        openDialog.Title := 'Bitte Datenbank *.xml auswählen';
+        if opendialog.Execute then
+          XMLFile := opendialog.FileName;
+      finally
+        opendialog.Free;
+      end;
     end;
+
+    ClientDataSet1.LoadFromFile( {ClientDataSet1.FileName}XMLFile );
+
+  //  with ClientDataSet1.FieldDefs do
+  //  begin
+  //    clear;
+  //    Add( 'ID', ftAutoInc, 0, true );
+  //    Add( 'Bezeichnung', ftString, 64 );
+  //    Add( 'Benutzername', ftString, 64 );
+  //    Add( 'Passwort', ftString, 64 );
+  //    Add( 'Info', ftString, 255 );
+  //    Add( 'Ordner', ftString, 32 );
+  //    Add( 'NodeIndex', ftInteger, 0 );
+  //    Add( 'NodeImageIndex', ftInteger, 0 );
+  //    Add( 'isFavorit', ftBoolean, 0 );
+  //  end;
+  //  ClientDataSet1.CreateDataSet;
+
+    EnableDBFields( false );
   end;
+end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-19
+-------------------------------------------------------------------------------}
+procedure TMain.FormShow(Sender: TObject);
+begin
+  //TODO: der Speichername und Ladename soll abhängig von den Anmeldedialog sein
+  //hier soll der Anmeldedialog hin!!
 
-  //{ClientDataSet1.FileName}XMLFile := 'D:\Delphi embarcadero\Passwort_Manager\DB\Versuch4.xml';
-  ClientDataSet1.LoadFromFile( {ClientDataSet1.FileName}XMLFile );
-
-  EnableDBFields( false );
 end;
 
 {------------------------------------------------------------------------------
@@ -534,16 +812,32 @@ begin
     ZuFavoritenhinzufgen1.Enabled   := false;
     Ordnerlschen1.Enabled           := false;
     Schlssellschen1.Enabled         := false;
+    OrdnerUmbenennen1.Enabled       := false;
   end
   else
   begin
-    //Nodelevel = 1 -> Odner der einzelnen Schlüssel
+    //Nodelevel = 1 -> Ordner der einzelnen Schlüssel
     if DBTree.AVST.GetNodeLevel( pNode ) = 1 then
     begin
+      if DBTree.IsFavFolder( pNode ) then
+      begin
+        Ordnerlschen1.Enabled       := false;
+        OrdnerUmbenennen1.Enabled   := false;
+      end
+      else if DBTree.IsAllFolder( pNode ) then
+      begin
+        Ordnerlschen1.Enabled       := false;
+        OrdnerUmbenennen1.Enabled   := false;
+      end
+      else
+      begin
+        Ordnerlschen1.Enabled       := true;
+        OrdnerUmbenennen1.Enabled   := true;
+      end;
+
       NeuerSchlssel1.Enabled        := true;
       NeuerOrdner1.Enabled          := true;
       ZuFavoritenhinzufgen1.Enabled := false;
-      Ordnerlschen1.Enabled         := true;
       Schlssellschen1.Enabled       := false;
 
       NeuerOrdner1.Caption := 'Neuer Ordner';
@@ -556,6 +850,7 @@ begin
       ZuFavoritenhinzufgen1.Enabled := true;
       Ordnerlschen1.Enabled         := false;
       Schlssellschen1.Enabled       := true;
+      OrdnerUmbenennen1.Enabled       := false;
 
       NeuerOrdner1.Caption := 'Neuer Ordner';
     end
@@ -567,6 +862,7 @@ begin
       ZuFavoritenhinzufgen1.Enabled := false;
       Ordnerlschen1.Enabled := false;
       Schlssellschen1.Enabled := false;
+      OrdnerUmbenennen1.Enabled       := false;
 
       NeuerOrdner1.Caption := 'Neuer Unterordner';
     end;
@@ -579,8 +875,16 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.SaveDataBtnClick(Sender: TObject);
 begin
-//TODO: der Pfad zu der Datei kann in ClientDataSet1.FileName gespeichert werden!
-  ClientDataSet1.SaveToFile( {ClientDataSet1.FileName}XMLFile , dfXML);
+  SavePMPK;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.Schlssellschen1Click(Sender: TObject);
+begin
+  DBTree.DelDBNode;
+  EnableDBFields( false );
 end;
 
 {------------------------------------------------------------------------------
@@ -594,6 +898,14 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.VSTDblClick(Sender: TObject);
+begin
+  DBEditBezeichnung.SetFocus;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -602,13 +914,12 @@ procedure TMain.VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
 var
 pData : pVTNodeData;
 begin
-  pData := VST.GetNodeData( Node );
+  pData := DBTree.AVST.GetNodeData( Node );
   HintText := 'ID: ' + IntToStr( pData^.ID ) + sLineBreak
               +'Bezeichnung: ' + pData^.Bezeichnung + sLineBreak
               +'Benutzername: ' +  pData^.Benutzername + sLineBreak
               +'Passwort: ' +  pData^.Passwort + sLineBreak
               +'Ordner: ' +  pData^.Ordner + sLineBreak
-              +'Nodeindex: ' +  IntToStr ( pData^.NodeIdx ) + sLineBreak
               +'Node-Imageindex: ' + IntToStr (  pData^.NodeImageIdx ) + sLineBreak
               +'Favorit: ' +  BoolToStr ( pData^.isFavorit, true );
 end;
@@ -624,10 +935,10 @@ var
 pData, pParentData :pVTNodeData;
 begin
   //TODO:Wenn es geht ein paar Sachen auslagern
-  pData := VST.GetNodeData( Node );
+  pData := DBTree.AVST.GetNodeData( Node );
   if kind in [ikNormal,ikSelected] then
   begin
-    if {VST.HasChildren[Node]}VST.GetNodeLevel( Node ) <= 1 then
+    if {VST.HasChildren[Node]}DBTree.AVST.GetNodeLevel( Node ) <= 1 then
     begin
       if VST.HasChildren[Node] then
       begin
@@ -647,7 +958,7 @@ begin
     else
     begin
       //Abfrage ob der Eltern Node Favoriten heißt
-      pParentData := VST.GetNodeData( Node.Parent );
+      pParentData := DBTree.AVST.GetNodeData( Node.Parent );
       if pParentData.Bezeichnung.Equals('Favoriten') then
         ImageIndex := IC_FAVORIT
       else
@@ -670,11 +981,24 @@ procedure TMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
 var
 pData :pVTNodeData;
 begin
-  pData := VST.GetNodeData( Node );
+  pData := DBTree.AVST.GetNodeData( Node );
   if pData^.Bezeichnung.Equals('Bezeichnung eingeben...') then
     CellText := '*Neuer Schlüssel'
   else
     CellText := pData^.Bezeichnung;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.VSTNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Column: TColumnIndex; NewText: string);
+var
+pData : pVTNodeData;
+begin
+  pData := DBTree.AVST.GetNodeData( Node );
+  pData^.Bezeichnung := NewText;
+  UpdateChildrenEntries;
 end;
 
 {------------------------------------------------------------------------------
