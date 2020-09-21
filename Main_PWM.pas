@@ -98,6 +98,7 @@ type
     ClientDataSet1NodeImageIndex: TIntegerField;
     ClientDataSet1isFavorit: TBooleanField;
     saveTest: TButton;
+    LHallo: TLabel;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -119,9 +120,6 @@ type
     procedure SeePWBtnClick(Sender: TObject);
     procedure DBMemoInfoClick(Sender: TObject);
     procedure DBEditBezeichnungExit(Sender: TObject);
-    procedure DBEditBezeichnungClick(Sender: TObject);
-    procedure DBEditBenutzerClick(Sender: TObject);
-    procedure DBEditPasswortClick(Sender: TObject);
     procedure DBEditBenutzerExit(Sender: TObject);
     procedure DBEditPasswortExit(Sender: TObject);
     procedure DBMemoInfoExit(Sender: TObject);
@@ -144,6 +142,12 @@ type
     procedure saveTestClick(Sender: TObject);
     procedure loadTestClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure DBEditBezeichnungDblClick(Sender: TObject);
+    procedure DBEditBenutzerDblClick(Sender: TObject);
+    procedure DBEditPasswortDblClick(Sender: TObject);
+    procedure SuchenEditChange(Sender: TObject);
+    procedure SuchenEditExit(Sender: TObject);
+    procedure SuchenEditClick(Sender: TObject);
   private
     AFonts : TFonts;
     DBTree : TDBTree;
@@ -153,7 +157,8 @@ type
     procedure EnableDBFields( enable : Boolean );
     procedure UpdateChildrenEntries;
     procedure LoadPMPK( ArchivFileName : String);
-    procedure SavePMPK;
+    procedure SavePMPK; overload;
+    procedure SavePMPK(FileForArchiv : String); overload;
     procedure LoadDBNodeStructur;
     { Private-Deklarationen }
   public
@@ -170,7 +175,7 @@ const
 implementation
 
 uses
-  ZipForge, Login_PWM;
+  ZipForge, Login_PWM, Global_PWM;
 
 {$R *.dfm}
 
@@ -224,6 +229,8 @@ pData : pVTNodeData;
 begin
   pNode := DBTree.AVST.FocusedNode;
   pData := DBTree.AVST.GetNodeData( pNode );
+
+  ClientDataSet1.Edit;
 
   if (Sender as TComponent).Name = 'DBEditBezeichnung' then
   begin
@@ -335,6 +342,70 @@ var
   archiver : TZipForge;
   ArchivFile : String;
   FileForArchiv : String;
+  IniForArchiv : String;
+  SavePath : String;
+  FileToSave : String;
+  stream : TMemoryStream;
+  IniList : TStringlist;
+begin
+  //stream erzeugen worin der CDS gespeichert wird
+  stream := TMemoryStream.Create;
+  stream.Clear;
+  stream.Position := 0;
+  ClientDataSet1.SaveToStream( stream );
+  stream.Position := 0;
+
+  //erzeugen des Speicherpfades (dieser ist abhängig vvon der .Exe)
+//  SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\' ;
+  SavePath := UserData.SavePath;
+  if not DirectoryExists( SavePath ) then
+    ForceDirectories( SavePath );
+
+  FileForArchiv := 'PMTable.xml';
+  IniForArchiv := 'PM.ini';
+  // erzeugen der IniStringlist
+  iniList := TStringList.Create;
+  try
+    iniList.Values[SC_USER] := UserData.User;
+    IniList.Values[SC_PW] := UserData.PW_Str;
+    IniList.Values[SC_PMPK] := UserData.PMPK_Name_MD5;
+    //ini-ende
+
+    // Create an instance of the TZipForge class
+    archiver := TZipForge.Create(nil);
+    with archiver do
+    begin
+      // Name des Archives was wir erstellen wollen
+      //TODO: Name des Archives später als Kombi aus Username und irgendwas
+      FileName := SavePath + UserData.PMPK_Name_MD5;
+      // Because we create a new archive,
+      // we set Mode to fmCreate
+      OpenArchive(fmCreate);
+      // Setzen des Verzeichnisses in dem das Archiv platziert wird
+      BaseDir := SavePath;
+      // Set encryption algorithm and password
+      EncryptionMethod := caAES_256;
+      Password := 'pW!M3Pw1gH,A!<3D';
+      //hinzufügen einer Datei
+      AddFromStream( FileForArchiv, stream );
+      AddFromString( IniForArchiv, IniList.Text );
+
+      //AddFiles( FileForArchiv );
+      ShowMessage( FileForArchiv + ' und ' + IniForArchiv + ' wurde in ' + FileName + ' gepackt' );
+      CloseArchive();
+    end;
+  finally
+    IniList.Free;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-18
+-------------------------------------------------------------------------------}
+procedure TMain.SavePMPK(FileForArchiv : String);
+var
+  archiver : TZipForge;
+  ArchivFile : String;
   SavePath : String;
   FileToSave : String;
   stream : TMemoryStream;
@@ -351,7 +422,6 @@ begin
   if not DirectoryExists( SavePath ) then
     ForceDirectories( SavePath );
 
-  FileForArchiv := 'test.xml';
   // Create an instance of the TZipForge class
   archiver := TZipForge.Create(nil);
   with archiver do
@@ -361,7 +431,7 @@ begin
     FileName := SavePath + 'test.PMPK';
     // Because we create a new archive,
     // we set Mode to fmCreate
-    OpenArchive(fmCreate);
+    OpenArchive(fmOpenReadWrite);
     // Setzen des Verzeichnisses in dem das Archiv platziert wird
     BaseDir := SavePath;
     // Set encryption algorithm and password
@@ -373,6 +443,7 @@ begin
     ShowMessage( FileForArchiv + ' wurde in ' + FileName + ' gepackt' );
     CloseArchive();
   end;
+
 end;
 
 {------------------------------------------------------------------------------
@@ -601,7 +672,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditBenutzerClick(Sender: TObject);
+procedure TMain.DBEditBenutzerDblClick(Sender: TObject);
 begin
   DBEditBenutzer.SelectAll;
 end;
@@ -630,7 +701,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditBezeichnungClick(Sender: TObject);
+procedure TMain.DBEditBezeichnungDblClick(Sender: TObject);
 begin
   DBEditBezeichnung.SelectAll;
 end;
@@ -660,7 +731,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditPasswortClick(Sender: TObject);
+procedure TMain.DBEditPasswortDblClick(Sender: TObject);
 begin
   DBEditPasswort.SelectAll;
 end;
@@ -717,56 +788,32 @@ Author: Seidel 2020-09-06
 procedure TMain.FormCreate(Sender: TObject);
 var
 opendialog : TFileOpenDialog;
-test : Integer;
 begin
   Application.HintHidePause := 10000;
 
+  DBTree := TDBTree.Create( VST );
+  DBTree.Create( VST );
+  DBTree.FirstOpen;
+
   Login := TLogin.Create(nil);
-  test :=  Login.ShowModal;
-  test := Login.ModalResult;
-  if test = mrCancel then
+  Login.ShowModal;
+  XMLFile := UserData.FirstLoadPath + 'EmtyTable.xml';
+  if Login.ModalResult = mrCancel then // schließen der kompletten anwendung
     Application.Terminate
-  else
+  else if Login.ModalResult = mrRetry then //erzeugen einer neuen DB
   begin
-
-    DBTree := TDBTree.Create( VST );
-    DBTree.Create( VST );
-    DBTree.FirstOpen;
-
-    XMLFile := 'D:\Delphi Embarcadero\Passwort_Manager\DB\PMTable.xml';
+    ClientDataSet1.LoadFromFile( XMLFile );
+  end
+  else if Login.ModalResult = mrOk then//laden einer alten DB
+  begin
+    ClientDataSet1.LoadFromFile( XMLFile );
+    LoadPMPK( UserData.PMPK_Name_MD5 );
+    //soll die Node entsprechend der Datenbank erzeugen
+    LoadDBNodeStructur;
     //XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\PMTable6.xml';
-  //
-    if not FileExists(XMLFile) then
-    begin
-      opendialog := TFileOpenDialog.Create( nil );
-      try
-        openDialog.Title := 'Bitte Datenbank *.xml auswählen';
-        if opendialog.Execute then
-          XMLFile := opendialog.FileName;
-      finally
-        opendialog.Free;
-      end;
-    end;
-
-    ClientDataSet1.LoadFromFile( {ClientDataSet1.FileName}XMLFile );
-
-  //  with ClientDataSet1.FieldDefs do
-  //  begin
-  //    clear;
-  //    Add( 'ID', ftAutoInc, 0, true );
-  //    Add( 'Bezeichnung', ftString, 64 );
-  //    Add( 'Benutzername', ftString, 64 );
-  //    Add( 'Passwort', ftString, 64 );
-  //    Add( 'Info', ftString, 255 );
-  //    Add( 'Ordner', ftString, 32 );
-  //    Add( 'NodeIndex', ftInteger, 0 );
-  //    Add( 'NodeImageIndex', ftInteger, 0 );
-  //    Add( 'isFavorit', ftBoolean, 0 );
-  //  end;
-  //  ClientDataSet1.CreateDataSet;
-
-    EnableDBFields( false );
   end;
+   EnableDBFields( false );
+   LUser.Caption := UserData.User;
 end;
 
 {------------------------------------------------------------------------------
@@ -895,6 +942,54 @@ begin
   DBEditPasswort.PasswordChar := #0;
   SeePWBtn.Enabled := false;
   HidePWBtn.Enabled := true;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-21
+-------------------------------------------------------------------------------}
+procedure TMain.SuchenEditChange(Sender: TObject);
+var
+SucheText : String;
+begin
+  SucheText := SuchenEdit.Text;
+  if SucheText.Equals( 'Suchen' ) or SucheText.Equals( '' ) then
+  begin
+    DBTree.UnfilterAllTree;
+    SuchenEdit.Font.Color := clScrollBar;
+  end
+  else
+  begin
+    DBTree.FilterTree( SucheText );
+    SuchenEdit.Font.Color := clBlack;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-21
+-------------------------------------------------------------------------------}
+procedure TMain.SuchenEditClick(Sender: TObject);
+var
+SucheText : String;
+begin
+  SucheText := SuchenEdit.Text;
+  if SucheText.Equals('Suchen') then
+  begin
+    SuchenEdit.Clear;
+  end
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-21
+-------------------------------------------------------------------------------}
+procedure TMain.SuchenEditExit(Sender: TObject);
+var
+SucheText : String;
+begin
+  SucheText := SuchenEdit.Text;
+  if SucheText.Equals('') then
+  begin
+    SuchenEdit.Text := 'Suchen';
+  end
 end;
 
 {------------------------------------------------------------------------------

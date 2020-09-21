@@ -31,7 +31,7 @@ object Main: TMain
     TabOrder = 0
     object LUser: TLabel
       Left = 16
-      Top = 16
+      Top = 31
       Width = 91
       Height = 19
       Caption = 'User-Name'
@@ -42,6 +42,19 @@ object Main: TMain
       Font.Style = [fsBold]
       ParentFont = False
       WordWrap = True
+    end
+    object LHallo: TLabel
+      Left = 16
+      Top = 12
+      Width = 28
+      Height = 16
+      Caption = 'Hallo'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
     end
     object PasswortBtn: TButton
       Left = 0
@@ -73,6 +86,7 @@ object Main: TMain
       Caption = 'Button3'
       Style = bsCommandLink
       TabOrder = 2
+      Visible = False
       OnClick = Button3Click
     end
   end
@@ -93,16 +107,18 @@ object Main: TMain
       ActivePage = PW_Manager
       Align = alClient
       TabOrder = 0
+      TabStop = False
       object PW_Manager: TTabSheet
         Caption = 'PasswortMTab'
+        TabVisible = False
         DesignSize = (
           919
-          695)
+          713)
         object VST: TVirtualStringTree
           Left = 31
           Top = 72
           Width = 420
-          Height = 590
+          Height = 608
           Anchors = [akLeft, akTop, akRight, akBottom]
           DefaultNodeHeight = 24
           Font.Charset = DEFAULT_CHARSET
@@ -141,10 +157,13 @@ object Main: TMain
           ParentFont = False
           TabOrder = 1
           Text = 'Suchen'
+          OnChange = SuchenEditChange
+          OnClick = SuchenEditClick
+          OnExit = SuchenEditExit
         end
         object SaveDataBtn: TBitBtn
           Left = 826
-          Top = 613
+          Top = 631
           Width = 57
           Height = 57
           Anchors = [akRight, akBottom]
@@ -283,7 +302,7 @@ object Main: TMain
         end
         object DelFolderBtn: TBitBtn
           Left = 478
-          Top = 624
+          Top = 642
           Width = 150
           Height = 34
           Anchors = [akRight, akBottom]
@@ -353,7 +372,7 @@ object Main: TMain
         end
         object AddFolderBtn: TBitBtn
           Left = 478
-          Top = 584
+          Top = 602
           Width = 150
           Height = 34
           Anchors = [akLeft, akBottom]
@@ -443,9 +462,9 @@ object Main: TMain
         end
         object GroupBox1: TGroupBox
           Left = 457
-          Top = 63
+          Top = 24
           Width = 459
-          Height = 331
+          Height = 370
           Anchors = [akTop, akRight]
           Caption = 'Benutzerdaten'
           Font.Charset = DEFAULT_CHARSET
@@ -457,7 +476,7 @@ object Main: TMain
           TabOrder = 7
           DesignSize = (
             459
-            331)
+            370)
           object LInfo: TLabel
             Left = 14
             Top = 146
@@ -518,8 +537,8 @@ object Main: TMain
             Left = 16
             Top = 168
             Width = 433
-            Height = 153
-            Anchors = [akTop, akRight]
+            Height = 185
+            Anchors = [akTop, akRight, akBottom]
             DataField = 'Info'
             DataSource = DataSource1
             Font.Charset = DEFAULT_CHARSET
@@ -548,7 +567,7 @@ object Main: TMain
             Font.Style = []
             ParentFont = False
             TabOrder = 1
-            OnClick = DBEditPasswortClick
+            OnDblClick = DBEditPasswortDblClick
             OnExit = DBEditPasswortExit
             OnKeyPress = DBEditPasswortKeyPress
           end
@@ -700,7 +719,7 @@ object Main: TMain
             Font.Style = []
             ParentFont = False
             TabOrder = 4
-            OnClick = DBEditBenutzerClick
+            OnDblClick = DBEditBenutzerDblClick
             OnExit = DBEditBenutzerExit
             OnKeyPress = DBEditBenutzerKeyPress
           end
@@ -739,7 +758,7 @@ object Main: TMain
             Font.Style = []
             ParentFont = False
             TabOrder = 6
-            OnClick = DBEditBezeichnungClick
+            OnDblClick = DBEditBezeichnungDblClick
             OnExit = DBEditBezeichnungExit
             OnKeyPress = DBEditBezeichnungKeyPress
           end
@@ -761,6 +780,7 @@ object Main: TMain
           Height = 32
           Caption = 'Test: Laden'
           TabOrder = 9
+          Visible = False
           OnClick = loadTestClick
         end
         object saveTest: TButton
@@ -770,6 +790,7 @@ object Main: TMain
           Height = 36
           Caption = 'Test: Speicher in Stream'
           TabOrder = 10
+          Visible = False
           OnClick = saveTestClick
         end
       end
@@ -786,11 +807,12 @@ object Main: TMain
       object DB_Tabelle: TTabSheet
         Caption = 'DB_Tabelle'
         ImageIndex = 3
+        TabVisible = False
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
           Width = 919
-          Height = 695
+          Height = 713
           Align = alClient
           DataSource = DataSource1
           TabOrder = 0

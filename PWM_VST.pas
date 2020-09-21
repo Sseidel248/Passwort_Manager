@@ -10,15 +10,13 @@ Type
   TDBTree = class(Tobject)
     var AVST : TVirtualStringTree;
     private
-      procedure SetFirstData;
       procedure SetData( pNode : PVirtualNode; isFolder : Boolean; Bezeichnung : String = ''); overload;
       procedure SetData( pNode : PVirtualNode; CDS : TClientDataSet); overload;
       procedure CreateNodeAfterLoad( CDS : TClientDataSet;
                                         Nodes : TVTVirtualNodeEnumeration );
-      procedure MoveNodeAfterLoad;
       procedure CreateFolderNodeAfterLoad( Nodes : TVTVirtualNodeEnumeration;
                                               FolderNameList : TStringList );
-      function AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
+//      function AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
       function AddDBNodeWithoutDataAt( Nodes : TVTVirtualNodeEnumeration; Ordner : String ) : PVirtualNode;
 
     public
@@ -40,6 +38,8 @@ Type
       procedure LoadNodes( Nodes : TVTVirtualNodeEnumeration;
                              FolderNameList : TStringList;
                              CDS : TClientDataSet );
+      procedure FilterTree( Bezeichnung : String);
+      procedure UnfilterAllTree;
 
   end;
 
@@ -208,15 +208,6 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
-procedure TDBTree.SetFirstData;
-begin
-
-
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-09-06
--------------------------------------------------------------------------------}
 procedure TDBTree.FirstOpen;
 var
 pNode, pNode2 : PVirtualNode;
@@ -283,7 +274,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TDBTree.DelDBNode;
 var
-pNode, pChild : PVirtualNode;
+pNode: PVirtualNode;
 pData : pVTNodeData;
 begin
   pNode := AVST.FocusedNode;
@@ -306,9 +297,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TDBTree.RenameDBFolder;
 var
-pNode, pChild : PVirtualNode;
-pDataChild, pData : pVTNodeData;
-Children : TVTVirtualNodeEnumeration;
+pNode: PVirtualNode;
 begin
   AVST.TreeOptions.MiscOptions := AVST.TreeOptions.MiscOptions + [toEditable];
 
@@ -321,29 +310,29 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-19
 -------------------------------------------------------------------------------}
-function TDBTree.AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
-var
-pNode : PVirtualNode;
-pData : pVTNodeData;
-pChildNode : PVirtualNode;
-Bezeichnung : String;
-begin
-  AVST.ClearSelection;
-  AVST.Refresh;
-  //suche nach dem Ordner 'Alle'
-  for pNode in Nodes do
-  begin
-    pData := AVST.GetNodeData( pNode );
-    Bezeichnung := pData^.Bezeichnung;
-    if Bezeichnung.Equals('Alle') then
-    begin
-      pChildNode := AVST.AddChild( pNode );
-      break;
-    end;
-  end;
-
-  Result := pChildNode;
-end;
+//function TDBTree.AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
+//var
+//pNode : PVirtualNode;
+//pData : pVTNodeData;
+//pChildNode : PVirtualNode;
+//Bezeichnung : String;
+//begin
+//  AVST.ClearSelection;
+//  AVST.Refresh;
+//  //suche nach dem Ordner 'Alle'
+//  for pNode in Nodes do
+//  begin
+//    pData := AVST.GetNodeData( pNode );
+//    Bezeichnung := pData^.Bezeichnung;
+//    if Bezeichnung.Equals('Alle') then
+//    begin
+//      pChildNode := AVST.AddChild( pNode );
+//      break;
+//    end;
+//  end;
+//
+//  Result := pChildNode;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-19
@@ -357,6 +346,7 @@ Bezeichnung : String;
 begin
   AVST.ClearSelection;
   AVST.Refresh;
+  pChildNode := nil;
   //suche nach dem Ordner 'Alle'
   for pNode in Nodes do
   begin
@@ -416,8 +406,7 @@ Author: Seidel 2020-09-19
 procedure TDBTree.CreateNodeAfterLoad( CDS : TClientDataSet;
                                         Nodes : TVTVirtualNodeEnumeration );
 var
-pNodeAll, pNode : PVirtualNode;
-pData : pVTNodeData;
+pNode : PVirtualNode;
 Ordner : String;
 I : Integer;
 begin
@@ -431,11 +420,56 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-19
+Author: Seidel 2020-09-21
 -------------------------------------------------------------------------------}
-procedure TDBTree.MoveNodeAfterLoad;
+procedure TDBTree.FilterTree( Bezeichnung : String);
+var
+Nodes, Children : TVTVirtualNodeEnumeration;
+pNode, pChild : PVirtualNode;
+pChildData : pVTNodeData;
 begin
+  Nodes := AVST.Nodes();
+  for pNode in Nodes do
+  begin
+    if AVST.GetNodeLevel( pNode ) = 1 then
+    begin
+      Children := AVST.ChildNodes( pNode );
+      for pChild in Children do
+      begin
+        pChildData := AVST.GetNodeData( pChild );
 
+        if not pChildData^.Bezeichnung.Contains( Bezeichnung ) then
+          AVST.IsVisible[pChild] := false
+        else
+          AVST.IsVisible[pChild] := true;
+      end;
+    end;
+  end;
+  AVST.Refresh;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-21
+-------------------------------------------------------------------------------}
+procedure TDBTree.UnfilterAllTree;
+var
+Nodes, Children : TVTVirtualNodeEnumeration;
+pNode, pChild : PVirtualNode;
+begin
+  Nodes := AVST.Nodes();
+  for pNode in Nodes do
+  begin
+    if AVST.GetNodeLevel( pNode ) = 1 then
+    begin
+      Children := AVST.ChildNodes( pNode );
+      for pChild in Children do
+      begin
+        if not AVST.IsVisible[pChild] then
+          AVST.IsVisible[pChild] := true;
+      end;
+    end;
+  end;
+  AVST.Refresh;
 end;
 
 {------------------------------------------------------------------------------
@@ -463,6 +497,7 @@ Bezeichnung : String;
 begin
   AVST.ClearSelection;
   AVST.Refresh;
+  pChildNode := nil;
   //suche nach dem Ordner 'Alle'
   Nodes := AVST.nodes;
   for pNode in Nodes do
@@ -486,7 +521,6 @@ Author: Seidel 2020-09-17
 function TDBTree.AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
 var
 pChildNode : PVirtualNode;
-pData, pChildData : pVTNodeData;
 begin
   AVST.ClearSelection;
   AVST.Refresh;
