@@ -285,7 +285,7 @@ begin
     BaseDir := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
     // Set encryption algorithm and password
     EncryptionMethod := caAES_256;
-    Password := 'pW!M3Pw1gH,A!<3D';
+    Password := TLogin.MD5String( PM_PW );
     // by specifying its absolute path
     if FindFirst('*.xml', archivItem, faAnyFile-faDirectory) then
     begin
@@ -385,7 +385,7 @@ begin
       BaseDir := SavePath;
       // Set encryption algorithm and password
       EncryptionMethod := caAES_256;
-      Password := 'pW!M3Pw1gH,A!<3D';
+      Password :=  TLogin.MD5String( PM_PW );
       //hinzufügen einer Datei
       AddFromStream( FileForArchiv, stream );
       AddFromString( IniForArchiv, IniList.Text );
@@ -436,7 +436,7 @@ begin
     BaseDir := SavePath;
     // Set encryption algorithm and password
     EncryptionMethod := caAES_256;
-    Password := 'pW!M3Pw1gH,A!<3D';
+    Password :=  TLogin.MD5String( PM_PW );
     //hinzufügen einer Datei
     AddFromStream( FileForArchiv, stream);
     //AddFiles( FileForArchiv );

@@ -35,12 +35,13 @@ type
     procedure TextChange( Edit : TEdit; Str : String);
     procedure TextStandart( Edit : TEdit; Str : String);
     procedure TextClick( Edit : TEdit; Str : String);
-    function MD5String(const Input: String) : String;
+
     function CheckPMKExist( PMPK_Str : string): Boolean;
     function CheckUserAndPW : Boolean;
     procedure EnableAnmeldeBtn;
     { Private-Deklarationen }
   public
+    class function MD5String(const Input: String) : String;
     { Public-Deklarationen }
   end;
 
@@ -100,7 +101,7 @@ begin
       FileName := UserData.SavePath + UserData.PMPK_Name_MD5;
       OpenArchive( fmOpenRead );
       EncryptionMethod := caAES_256;
-      Password := 'pW!M3Pw1gH,A!<3D';
+      Password := MD5String(PM_PW);
       if FindFirst( '*.ini', ArchiveItem, faAnyFile ) then
       begin
         stream.Clear;
@@ -147,7 +148,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-function TLogin.MD5String( const Input: String ): String;
+class function TLogin.MD5String( const Input: String ): String;
 var
 MD5: TIdHashMessageDigest5;
 begin
