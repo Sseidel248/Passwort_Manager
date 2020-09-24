@@ -464,7 +464,7 @@ object Main: TMain
           Left = 457
           Top = 24
           Width = 459
-          Height = 370
+          Height = 417
           Anchors = [akTop, akRight]
           Caption = 'Benutzerdaten'
           Font.Charset = DEFAULT_CHARSET
@@ -476,10 +476,10 @@ object Main: TMain
           TabOrder = 7
           DesignSize = (
             459
-            370)
+            417)
           object LInfo: TLabel
             Left = 14
-            Top = 146
+            Top = 194
             Width = 27
             Height = 16
             Anchors = [akTop, akRight]
@@ -533,11 +533,24 @@ object Main: TMain
             Font.Style = []
             ParentFont = False
           end
+          object Label1: TLabel
+            Left = 14
+            Top = 161
+            Width = 27
+            Height = 16
+            Caption = 'URL:'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+          end
           object DBMemoInfo: TDBMemo
             Left = 16
-            Top = 168
+            Top = 216
             Width = 433
-            Height = 185
+            Height = 184
             Anchors = [akTop, akRight, akBottom]
             DataField = 'Info'
             DataSource = DataSource1
@@ -554,14 +567,14 @@ object Main: TMain
           end
           object DBEditPasswort: TDBEdit
             Left = 112
-            Top = 115
+            Top = 122
             Width = 268
             Height = 24
             Anchors = [akTop, akRight]
             DataField = 'Passwort'
             DataSource = DataSource1
             Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
+            Font.Color = clMedGray
             Font.Height = -13
             Font.Name = 'Tahoma'
             Font.Style = []
@@ -762,6 +775,24 @@ object Main: TMain
             OnExit = DBEditBezeichnungExit
             OnKeyPress = DBEditBezeichnungKeyPress
           end
+          object DBEditURL: TDBEdit
+            Left = 112
+            Top = 158
+            Width = 329
+            Height = 24
+            DataField = 'URL'
+            DataSource = DataSource1
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 7
+            OnDblClick = DBEditURLDblClick
+            OnExit = DBEditURLExit
+            OnKeyPress = DBEditURLKeyPress
+          end
         end
         object DelDataSetBtn: TButton
           Left = 634
@@ -827,62 +858,61 @@ object Main: TMain
   end
   object ClientDataSet1: TClientDataSet
     PersistDataPacket.Data = {
-      0B0100009619E0BD0100000018000000080000000000030000000B0102494404
-      0001001200010007535542545950450200490008004175746F696E63000B4265
-      7A656963686E756E6701004900100001000557494454480200020040000C4265
-      6E75747A65726E616D6501004900100001000557494454480200020040000850
-      617373776F7274010049001000010005574944544802000200320004496E666F
-      020049001000010005574944544802000200FF00064F72646E65720100490010
+      230100009619E0BD010000001800000009000000000003000000230102494404
+      0001000200010007535542545950450200490008004175746F696E63000B4265
+      7A656963686E756E6701004900000001000557494454480200020040000C4265
+      6E75747A65726E616D6501004900000001000557494454480200020040000850
+      617373776F7274010049000000010005574944544802000200320004496E666F
+      020049000000010005574944544802000200FF00064F72646E65720100490000
       0001000557494454480200020020000E4E6F6465496D616765496E6465780400
-      0100100000000969734661766F726974020003001000000001000C4155544F49
-      4E4356414C55450400010001000000}
+      0100000000000969734661766F72697402000300000000000355524C02004900
+      0000010005574944544802000200000201000C4155544F494E4356414C554504
+      00010001000000}
     Active = True
     Aggregates = <>
     FieldDefs = <
       item
         Name = 'ID'
-        Attributes = [faReadonly, faUnNamed]
+        Attributes = [faReadonly]
         DataType = ftAutoInc
       end
       item
         Name = 'Bezeichnung'
-        Attributes = [faUnNamed]
         DataType = ftString
         Size = 64
       end
       item
         Name = 'Benutzername'
-        Attributes = [faUnNamed]
         DataType = ftString
         Size = 64
       end
       item
         Name = 'Passwort'
-        Attributes = [faUnNamed]
         DataType = ftString
         Size = 50
       end
       item
         Name = 'Info'
-        Attributes = [faUnNamed]
         DataType = ftString
         Size = 255
       end
       item
         Name = 'Ordner'
-        Attributes = [faUnNamed]
         DataType = ftString
         Size = 32
       end
       item
         Name = 'NodeImageIndex'
-        Attributes = [faUnNamed]
         DataType = ftInteger
       end
       item
         Name = 'isFavorit'
-        Attributes = [faUnNamed]
         DataType = ftBoolean
+      end
+      item
+        Name = 'URL'
+        DataType = ftString
+        Size = 512
       end>
     IndexDefs = <>
     Params = <>
@@ -926,6 +956,11 @@ object Main: TMain
     object ClientDataSet1isFavorit: TBooleanField
       DisplayWidth = 6
       FieldName = 'isFavorit'
+    end
+    object ClientDataSet1URL: TStringField
+      DisplayWidth = 29
+      FieldName = 'URL'
+      Size = 512
     end
   end
   object DataSource1: TDataSource

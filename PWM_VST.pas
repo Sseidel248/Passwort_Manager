@@ -172,6 +172,7 @@ begin
     pData^.isFavorit := false;
     pData^.Ordner := SC_FOLDER;
     pData^.NodeImageIdx := IC_FOLDER_OPEN;
+    pData^.URL := SC_NO_DATA;
   end
   else
   begin
@@ -183,6 +184,7 @@ begin
     pData^.isFavorit := false;
     pData^.Ordner := SC_FILE;
     pData^.NodeImageIdx := IC_KEY;
+    pData^.URL := SC_NO_DATA;
   end;
 
 end;
@@ -203,6 +205,7 @@ begin
   pData^.isFavorit    := CDS.Fields[7].AsBoolean;
   pData^.Ordner       := SC_FILE;
   pData^.NodeImageIdx := CDS.Fields[6].AsInteger;
+  pData^.URL          := CDS.Fields[8].AsString;
 end;
 
 {------------------------------------------------------------------------------

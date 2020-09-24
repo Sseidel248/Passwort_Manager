@@ -20,6 +20,7 @@ type
          isFavorit : Boolean;
          Ordner : String;
          NodeImageIdx : Integer;
+         URL : String;
      end;
 
 type
@@ -99,6 +100,9 @@ type
     ClientDataSet1isFavorit: TBooleanField;
     saveTest: TButton;
     LHallo: TLabel;
+    ClientDataSet1URL: TStringField;
+    DBEditURL: TDBEdit;
+    Label1: TLabel;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -148,6 +152,9 @@ type
     procedure SuchenEditChange(Sender: TObject);
     procedure SuchenEditExit(Sender: TObject);
     procedure SuchenEditClick(Sender: TObject);
+    procedure DBEditURLDblClick(Sender: TObject);
+    procedure DBEditURLExit(Sender: TObject);
+    procedure DBEditURLKeyPress(Sender: TObject; var Key: Char);
   private
     AFonts : TFonts;
     DBTree : TDBTree;
@@ -488,6 +495,7 @@ begin
   DBEditPasswort.Enabled := enable;
   DBMemoInfo.Enabled := enable;
   DBCheckBox1.Enabled := enable;
+  DBEditURL.Enabled := enable;
 end;
 
 {------------------------------------------------------------------------------
@@ -752,6 +760,35 @@ begin
   if Key = #13 then
   begin
     Key := #0;
+    DBEditURL.SetFocus;
+  end;
+  DBTree.AVST.Refresh;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-24
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditURLDblClick(Sender: TObject);
+begin
+  DBEditURL.SelectAll;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-24
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditURLExit(Sender: TObject);
+begin
+  UpdateNodeEntry( Sender );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-24
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditURLKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
     VST.SetFocus;
   end;
   DBTree.AVST.Refresh;
@@ -955,7 +992,7 @@ begin
   if SucheText.Equals( 'Suchen' ) or SucheText.Equals( '' ) then
   begin
     DBTree.UnfilterAllTree;
-    SuchenEdit.Font.Color := clScrollBar;
+    SuchenEdit.Font.Color := clMedGray;
   end
   else
   begin

@@ -167,6 +167,7 @@ procedure TLogin.AnmeldeBtnClick(Sender: TObject);
 var
 User, PwStr : String;
 INI : TStrings;
+SaveStr : String;
 begin
   Ini := TStringList.Create;
   try
@@ -175,6 +176,7 @@ begin
     UserData.PMPK_Name_MD5 := MD5String( User ) + '.PMPK';
     UserData.User := User;
     UserData.PW_Str := PwStr;
+    SaveStr := Concat( UserData.SavePath, UserData.PMPK_Name_MD5 );
 
     if {CheckPMKExist( MD5String( User ) )} not CBNewUser.Checked then
     begin
@@ -195,14 +197,27 @@ begin
     end
     else
     begin
-      if MessageDlg( 'Benutzername existiert noch nicht, soll dieser angelegt werden?',
+      if FileExists( SaveStr )  then
+      begin
+        if MessageDlg( 'Der Benutzer existiert bereits!' + sLineBreak + 'Wollen Sie stattdessen sich mit diesen Benutzernamen anmelden?',
                   mtInformation,
                   [mbYes, mbNo], 0 ) = mrYes then
+        begin
+          CBNewUser.Checked := false;
+          AnmeldeBtnClick( Sender );
+        end;
+      end
+      else
       begin
-        ModalResult := mrRetry; //retry = neuer Benutzer
-        UserData.PMPK_Name_MD5 := MD5String( User ) + '.PMPK';
-        UserData.User := User;
-        UserData.PW_Str := PwStr;
+        if MessageDlg( 'Benutzername existiert noch nicht, soll dieser angelegt werden?',
+                    mtInformation,
+                    [mbYes, mbNo], 0 ) = mrYes then
+        begin
+          ModalResult := mrRetry; //retry = neuer Benutzer
+          UserData.PMPK_Name_MD5 := MD5String( User ) + '.PMPK';
+          UserData.User := User;
+          UserData.PW_Str := PwStr;
+        end;
       end;
     end;
   finally
@@ -340,7 +355,7 @@ begin
   if not EditText.Equals('') then
     Edit.Font.Color := clBlack
   else
-    Edit.Font.Color := clScrollBar;
+    Edit.Font.Color := clMedGray;
 end;
 
 {------------------------------------------------------------------------------
@@ -354,11 +369,11 @@ begin
   if EditText.Equals('') then
   begin
     Edit.Text := Str;
-    Edit.Font.Color := clScrollBar;
+    Edit.Font.Color := clMedGray;
   end
   else if EditText.Equals(Str) then
   begin
-    Edit.Font.Color := clScrollBar;
+    Edit.Font.Color := clMedGray;
   end
   else
   begin
