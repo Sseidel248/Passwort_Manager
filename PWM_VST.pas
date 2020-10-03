@@ -1,5 +1,11 @@
 unit PWM_VST;
 
+{******************************************************************************
+Datenbank und Node Bearbeitung von "KiiTree"
+Author: Sebastian Seidel
+
+*******************************************************************************}
+
 interface
 
 uses
@@ -60,7 +66,7 @@ const
 implementation
 
 uses
-  Vcl.Dialogs, Main_PWM;
+  Vcl.Dialogs, Main_PWM, Global_PWM;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -104,7 +110,7 @@ pData : pVTNodeData;
 begin
   Result := false;
   pData := AVST.GetNodeData( pNode.Parent );
-  if pData^.Bezeichnung.Equals('Favoriten') then
+  if pData^.Bezeichnung.Equals( SC_FAVORITEN ) then
   begin
     Result := true;
   end;
@@ -119,7 +125,7 @@ pData : pVTNodeData;
 begin
   Result := false;
   pData := AVST.GetNodeData( pNode );
-  if pData^.Bezeichnung.Equals('Favoriten') then
+  if pData^.Bezeichnung.Equals( SC_FAVORITEN ) then
   begin
     Result := true;
   end;
@@ -134,7 +140,7 @@ pData : pVTNodeData;
 begin
   Result := false;
   pData := AVST.GetNodeData( pNode.Parent );
-  if pData^.Bezeichnung.Equals( 'Alle' ) then
+  if pData^.Bezeichnung.Equals( SC_ALLE ) then
   begin
     Result := true;
   end;
@@ -149,7 +155,7 @@ pData : pVTNodeData;
 begin
   Result := false;
   pData := AVST.GetNodeData( pNode );
-  if pData^.Bezeichnung.Equals('Alle') then
+  if pData^.Bezeichnung.Equals( SC_ALLE ) then
   begin
     Result := true;
   end;
@@ -186,7 +192,6 @@ begin
     pData^.NodeImageIdx := IC_KEY;
     pData^.URL := SC_NO_DATA;
   end;
-
 end;
 
 {------------------------------------------------------------------------------
@@ -218,9 +223,9 @@ begin
   pNode := AVST.AddChild( nil );
   SetData( pNode, true, 'Passwort-Manager' );
   pNode2 := AVST.AddChild( pNode );
-  SetData( pNode2, true, 'Favoriten' );
+  SetData( pNode2, true,  SC_FAVORITEN  );
   pNode2 := AVST.AddChild( pNode );
-  SetData( pNode2, true, 'Alle' );
+  SetData( pNode2, true, SC_ALLE );
   AVST.FullExpand();
 end;
 
@@ -282,7 +287,7 @@ pData : pVTNodeData;
 begin
   pNode := AVST.FocusedNode;
   pData := AVST.GetNodeData( pNode );
-  if MessageDlg( 'Sind Sie sich sicher, dass Sie den Schlüssel löschen unwiderruflich wollen?'
+  if MessageDlg( 'Sind Sie sich sicher, dass Sie den Schlüssel löschen wollen?'
                 + sLineBreak + sLineBreak
                 + 'Zu löschender Schlüssel: "'
                 + pData^.Bezeichnung + '"',
@@ -327,7 +332,7 @@ Author: Seidel 2020-09-19
 //  begin
 //    pData := AVST.GetNodeData( pNode );
 //    Bezeichnung := pData^.Bezeichnung;
-//    if Bezeichnung.Equals('Alle') then
+//    if Bezeichnung.Equals( SC_ALLE ) then
 //    begin
 //      pChildNode := AVST.AddChild( pNode );
 //      break;
@@ -350,7 +355,7 @@ begin
   AVST.ClearSelection;
   AVST.Refresh;
   pChildNode := nil;
-  //suche nach dem Ordner 'Alle'
+  //suche nach dem Ordner "Alle"
   for pNode in Nodes do
   begin
     pData := AVST.GetNodeData( pNode );
@@ -411,14 +416,17 @@ procedure TDBTree.CreateNodeAfterLoad( CDS : TClientDataSet;
 var
 pNode : PVirtualNode;
 Ordner : String;
-I : Integer;
+I, Max_ID : Integer;
 begin
-  for I := 0 to CDS.RecordCount-1 do
+  Max_ID := Main.GetMaxID;
+  for I := 0 to {CDS.RecordCount-1}Max_ID do
   begin
-    CDS.Locate( 'ID', I+1, [] );
-    Ordner := CDS.Fields[5].AsString;
-    pNode := AddDBNodeWithoutDataAt( Nodes, Ordner );
-    SetData( pNode, CDS );
+    if CDS.Locate( 'ID', I+1, [] ) then
+    begin
+      Ordner := CDS.Fields[5].AsString;
+      pNode := AddDBNodeWithoutDataAt( Nodes, Ordner );
+      SetData( pNode, CDS );
+    end;
   end;
 end;
 
@@ -501,13 +509,13 @@ begin
   AVST.ClearSelection;
   AVST.Refresh;
   pChildNode := nil;
-  //suche nach dem Ordner 'Alle'
+  //suche nach dem Ordner "Alle"
   Nodes := AVST.nodes;
   for pNode in Nodes do
   begin
     pData := AVST.GetNodeData( pNode );
     Bezeichnung := pData^.Bezeichnung;
-    if Bezeichnung.Equals('Alle') then
+    if Bezeichnung.Equals( SC_ALLE ) then
     begin
       pChildNode := AVST.AddChild( pNode );
       break;
@@ -559,7 +567,7 @@ begin
     for pNodeFav in Nodes do
     begin
       pDataFav := AVST.GetNodeData( pNodeFav );
-      if pDataFav^.Bezeichnung.Equals( 'Favoriten' ) then
+      if pDataFav^.Bezeichnung.Equals( SC_FAVORITEN ) then
       begin
         AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
         TryExpandNode( pNodeFav );

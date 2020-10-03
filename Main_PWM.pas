@@ -1,5 +1,12 @@
 unit Main_PWM;
 
+{******************************************************************************
+Hauptprogramm "KiiTree"
+Author: Sebastian Seidel
+
+Dient der Erzeugung einer Standalone-Datenbank zur Speicherung der Passwörter
+*******************************************************************************}
+
 interface
 
 uses
@@ -7,7 +14,12 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.StdCtrls, Vcl.Buttons,
   Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees, Data.DB,
   Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls, PWM_VST,
-  System.ImageList, Vcl.ImgList;
+  System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX;
+
+type
+  TMainStates = Set of (
+    msChanged                  //wenn gesetzt, dann hat sich etwas im Bäumchen geändert
+    );
 
 type
   pVTNodeData = ^rVTNodeData; // Zeiger auf die Daten-Struktur
@@ -44,12 +56,8 @@ type
 
 type
   TMain = class(TForm)
-    MenuPanel: TPanel;
     Panel2: TPanel;
     LUser: TLabel;
-    PasswortBtn: TButton;
-    EinstellBtn: TButton;
-    Button3: TButton;
     PageControl1: TPageControl;
     PW_Manager: TTabSheet;
     Options: TTabSheet;
@@ -103,6 +111,10 @@ type
     ClientDataSet1URL: TStringField;
     DBEditURL: TDBEdit;
     Label1: TLabel;
+    GradientPanel1: TGradientPanel;
+    SBPasswoerter: TSpeedButton;
+    SBEinstellungen: TSpeedButton;
+    SpeedButton3: TSpeedButton;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -155,20 +167,44 @@ type
     procedure DBEditURLDblClick(Sender: TObject);
     procedure DBEditURLExit(Sender: TObject);
     procedure DBEditURLKeyPress(Sender: TObject; var Key: Char);
+    procedure DBEditBezeichnungClick(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure SBPasswoerterClick(Sender: TObject);
+    procedure SBEinstellungenClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure VSTDragDrop(Sender: TBaseVirtualTree; Source: TObject;
+      DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
+      Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure VSTDragOver(Sender: TBaseVirtualTree; Source: TObject;
+      Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
+      var Effect: Integer; var Accept: Boolean);
+    procedure VSTDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; var Allowed: Boolean);
+    procedure DBEditBenutzerClick(Sender: TObject);
+    procedure DBEditPasswortClick(Sender: TObject);
+    procedure DBEditURLClick(Sender: TObject);
   private
-    AFonts : TFonts;
+    FFonts : TFonts;
     DBTree : TDBTree;
+    FMainStates : TMainStates;
     procedure AddNewDataSet;
     procedure InitNewData( pNode : pVirtualNode = nil; AddedInFav : Boolean = false);
-    procedure UpdateNodeEntry( Sender : TObject );
+    procedure UpdateEntryByNode();
+    procedure UpdateNodeByEntry( Sender : TObject );
     procedure EnableDBFields( enable : Boolean );
-    procedure UpdateChildrenEntries;
+    procedure UpdateChildrenByEntry;
     procedure LoadPMPK( ArchivFileName : String);
     procedure SavePMPK; overload;
     procedure SavePMPK(FileForArchiv : String); overload;
     procedure LoadDBNodeStructur;
+    procedure TextDBChange( Edit : TDBEdit; Str : String );
+    procedure TextDBStandart( Edit : TDBEdit; Str : String );
+    procedure TextDBClick( Edit : TDBEdit; Str : String );
     { Private-Deklarationen }
   public
+    function GetMaxID : Integer;
+    procedure DoChangeStates( Enter : TMainStates; Leave : TMainStates = [] );
+    property MainStates : TMainStates read FMainStates write FMainStates;
     { Public-Deklarationen }
   end;
 
@@ -180,11 +216,9 @@ const
   PM_PW = 'pW!M3Pw1gH,A!<3D';
 
 implementation
-
-uses
-  ZipForge, Login_PWM, Global_PWM;
-
 {$R *.dfm}
+uses
+  ZipForge, Login_PWM, Global_PWM, Hash_Functions;
 
 //*****************************************************************************
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -201,7 +235,7 @@ begin
   FTitelSize := 12;
   FSchreibenColor := clBlack;
   FSchreibenSize := 10;
-  FStandartColor := clScrollBar;
+  FStandartColor := clGrayText;
 end;
 
 {------------------------------------------------------------------------------
@@ -225,11 +259,34 @@ end;
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //*****************************************************************************
 
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.UpdateEntryByNode;
+var
+pNode : PVirtualNode;
+pData,
+pParentData : pVTNodeData;
+begin
+  pNode := DBTree.AVST.FocusedNode;
+  pData := DBTree.AVST.GetNodeData( pNode );
+  pParentData := DBTree.AVST.GetNodeData( pNode.Parent );
+
+  ClientDataSet1.Edit;
+
+  ClientDataSet1isFavorit.AsBoolean := pParentData^.Bezeichnung.Equals( SC_FAVORITEN );
+
+  ClientDataSet1Ordner.AsString := pParentData^.Bezeichnung;
+
+  DoChangeStates( [msChanged] );
+
+  DBTree.AVST.Repaint;
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.UpdateNodeEntry( Sender : TObject );
+procedure TMain.UpdateNodeByEntry( Sender : TObject );
 var
 pNode : PVirtualNode;
 pData : pVTNodeData;
@@ -260,6 +317,8 @@ begin
     pData^.isFavorit := DBCheckBox1.Checked;
   end;
   ClientDataSet1NodeImageIndex.AsInteger := pData^.NodeImageIdx;
+
+  DoChangeStates( [msChanged] );
 
   DBTree.AVST.Repaint;
 end;
@@ -292,7 +351,9 @@ begin
     BaseDir := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
     // Set encryption algorithm and password
     EncryptionMethod := caAES_256;
-    Password := TLogin.MD5String( PM_PW );
+//    Password := TLogin.MD5String( PM_PW ); //Change 2020.09.28
+//    Password := SHA256String( PM_PW ); //Change 2020.10.03
+    Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
     // by specifying its absolute path
     if FindFirst('*.xml', archivItem, faAnyFile-faDirectory) then
     begin
@@ -311,9 +372,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.loadTestClick(Sender: TObject);
 begin
-  //TODO: Laden so implementieren das die Nodes erstellt werden
   LoadPMPK('test.PMPK');
-  //soll die Node entsprechend der Datenbank erzeugen
   LoadDBNodeStructur;
 end;
 
@@ -324,21 +383,85 @@ procedure TMain.LoadDBNodeStructur;
 var
 Nodes : TVTVirtualNodeEnumeration;
 FolderNameList : TStringList;
-  I: Integer;
+  I, Max_ID: Integer;
 begin
   Nodes := DBTree.AVST.Nodes();
+  //Max-Wert der ID's finden
+  Max_ID := GetMaxID;
 
   //Sammeln aller Ordnernamen in der Datenbank
   FolderNameList := TStringList.Create;
-  for I := 0 to ClientDataSet1.RecordCount-1 do
+  for I := 0 to Max_ID do
   begin
-    ClientDataSet1.Locate( 'ID', I+1, [] );
-    FolderNameList.Add( ClientDataSet1Ordner.AsString );
+    if ClientDataSet1.Locate( 'ID', I+1, [] ) then
+      FolderNameList.Add( ClientDataSet1Ordner.AsString );
   end;
 
   DBTree.LoadNodes( Nodes, FolderNameList, ClientDataSet1 );
 
   DBTree.AVST.FullExpand();
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-28
+-------------------------------------------------------------------------------}
+procedure TMain.TextDBChange( Edit : TDBEdit; Str : String );
+var
+EditText : String;
+begin
+  EditText := Edit.Text;
+  if not EditText.Equals('') then
+    Edit.Font.Color := clBlack
+  else
+    Edit.Font.Color := clMedGray;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-28
+-------------------------------------------------------------------------------}
+procedure TMain.TextDBStandart( Edit : TDBEdit; Str : String );
+var
+EditText : String;
+begin
+  EditText := Edit.Text;
+  if EditText.Equals('') then
+  begin
+    Edit.Text := Str;
+    Edit.Font.Color := clMedGray;
+  end
+  else if EditText.Equals(Str) then
+  begin
+    Edit.Font.Color := clMedGray;
+  end
+  else
+  begin
+    Edit.Font.Color := clBlack;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-30
+-------------------------------------------------------------------------------}
+procedure TMain.DoChangeStates( Enter : TMainStates; Leave : TMainStates = [] );
+begin
+  FMainStates := FMainStates + Enter - Leave;
+
+  if msChanged in MainStates then
+    Main.Caption := '*KiiTree von ' + UserData.User
+  else
+    Main.Caption := 'KiiTree von ' + UserData.User;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-28
+-------------------------------------------------------------------------------}
+procedure TMain.TextDBClick( Edit : TDBEdit; Str : String );
+var
+EditText : String;
+begin
+  EditText := Edit.Text;
+  if EditText.Equals( Str ) then
+    Edit.SelectAll;
 end;
 
 {------------------------------------------------------------------------------
@@ -383,7 +506,6 @@ begin
     with archiver do
     begin
       // Name des Archives was wir erstellen wollen
-      //TODO: Name des Archives später als Kombi aus Username und irgendwas
       FileName := SavePath + UserData.PMPK_Name_MD5;
       // Because we create a new archive,
       // we set Mode to fmCreate
@@ -392,7 +514,9 @@ begin
       BaseDir := SavePath;
       // Set encryption algorithm and password
       EncryptionMethod := caAES_256;
-      Password :=  TLogin.MD5String( PM_PW );
+//      Password :=  TLogin.MD5String( PM_PW ); //Change 2020.09.28
+//      Password :=  SHA256String( PM_PW );
+      Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
       //hinzufügen einer Datei
       AddFromStream( FileForArchiv, stream );
       AddFromString( IniForArchiv, IniList.Text );
@@ -443,7 +567,9 @@ begin
     BaseDir := SavePath;
     // Set encryption algorithm and password
     EncryptionMethod := caAES_256;
-    Password :=  TLogin.MD5String( PM_PW );
+//    Password :=  TLogin.MD5String( PM_PW );  //Change 2020.09.28
+//    Password := SHA256String( PM_PW );
+    Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
     //hinzufügen einer Datei
     AddFromStream( FileForArchiv, stream);
     //AddFiles( FileForArchiv );
@@ -451,6 +577,19 @@ begin
     CloseArchive();
   end;
 
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-02
+-------------------------------------------------------------------------------}
+function TMain.GetMaxID : Integer;
+begin
+  ClientDataSet1.AggregatesActive := true;
+  try
+    Result := ClientDataSet1.Aggregates[0].Value;
+  finally
+    ClientDataSet1.AggregatesActive := false;
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -464,7 +603,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
-procedure TMain.UpdateChildrenEntries;
+procedure TMain.UpdateChildrenByEntry;
 var
 pData, pDataChild : pVTNodeData;
 pNode, pChild : PVirtualNode;
@@ -542,10 +681,11 @@ var
 ParentData, pNodeData : pVTNodeData;
 begin
 
-  ClientDataSet1Bezeichnung.AsString := 'Bezeichnung eingeben...' ;
-  ClientDataSet1Benutzername.AsString := 'Benutzername eingeben...';
-  ClientDataSet1Passwort.AsString := 'Passwort eingeben...';
-  ClientDataSet1Info.AsString := 'Ihre Notiz';
+  ClientDataSet1Bezeichnung.AsString := SC_BEZEICHNUNG ;
+  ClientDataSet1Benutzername.AsString := SC_BENUTZER;
+  ClientDataSet1Passwort.AsString := SC_PASSWORT;
+  ClientDataSet1Info.AsString := SC_NOTIZ;
+  ClientDataSet1URL.AsString := SC_URL;
   ClientDataSet1isFavorit.AsBoolean := AddedInFav;
   DBCheckBox1.Checked := AddedInFav;
 
@@ -559,6 +699,7 @@ begin
     pNodeData.Passwort := ClientDataSet1Passwort.AsString;
     pNodeData.Info := ClientDataSet1Info.AsString;
     pNodeData.isFavorit := ClientDataSet1isFavorit.AsBoolean;
+    pNodeData.URL := ClientDataSet1URL.AsString;
 
     pNodeData.Ordner := ParentData.Bezeichnung;
     ClientDataSet1Ordner.AsString :=  pNodeData.Ordner;
@@ -582,6 +723,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.NeuerSchlssel1Click(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   AddNewDataSet;
   EnableDBFields( false );
 end;
@@ -591,6 +733,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.Ordnerlschen1Click(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   DBtree.DelFolder;
 end;
 
@@ -599,6 +742,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.OrdnerUmbenennen1Click(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   DBTree.RenameDBFolder;
 end;
 
@@ -607,6 +751,7 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddFolderBtnClick(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   DBTree.AddDBNodeFolder;
 end;
 
@@ -615,6 +760,7 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.AddNewDatasetBtnClick(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   AddNewDataSet;
 end;
 
@@ -623,6 +769,7 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.DelDataSetBtnClick(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   DBTree.DelDBNode;
   EnableDBFields( false );
 end;
@@ -632,6 +779,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.DelFolderBtnClick(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   DBTree.DelFolder;
 end;
 
@@ -674,7 +822,15 @@ begin
 
   DBTree.MoveNodeToFav( pNode );
 
-  UpdateNodeEntry( Sender );
+  UpdateNodeByEntry( Sender );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBenutzerClick(Sender: TObject);
+begin
+  TextDBClick( DBEditBenutzer, SC_BENUTZER );
 end;
 
 {------------------------------------------------------------------------------
@@ -690,7 +846,7 @@ Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditBenutzerExit(Sender: TObject);
 begin
-  UpdateNodeEntry( Sender );
+  UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -709,6 +865,14 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
+procedure TMain.DBEditBezeichnungClick(Sender: TObject);
+begin
+  TextDBClick( DBEditBezeichnung, SC_BEZEICHNUNG );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-28
+-------------------------------------------------------------------------------}
 procedure TMain.DBEditBezeichnungDblClick(Sender: TObject);
 begin
   DBEditBezeichnung.SelectAll;
@@ -719,8 +883,7 @@ Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditBezeichnungExit(Sender: TObject);
 begin
-  UpdateNodeEntry( Sender );
-
+  UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -737,6 +900,14 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditPasswortClick(Sender: TObject);
+begin
+  TextDBClick( DBEditPasswort, SC_PASSWORT );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditPasswortDblClick(Sender: TObject);
@@ -749,7 +920,7 @@ Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditPasswortExit(Sender: TObject);
 begin
-  UpdateNodeEntry( Sender );
+  UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -766,6 +937,14 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditURLClick(Sender: TObject);
+begin
+  TextDBClick( DBEditURL, SC_URL );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-24
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditURLDblClick(Sender: TObject);
@@ -778,7 +957,7 @@ Author: Seidel 2020-09-24
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditURLExit(Sender: TObject);
 begin
-  UpdateNodeEntry( Sender );
+  UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -807,7 +986,7 @@ Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBMemoInfoExit(Sender: TObject);
 begin
-  UpdateNodeEntry( Sender );
+  UpdateNodeByEntry( Sender );
   DBTree.AVST.Refresh;
 end;
 
@@ -817,6 +996,25 @@ Author: Seidel 2020-09-06
 procedure TMain.EinstellBtnClick(Sender: TObject);
 begin
   PageControl1.ActivePage := Options;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-30
+-------------------------------------------------------------------------------}
+procedure TMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+Text : String;
+MResult : Integer;
+begin
+  if msChanged in MainStates then
+  begin
+    Text := 'Es sind Änderungen vorhanden.'
+    + sLineBreak
+    + 'Sollen die Änderungen an Ihrem KiiTree gespeichert werden?';
+    MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
+    if MResult = mrYes then
+      SavePMPK;
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -851,6 +1049,18 @@ begin
   end;
    EnableDBFields( false );
    LUser.Caption := UserData.User;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-28
+-------------------------------------------------------------------------------}
+procedure TMain.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if ( Key = 70 ) and ( Shift = [ssCtrl] ) then
+  begin
+    SuchenEdit.SetFocus;
+    SuchenEdit.Clear;
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -960,6 +1170,23 @@ Author: Seidel 2020-09-06
 procedure TMain.SaveDataBtnClick(Sender: TObject);
 begin
   SavePMPK;
+  DoChangeStates( [], [msChanged] );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-30
+-------------------------------------------------------------------------------}
+procedure TMain.SBEinstellungenClick(Sender: TObject);
+begin
+  PageControl1.ActivePage := Options;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-09-30
+-------------------------------------------------------------------------------}
+procedure TMain.SBPasswoerterClick(Sender: TObject);
+begin
+  PageControl1.ActivePage := PW_Manager;
 end;
 
 {------------------------------------------------------------------------------
@@ -967,6 +1194,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.Schlssellschen1Click(Sender: TObject);
 begin
+  DoChangeStates( [msChanged] );
   DBTree.DelDBNode;
   EnableDBFields( false );
 end;
@@ -1038,6 +1266,80 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.VSTDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Column: TColumnIndex; var Allowed: Boolean);
+begin
+  if DBTree.AVST.GetNodeLevel( Node ) = 2 then
+    Allowed := true
+  else
+    Allowed := false;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.VSTDragDrop(Sender: TBaseVirtualTree; Source: TObject;
+  DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
+  Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+var
+AttachMode :TVTNodeAttachMode;
+pNode,
+pFocusNode,
+pParentNodeBeforeDD,
+pParentNodeAfterDD : PVirtualNode;
+begin
+  if ( Sender = Source ) then
+  begin
+    pFocusNode := DBTree.AVST.FocusedNode; // zu ziehenden Node
+    pParentNodeBeforeDD := pFocusNode.Parent; //Elternteil vor dem verschieben
+    case Mode of // DropPosition in NodeAttachMode umsetzen
+      dmAbove:    AttachMode := amInsertBefore;
+      dmOnNode:   AttachMode := amAddChildFirst;
+      dmBelow:    AttachMode := amInsertAfter;
+      else        AttachMode := amNowhere;
+    end;
+    pNode := DBTree.AVST.DropTargetNode;
+
+    DBTree.AVST.ProcessDrop( DataObject, pNode, Effect, AttachMode );
+    pParentNodeAfterDD := pNode.Parent; //Elternteil nach dem verschieben
+    if pParentNodeBeforeDD <> pParentNodeAfterDD then
+    begin
+      UpdateEntryByNode;
+    end;
+  end
+  else
+    Effect := DROPEFFECT_NONE;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-03
+-------------------------------------------------------------------------------}
+procedure TMain.VSTDragOver(Sender: TBaseVirtualTree; Source: TObject;
+  Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode;
+  var Effect: Integer; var Accept: Boolean);
+var
+Node : PVirtualNode;
+begin
+  Node := DBTree.AVST.DropTargetNode;
+  case DBTree.AVST.GetNodeLevel( Node ) of
+    1: Accept := true;
+    2: begin
+      case Mode of // DropPosition in NodeAttachMode umsetzen
+        dmAbove:    Accept := true;
+        dmOnNode:   Accept := false;
+        dmBelow:    Accept := true;
+      end;
+    end
+    else
+    begin
+      Accept := false;
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -1051,7 +1353,7 @@ begin
               +'Bezeichnung: ' + pData^.Bezeichnung + sLineBreak
               +'Benutzername: ' +  pData^.Benutzername + sLineBreak
               +'Passwort: ' +  pData^.Passwort + sLineBreak
-              +'Ordner: ' +  pData^.Ordner + sLineBreak
+              +'Type: ' +  pData^.Ordner + sLineBreak
               +'Node-Imageindex: ' + IntToStr (  pData^.NodeImageIdx ) + sLineBreak
               +'Favorit: ' +  BoolToStr ( pData^.isFavorit, true );
 end;
@@ -1078,7 +1380,7 @@ begin
           ImageIndex := IC_FOLDER_OPEN
         else
         begin
-          if pData.Bezeichnung.Equals('Favoriten') then
+          if pData.Bezeichnung.Equals( SC_FAVORITEN ) then
             ImageIndex := IC_FAV_FOLDER_CLOSE
           else
             ImageIndex := IC_FOLDER_CLOSE;
@@ -1091,7 +1393,7 @@ begin
     begin
       //Abfrage ob der Eltern Node Favoriten heißt
       pParentData := DBTree.AVST.GetNodeData( Node.Parent );
-      if pParentData.Bezeichnung.Equals('Favoriten') then
+      if pParentData.Bezeichnung.Equals( SC_FAVORITEN ) then
         ImageIndex := IC_FAVORIT
       else
       begin
@@ -1114,7 +1416,7 @@ var
 pData :pVTNodeData;
 begin
   pData := DBTree.AVST.GetNodeData( Node );
-  if pData^.Bezeichnung.Equals('Bezeichnung eingeben...') then
+  if pData^.Bezeichnung.Equals(SC_BEZEICHNUNG) then
     CellText := '*Neuer Schlüssel'
   else
     CellText := pData^.Bezeichnung;
@@ -1130,7 +1432,7 @@ pData : pVTNodeData;
 begin
   pData := DBTree.AVST.GetNodeData( Node );
   pData^.Bezeichnung := NewText;
-  UpdateChildrenEntries;
+  UpdateChildrenByEntry;
 end;
 
 {------------------------------------------------------------------------------
@@ -1157,3 +1459,4 @@ end;
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 end.
+

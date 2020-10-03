@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{21CF5A88-1505-41E8-853C-85630AAD1300}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="KiiTree.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\PWM_TESTS.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="KiiTree">
+        <MSBuild Projects="KiiTree.dproj"/>
+    </Target>
+    <Target Name="KiiTree:Clean">
+        <MSBuild Projects="KiiTree.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="KiiTree:Make">
+        <MSBuild Projects="KiiTree.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="PWM_TESTS">
+        <MSBuild Projects="Tests\PWM_TESTS.dproj"/>
+    </Target>
+    <Target Name="PWM_TESTS:Clean">
+        <MSBuild Projects="Tests\PWM_TESTS.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PWM_TESTS:Make">
+        <MSBuild Projects="Tests\PWM_TESTS.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="KiiTree;PWM_TESTS"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="KiiTree:Clean;PWM_TESTS:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="KiiTree:Make;PWM_TESTS:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
