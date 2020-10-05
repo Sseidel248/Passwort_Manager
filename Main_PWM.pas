@@ -14,7 +14,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.StdCtrls, Vcl.Buttons,
   Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees, Data.DB,
   Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls, PWM_VST,
-  System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX;
+  System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX, System.UITypes;
 
 type
   TMainStates = Set of (
@@ -61,7 +61,7 @@ type
     PageControl1: TPageControl;
     PW_Manager: TTabSheet;
     Options: TTabSheet;
-    TabSheet3: TTabSheet;
+    PasswortChecker: TTabSheet;
     VST: TVirtualStringTree;
     SuchenEdit: TEdit;
     LBezeichnung: TLabel;
@@ -81,10 +81,10 @@ type
     DBEditBenutzer: TDBEdit;
     DBEditPasswort: TDBEdit;
     DBMemoInfo: TDBMemo;
-    DBCheckBox1: TDBCheckBox;
+    DBCBFavorit: TDBCheckBox;
     AddNewDatasetBtn: TButton;
     DelDataSetBtn: TButton;
-    ImageList1: TImageList;
+    ILNormal: TImageList;
     AddNodeTest: TButton;
     PopupMenu1: TPopupMenu;
     NeuerOrdner1: TMenuItem;
@@ -94,7 +94,7 @@ type
     N2: TMenuItem;
     Ordnerlschen1: TMenuItem;
     Schlssellschen1: TMenuItem;
-    GroupBox1: TGroupBox;
+    GBDaten: TGroupBox;
     N3: TMenuItem;
     OrdnerUmbenennen1: TMenuItem;
     loadTest: TButton;
@@ -110,11 +110,31 @@ type
     LHallo: TLabel;
     ClientDataSet1URL: TStringField;
     DBEditURL: TDBEdit;
-    Label1: TLabel;
+    LURL: TLabel;
     GradientPanel1: TGradientPanel;
     SBPasswoerter: TSpeedButton;
     SBEinstellungen: TSpeedButton;
-    SpeedButton3: TSpeedButton;
+    SBPasswortCheck: TSpeedButton;
+    GBDarstellung: TGroupBox;
+    GBAllgemein: TGroupBox;
+    GBSicherheit: TGroupBox;
+    RGSchriftgreosse: TRadioGroup;
+    GBFarbverlauf: TGroupBox;
+    LFarbeVon: TLabel;
+    LFarbeNach: TLabel;
+    CBFarbeVon: TComboBox;
+    CBFarbeNach: TComboBox;
+    CBAutoSave: TCheckBox;
+    CBZeitImSpeicher: TComboBox;
+    LZeitSpeicherErkl: TLabel;
+    BMasterPWChange: TButton;
+    BErzeugeTAN: TButton;
+    GBInfo: TGroupBox;
+    LBtnErkl: TLabel;
+    SBAbout: TSpeedButton;
+    RGSymbole: TRadioGroup;
+    ILklein: TImageList;
+    ILGross: TImageList;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -140,7 +160,7 @@ type
     procedure DBEditPasswortExit(Sender: TObject);
     procedure DBMemoInfoExit(Sender: TObject);
     procedure VSTNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
-    procedure DBCheckBox1MouseUp(Sender: TObject; Button: TMouseButton;
+    procedure DBCBFavoritMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure NeuerOrdner1Click(Sender: TObject);
     procedure NeuerSchlssel1Click(Sender: TObject);
@@ -183,10 +203,25 @@ type
     procedure DBEditBenutzerClick(Sender: TObject);
     procedure DBEditPasswortClick(Sender: TObject);
     procedure DBEditURLClick(Sender: TObject);
+    procedure DBEditBezeichnungEnter(Sender: TObject);
+    procedure DBEditBenutzerEnter(Sender: TObject);
+    procedure DBEditPasswortEnter(Sender: TObject);
+    procedure DBEditURLEnter(Sender: TObject);
+    procedure DBMemoInfoEnter(Sender: TObject);
+    procedure RGSchriftgreosseClick(Sender: TObject);
+    procedure RGSymboleClick(Sender: TObject);
   private
-    FFonts : TFonts;
+//    FFonts : TFonts;
     DBTree : TDBTree;
     FMainStates : TMainStates;
+    FBezeichnungOld,
+    FBenutzerOld,
+    FPasswortOld,
+    FURLOld,
+    FInfoOld : String;
+    procedure SetFontSizes( size : Integer );
+    procedure SetTreeImageListForSize( Number : Integer );
+    procedure InitInfosHints;
     procedure AddNewDataSet;
     procedure InitNewData( pNode : pVirtualNode = nil; AddedInFav : Boolean = false);
     procedure UpdateEntryByNode();
@@ -195,10 +230,10 @@ type
     procedure UpdateChildrenByEntry;
     procedure LoadPMPK( ArchivFileName : String);
     procedure SavePMPK; overload;
-    procedure SavePMPK(FileForArchiv : String); overload;
+//    procedure SavePMPK(FileForArchiv : String); overload;    //erstmal nicht benutzt
     procedure LoadDBNodeStructur;
-    procedure TextDBChange( Edit : TDBEdit; Str : String );
-    procedure TextDBStandart( Edit : TDBEdit; Str : String );
+//    procedure TextDBChange( Edit : TDBEdit; Str : String );  //erstmal nicht benutzt
+//    procedure TextDBStandart( Edit : TDBEdit; Str : String );//erstmal nicht benutzt
     procedure TextDBClick( Edit : TDBEdit; Str : String );
     { Private-Deklarationen }
   public
@@ -265,11 +300,11 @@ Author: Seidel 2020-10-03
 procedure TMain.UpdateEntryByNode;
 var
 pNode : PVirtualNode;
-pData,
+{pData,}
 pParentData : pVTNodeData;
 begin
   pNode := DBTree.AVST.FocusedNode;
-  pData := DBTree.AVST.GetNodeData( pNode );
+//  pData := DBTree.AVST.GetNodeData( pNode );
   pParentData := DBTree.AVST.GetNodeData( pNode.Parent );
 
   ClientDataSet1.Edit;
@@ -297,26 +332,22 @@ begin
   ClientDataSet1.Edit;
 
   if (Sender as TComponent).Name = 'DBEditBezeichnung' then
-  begin
-    pData^.Bezeichnung := ClientDataSet1Bezeichnung.AsString;
-  end
+    pData^.Bezeichnung := ClientDataSet1Bezeichnung.AsString
+
   else if (Sender as TComponent).Name = 'DBEditBenutzer' then
-  begin
-    pData^.Benutzername := ClientDataSet1Benutzername.AsString;
-  end
+    pData^.Benutzername := ClientDataSet1Benutzername.AsString
+
   else if (Sender as TComponent).Name = 'DBEditPasswort' then
-  begin
-    pData^.Passwort := ClientDataSet1Passwort.AsString;
-  end
+    pData^.Passwort := ClientDataSet1Passwort.AsString
+
   else if (Sender as TComponent).Name = 'DBMemoInfo' then
-  begin
-    pData^.Info := ClientDataSet1Info.AsString;
-  end
+    pData^.Info := ClientDataSet1Info.AsString
+
   else if (Sender as TComponent).Name = 'DBCheckBox1' then
-  begin
-    pData^.isFavorit := DBCheckBox1.Checked;
-  end;
-  ClientDataSet1NodeImageIndex.AsInteger := pData^.NodeImageIdx;
+    pData^.isFavorit := DBCBFavorit.Checked;
+
+  if ClientDataSet1NodeImageIndex.AsInteger <> pData^.NodeImageIdx then
+    ClientDataSet1NodeImageIndex.AsInteger := pData^.NodeImageIdx;
 
   DoChangeStates( [msChanged] );
 
@@ -330,7 +361,7 @@ procedure TMain.LoadPMPK( ArchivFileName : String );
 var
   archiver : TZipForge;
   ArchivPath : String;
-  FileForArchiv : String;
+//  FileForArchiv : String;
   archivItem : TZFArchiveItem;
   stream : TMemoryStream;
 begin
@@ -353,7 +384,7 @@ begin
     EncryptionMethod := caAES_256;
 //    Password := TLogin.MD5String( PM_PW ); //Change 2020.09.28
 //    Password := SHA256String( PM_PW ); //Change 2020.10.03
-    Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
+    Password := AnsiString( GetCryptStr( PM_PW, UserData.User, UserData.PW_Str ) );
     // by specifying its absolute path
     if FindFirst('*.xml', archivItem, faAnyFile-faDirectory) then
     begin
@@ -405,39 +436,39 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-28
 -------------------------------------------------------------------------------}
-procedure TMain.TextDBChange( Edit : TDBEdit; Str : String );
-var
-EditText : String;
-begin
-  EditText := Edit.Text;
-  if not EditText.Equals('') then
-    Edit.Font.Color := clBlack
-  else
-    Edit.Font.Color := clMedGray;
-end;
+//procedure TMain.TextDBChange( Edit : TDBEdit; Str : String );
+//var
+//EditText : String;
+//begin
+//  EditText := Edit.Text;
+//  if not EditText.Equals('') then
+//    Edit.Font.Color := clBlack
+//  else
+//    Edit.Font.Color := clMedGray;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-28
 -------------------------------------------------------------------------------}
-procedure TMain.TextDBStandart( Edit : TDBEdit; Str : String );
-var
-EditText : String;
-begin
-  EditText := Edit.Text;
-  if EditText.Equals('') then
-  begin
-    Edit.Text := Str;
-    Edit.Font.Color := clMedGray;
-  end
-  else if EditText.Equals(Str) then
-  begin
-    Edit.Font.Color := clMedGray;
-  end
-  else
-  begin
-    Edit.Font.Color := clBlack;
-  end;
-end;
+//procedure TMain.TextDBStandart( Edit : TDBEdit; Str : String );
+//var
+//EditText : String;
+//begin
+//  EditText := Edit.Text;
+//  if EditText.Equals('') then
+//  begin
+//    Edit.Text := Str;
+//    Edit.Font.Color := clMedGray;
+//  end
+//  else if EditText.Equals(Str) then
+//  begin
+//    Edit.Font.Color := clMedGray;
+//  end
+//  else
+//  begin
+//    Edit.Font.Color := clBlack;
+//  end;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-30
@@ -447,9 +478,15 @@ begin
   FMainStates := FMainStates + Enter - Leave;
 
   if msChanged in MainStates then
-    Main.Caption := '*KiiTree von ' + UserData.User
+  begin
+    Main.Caption := '*KiiTree von ' + UserData.User;
+    SaveDataBtn.Enabled := true;
+  end
   else
+  begin
     Main.Caption := 'KiiTree von ' + UserData.User;
+    SaveDataBtn.Enabled := false;
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -470,11 +507,11 @@ Author: Seidel 2020-09-18
 procedure TMain.SavePMPK;
 var
   archiver : TZipForge;
-  ArchivFile : String;
+//  ArchivFile : String;
   FileForArchiv : String;
   IniForArchiv : String;
   SavePath : String;
-  FileToSave : String;
+//  FileToSave : String;
   stream : TMemoryStream;
   IniList : TStringlist;
 begin
@@ -516,7 +553,7 @@ begin
       EncryptionMethod := caAES_256;
 //      Password :=  TLogin.MD5String( PM_PW ); //Change 2020.09.28
 //      Password :=  SHA256String( PM_PW );
-      Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
+      Password := AnsiString( GetCryptStr( PM_PW, UserData.User, UserData.PW_Str ) );
       //hinzufügen einer Datei
       AddFromStream( FileForArchiv, stream );
       AddFromString( IniForArchiv, IniList.Text );
@@ -533,51 +570,51 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
-procedure TMain.SavePMPK(FileForArchiv : String);
-var
-  archiver : TZipForge;
-  ArchivFile : String;
-  SavePath : String;
-  FileToSave : String;
-  stream : TMemoryStream;
-begin
-  //stream erzeugen worin der CDS gespeichert wird
-  stream := TMemoryStream.Create;
-  stream.Clear;
-  stream.Position := 0;
-  ClientDataSet1.SaveToStream( stream );
-  stream.Position := 0;
-
-  //erzeugen des Speicherpfades (dieser ist abhängig vvon der .Exe)
-  SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\' ;
-  if not DirectoryExists( SavePath ) then
-    ForceDirectories( SavePath );
-
-  // Create an instance of the TZipForge class
-  archiver := TZipForge.Create(nil);
-  with archiver do
-  begin
-    // Name des Archives was wir erstellen wollen
-    //TODO: Name des Archives später als Kombi aus Username und irgendwas
-    FileName := SavePath + 'test.PMPK';
-    // Because we create a new archive,
-    // we set Mode to fmCreate
-    OpenArchive(fmOpenReadWrite);
-    // Setzen des Verzeichnisses in dem das Archiv platziert wird
-    BaseDir := SavePath;
-    // Set encryption algorithm and password
-    EncryptionMethod := caAES_256;
-//    Password :=  TLogin.MD5String( PM_PW );  //Change 2020.09.28
-//    Password := SHA256String( PM_PW );
-    Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
-    //hinzufügen einer Datei
-    AddFromStream( FileForArchiv, stream);
-    //AddFiles( FileForArchiv );
-    ShowMessage( FileForArchiv + ' wurde in ' + FileName + ' gepackt' );
-    CloseArchive();
-  end;
-
-end;
+//procedure TMain.SavePMPK(FileForArchiv : String);
+//var
+//  archiver : TZipForge;
+////  ArchivFile : String;
+//  SavePath : String;
+////  FileToSave : String;
+//  stream : TMemoryStream;
+//begin
+//  //stream erzeugen worin der CDS gespeichert wird
+//  stream := TMemoryStream.Create;
+//  stream.Clear;
+//  stream.Position := 0;
+//  ClientDataSet1.SaveToStream( stream );
+//  stream.Position := 0;
+//
+//  //erzeugen des Speicherpfades (dieser ist abhängig vvon der .Exe)
+//  SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\' ;
+//  if not DirectoryExists( SavePath ) then
+//    ForceDirectories( SavePath );
+//
+//  // Create an instance of the TZipForge class
+//  archiver := TZipForge.Create(nil);
+//  with archiver do
+//  begin
+//    // Name des Archives was wir erstellen wollen
+//    //TODO: Name des Archives später als Kombi aus Username und irgendwas
+//    FileName := SavePath + 'test.PMPK';
+//    // Because we create a new archive,
+//    // we set Mode to fmCreate
+//    OpenArchive(fmOpenReadWrite);
+//    // Setzen des Verzeichnisses in dem das Archiv platziert wird
+//    BaseDir := SavePath;
+//    // Set encryption algorithm and password
+//    EncryptionMethod := caAES_256;
+////    Password :=  TLogin.MD5String( PM_PW );  //Change 2020.09.28
+////    Password := SHA256String( PM_PW );
+//    Password := AnsiString( GetCryptStr( PM_PW, UserData.User, UserData.PW_Str ) );
+//    //hinzufügen einer Datei
+//    AddFromStream( FileForArchiv, stream);
+//    //AddFiles( FileForArchiv );
+//    ShowMessage( FileForArchiv + ' wurde in ' + FileName + ' gepackt' );
+//    CloseArchive();
+//  end;
+//
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-02
@@ -633,8 +670,124 @@ begin
   DBEditBenutzer.Enabled := enable;
   DBEditPasswort.Enabled := enable;
   DBMemoInfo.Enabled := enable;
-  DBCheckBox1.Enabled := enable;
+  DBCBFavorit.Enabled := enable;
   DBEditURL.Enabled := enable;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.SetFontSizes( size : Integer );
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    //kleineren
+    //Menüleiste
+    LHallo.Font.Size := size;
+    SBAbout.Font.Size := size;
+    //Einstellungen
+    GBDarstellung.Font.Size := size;
+    GBAllgemein.Font.Size := size;
+    GBSicherheit.Font.Size := size;
+    GBFarbverlauf.Font.Size := size;
+    GBInfo.Font.Size := size;
+    BMasterPWChange.Font.Size := size;
+    BErzeugeTAN.Font.Size := size;
+    LBtnErkl.Font.Size := size;
+    CBAutoSave.Font.Size := size;
+    CBZeitImSpeicher.Font.Size := size;
+    LZeitSpeicherErkl.Font.Size := size;
+    RGSchriftgreosse.Font.Size := size;
+    LFarbeVon.Font.Size := size;
+    LFarbeNach.Font.Size := size;
+    CBFarbeVon.Font.Size := size;
+    CBFarbeNach.Font.Size := size;
+    RGSymbole.Font.Size := size;
+    //Passwörter
+    SuchenEdit.Font.Size := size;
+    DBTree.AVST.Font.Size := size;
+    DBEditBezeichnung.Font.Size := size;
+    DBEditBenutzer.Font.Size := size;
+    DBEditPasswort.Font.Size := size;
+    DBMemoInfo.Font.Size := size;
+    DBCBFavorit.Font.Size := size;
+    DBEditURL.Font.Size := size;
+    LBezeichnung.Font.Size := size;
+    LBenutzername.Font.Size := size;
+    LPasswort.Font.Size := size;
+    LInfo.Font.Size := size;
+    LURL.Font.Size := size;
+
+    //größere
+    //Menüleiste
+    LUser.Font.Size := size+2;
+    SBPasswoerter.Font.Size := size+2;
+    SBEinstellungen.Font.Size := size+2;
+    SBPasswortCheck.Font.Size := size+2;
+    //Passwörter
+    GBDaten.Font.Size := size+2;
+
+    //Anpassungen
+//    if size > 10 then
+//      LBenutzername.Caption := 'Benutzer-' + sLineBreak + 'name:'
+//    else
+//      LBenutzername.Caption := 'Benutzername:';
+    Main.Refresh;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.SetTreeImageListForSize( Number : Integer );
+var
+Nodes : TVTVirtualNodeEnumeration;
+Node : PVirtualNode;
+begin
+  Nodes := DBTree.AVST.Nodes();
+  Screen.Cursor := crHourGlass;
+  try
+    case Number of
+      0: begin
+        DBTree.AVST.Images := ILGross;
+        for Node in Nodes do
+        begin
+          DBTree.AVST.NodeHeight[ Node ] := 36;
+        end;
+      end;
+      1: begin
+        DBTree.AVST.Images := ILNormal;
+        for Node in Nodes do
+        begin
+          DBTree.AVST.NodeHeight[ Node ] := 26;
+        end;
+      end;
+      2: begin
+        DBTree.AVST.Images := ILklein;
+        for Node in Nodes do
+        begin
+          DBTree.AVST.NodeHeight[ Node ] := 18;
+        end;
+      end;
+    end;
+    //TODO: VST übernimmt die großen Symbole nicht! nach änderung der NodeHeight
+    Main.Refresh;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.InitInfosHints;
+begin
+  SBPasswortCheck.Hint := 'Überprüft Ihre Passwörter nach ihre der Stärke.';
+  CBZeitImSpeicher.Hint := 'Nach Ablauf der Zeit, wird der Zwischenspeicher und das darin enthaltene Passwort geleert.';
+  LZeitSpeicherErkl.Hint := 'Nach Ablauf der Zeit, wird der Zwischenspeicher und das darin enthaltene Passwort geleert.';
+  SBPasswoerter.Hint := 'Hier sind all Ihre Zugangdaten.';
 end;
 
 {------------------------------------------------------------------------------
@@ -687,7 +840,7 @@ begin
   ClientDataSet1Info.AsString := SC_NOTIZ;
   ClientDataSet1URL.AsString := SC_URL;
   ClientDataSet1isFavorit.AsBoolean := AddedInFav;
-  DBCheckBox1.Checked := AddedInFav;
+  DBCBFavorit.Checked := AddedInFav;
 
   pNodeData := DBTree.AVST.GetNodeData( pNode );
   if Assigned(pNodeData) then
@@ -796,18 +949,18 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.Button3Click(Sender: TObject);
 begin
-  PageControl1.ActivePage := TabSheet3;
+  PageControl1.ActivePage := PasswortChecker;
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-17
 -------------------------------------------------------------------------------}
-procedure TMain.DBCheckBox1MouseUp(Sender: TObject; Button: TMouseButton;
+procedure TMain.DBCBFavoritMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
-pNode, pNodeFav : PVirtualNode;
-pData, pDataFav : pVTNodeData;
-Nodes :TVTVirtualNodeEnumeration;
+pNode{, pParentNode} : PVirtualNode;
+//pData, pParentData : pVTNodeData;
+//Nodes :TVTVirtualNodeEnumeration;
 begin
   //fängt eine Exception beim Start ab
   if not Assigned( DBTree ) then
@@ -820,7 +973,10 @@ begin
   if DBTree.AVST.GetNodeLevel( pNode ) <= 1 then
     Exit;
 
-  DBTree.MoveNodeToFav( pNode );
+  if not DBTree.IsAddedInFav( pNode ) then
+    DBTree.MoveNodeToFav( pNode )
+  else
+    DBTree.MoveNodeTo( pNode, SC_ALLE );
 
   UpdateNodeByEntry( Sender );
 end;
@@ -844,9 +1000,21 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditBenutzerExit(Sender: TObject);
+procedure TMain.DBEditBenutzerEnter(Sender: TObject);
 begin
-  UpdateNodeByEntry( Sender );
+  FBenutzerOld := DBEditBenutzer.Text;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBenutzerExit(Sender: TObject);
+var
+ABenutzer : String;
+begin
+  ABenutzer := DBEditBenutzer.Text;
+  if not ABenutzer.Equals( FBenutzerOld ) then
+    UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -858,6 +1026,12 @@ begin
   begin
     Key := #0;
     DBEditPasswort.SetFocus;
+  end
+  else
+  if Ord( Key ) = 27 then
+  begin
+    Key := #0;
+    GBDaten.SetFocus;
   end;
   DBTree.AVST.Refresh;
 end;
@@ -881,9 +1055,21 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditBezeichnungExit(Sender: TObject);
+procedure TMain.DBEditBezeichnungEnter(Sender: TObject);
 begin
-  UpdateNodeByEntry( Sender );
+  FBezeichnungOld := DBEditBezeichnung.Text;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBezeichnungExit(Sender: TObject);
+var
+ABezeichnung : String;
+begin
+  ABezeichnung := DBEditBezeichnung.Text;
+  if not ABezeichnung.Equals( FBezeichnungOld ) then
+    UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -895,6 +1081,12 @@ begin
   begin
     Key := #0;
     DBEditBenutzer.SetFocus;
+  end
+  else
+  if Ord( Key ) = 27 then
+  begin
+    Key := #0;
+    GBDaten.SetFocus;
   end;
   DBTree.AVST.Refresh;
 end;
@@ -918,9 +1110,21 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditPasswortExit(Sender: TObject);
+procedure TMain.DBEditPasswortEnter(Sender: TObject);
 begin
-  UpdateNodeByEntry( Sender );
+  FPasswortOld := DBEditPasswort.Text;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditPasswortExit(Sender: TObject);
+var
+APasswort : String;
+begin
+  APasswort := DBEditPasswort.Text;
+  if not APasswort.Equals( FPasswortOld ) then
+    UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -932,6 +1136,12 @@ begin
   begin
     Key := #0;
     DBEditURL.SetFocus;
+  end
+  else
+  if Ord( Key ) = 27 then
+  begin
+    Key := #0;
+    GBDaten.SetFocus;
   end;
   DBTree.AVST.Refresh;
 end;
@@ -955,9 +1165,20 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-24
 -------------------------------------------------------------------------------}
-procedure TMain.DBEditURLExit(Sender: TObject);
+procedure TMain.DBEditURLEnter(Sender: TObject);
 begin
-  UpdateNodeByEntry( Sender );
+  FURLOld := DBEditURL.Text;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditURLExit(Sender: TObject);
+var
+AURL : String;
+begin
+  if not AURL.Equals( FURLOld ) then
+    UpdateNodeByEntry( Sender );
 end;
 
 {------------------------------------------------------------------------------
@@ -969,6 +1190,12 @@ begin
   begin
     Key := #0;
     VST.SetFocus;
+  end
+  else
+  if Ord( Key ) = 27 then
+  begin
+    Key := #0;
+    GBDaten.SetFocus;
   end;
   DBTree.AVST.Refresh;
 end;
@@ -984,10 +1211,23 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
-procedure TMain.DBMemoInfoExit(Sender: TObject);
+procedure TMain.DBMemoInfoEnter(Sender: TObject);
 begin
-  UpdateNodeByEntry( Sender );
-  DBTree.AVST.Refresh;
+  FInfoOld := DBMemoInfo.Text;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.DBMemoInfoExit(Sender: TObject);
+var
+AInfo : String;
+begin
+  if not AInfo.Equals( FInfoOld ) then
+  begin
+    UpdateNodeByEntry( Sender );
+    DBTree.AVST.Refresh;
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -1021,10 +1261,14 @@ end;
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.FormCreate(Sender: TObject);
-var
-opendialog : TFileOpenDialog;
+//var
+//opendialog : TFileOpenDialog;
 begin
   Application.HintHidePause := 10000;
+
+  InitInfosHints;
+
+  PageControl1.ActivePage := PW_Manager;
 
   DBTree := TDBTree.Create( VST );
   DBTree.Create( VST );
@@ -1161,6 +1405,30 @@ begin
       NeuerOrdner1.Caption := 'Neuer Unterordner';
     end;
 
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.RGSchriftgreosseClick(Sender: TObject);
+begin
+  case RGSchriftgreosse.ItemIndex of
+    0: SetFontSizes( 12 );
+    1: SetFontSizes( 10 );
+    2: SetFontSizes( 8 );
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TMain.RGSymboleClick(Sender: TObject);
+begin
+  case RGSymbole.ItemIndex of
+    0: SetTreeImageListForSize( 0 );
+    1: SetTreeImageListForSize( 1 );
+    2: SetTreeImageListForSize( 2 );
   end;
 end;
 
@@ -1448,11 +1716,10 @@ begin
   End
   else
   begin
-    EnableDBFields( true );
     pData := DBTree.AVST.GetNodeData( HitInfo.HitNode );
-    ClientDataSet1.Locate( 'ID', pData^.ID , [] );
+    if ClientDataSet1.Locate( 'ID', pData^.ID , [] ) then
+      EnableDBFields( true );
   end;
-
 end;
 
 {------------------------------------------------------------------------------

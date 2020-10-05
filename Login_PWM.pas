@@ -11,7 +11,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel;
+  System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes;
 
 
 //type
@@ -48,9 +48,9 @@ type
     procedure UsernameEditKeyPress(Sender: TObject; var Key: Char);
     procedure SBToogleHideClick(Sender: TObject);
   private
-//    LoginStates : TLoginStates;
-//    property LoginState : TLoginStates read LoginStates write LoginStates;
-    function CheckPMKExist( PMPK_Str : string): Boolean;
+//    LoginStates : TLoginStates;                                             //erstmal nicht benutzt
+//    property LoginState : TLoginStates read LoginStates write LoginStates;  //erstmal nicht benutzt
+//    function CheckPMPKExist( PMPK_Str : string): Boolean;                   //erstmal nicht benutzt
     function CheckUserAndPW : Boolean;
     procedure EnableAnmeldeBtn;
     procedure TextChange( Edit : TEdit; Str : String );
@@ -58,12 +58,12 @@ type
     procedure TextClick( Edit : TEdit; Str : String );
     { Private-Deklarationen }
   public
-//    class procedure TextChange( Edit : TEdit; Str : String );
-//    class procedure TextStandart( Edit : TEdit; Str : String );
-//    class procedure TextClick( Edit : TEdit; Str : String );
-//    class function MD5String( const Input: String ) : String;
-//    class function SHA256String( const Input : String ) : String;
-//    procedure ChangeLoginState( Enter : TLoginStates; Leave : TLoginStates = []);
+//    class procedure TextChange( Edit : TEdit; Str : String );              //erstmal nicht benutzt
+//    class procedure TextStandart( Edit : TEdit; Str : String );            //erstmal nicht benutzt
+//    class procedure TextClick( Edit : TEdit; Str : String );               //erstmal nicht benutzt
+//    class function MD5String( const Input: String ) : String;              //erstmal nicht benutzt
+//    class function SHA256String( const Input : String ) : String;          //erstmal nicht benutzt
+//    procedure ChangeLoginState( Enter : TLoginStates; Leave : TLoginStates = []);  //erstmal nicht benutzt
     { Public-Deklarationen }
   end;
 
@@ -127,7 +127,7 @@ begin
       FileName := UserData.SavePath + UserData.PMPK_Name_MD5;
       OpenArchive( fmOpenRead );
       EncryptionMethod := caAES_256;
-      Password := GetCryptStr( PM_PW, UserData.User, UserData.PW_Str );
+      Password := AnsiString( GetCryptStr( PM_PW, UserData.User, UserData.PW_Str ) );
 //      Password := SHA256String( PM_PW );
 //      Password := MD5String(PM_PW);  //Change 2020.09.28
       if FindFirst( '*.ini', ArchiveItem, faAnyFile ) then
@@ -162,16 +162,16 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-function TLogin.CheckPMKExist( PMPK_Str : string ): Boolean;
-var
-SaveFile : string;
-begin
-  SaveFile := Concat( UserData.SavePath, PMPK_str , SC_EXT );
-  if FileExists( SaveFile ) then
-    Result := true
-  else
-    Result := false;
-end;
+//function TLogin.CheckPMPKExist( PMPK_Str : string ): Boolean;
+//var
+//SaveFile : string;
+//begin
+//  SaveFile := Concat( UserData.SavePath, PMPK_str , SC_EXT );
+//  if FileExists( SaveFile ) then
+//    Result := true
+//  else
+//    Result := false;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20

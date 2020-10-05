@@ -9,7 +9,7 @@ Author: Sebastian Seidel
 interface
 
 uses
-  Vcl.StdCtrls, Vcl.DBCtrls, Virtualtrees, System.SysUtils, System.Classes,
+  Vcl.StdCtrls, Vcl.DBCtrls, Virtualtrees, System.SysUtils, System.Classes, System.UITypes,
   Datasnap.DBClient;
 
 Type
@@ -32,6 +32,7 @@ Type
       function AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
       procedure SetNodeDBID( Node : PVirtualNode; ID : Integer );
       procedure MoveNodeToFav( pNode : PVirtualNode );
+      procedure MoveNodeTo( pNode : PVirtualNode; Location : String);
       function AddDBNodeFolder : PVirtualNode;
       function IsAddedInFav( pNode : PVirtualNode) : Boolean;
       function IsFavFolder( pNode : PVirtualNode ) : Boolean;
@@ -89,12 +90,12 @@ Author: Seidel 2020-09-17
 function TDBTree.AddDBNodeFolder : PVirtualNode;
 var
 pNode : PVirtualNode;
-pData : pVTNodeData;
+//pData : pVTNodeData;
 begin
   AVST.ClearSelection;
   AVST.Refresh;
   pNode := AVST.GetFirst();
-  pData := AVST.GetNodeData(PNode);
+//  pData := AVST.GetNodeData(PNode);
   Result := AVST.AddChild( pNode );
 
   SetData( Result, true, 'Neuer Ordner' );
@@ -569,9 +570,31 @@ begin
       pDataFav := AVST.GetNodeData( pNodeFav );
       if pDataFav^.Bezeichnung.Equals( SC_FAVORITEN ) then
       begin
-        AVST.MoveTo( pNode, pNodeFav, amAddChildLast, false );
+        AVST.MoveTo( pNode, pNodeFav, amAddChildFirst, false );
         TryExpandNode( pNodeFav );
       end;
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-04
+-------------------------------------------------------------------------------}
+procedure TDBTree.MoveNodeTo( pNode : PVirtualNode; Location : String);
+var
+{pData,} pDataFav : pVTNodeData;
+Nodes : TVTVirtualNodeEnumeration;
+pNodeFav : PVirtualNode;
+begin
+//  pData := AVST.GetNodeData( pNode );
+  Nodes := AVST.Nodes();
+  for pNodeFav in Nodes do
+  begin
+    pDataFav := AVST.GetNodeData( pNodeFav );
+    if pDataFav^.Bezeichnung.Equals( Location ) then
+    begin
+      AVST.MoveTo( pNode, pNodeFav, amAddChildFirst, false );
+      TryExpandNode( pNodeFav );
     end;
   end;
 end;
