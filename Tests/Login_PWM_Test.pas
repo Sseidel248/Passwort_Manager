@@ -21,14 +21,17 @@ type
     [TearDown]
     procedure TearDown;
     [Test]
-    [Testcase( 'Normaler Login User existiert', '1,1,false,1')]
-    [Testcase( 'Normaler Login Passwort falsch', '1,2,false,8')]
-    [Testcase( 'Neuer User existiert bereits' , '1,1,true,6')]
+    [Testcase( 'Normaler Login User existiert', '1,1,false,1' ) ]
+    [Testcase( 'Normaler Login Passwort falsch', '1,2,false,8' ) ]
     procedure LoginTest( User , Passwort : String; CB_Checked : Boolean; Result : Integer );
     [Test]
-    [Testcase( 'User existiert noch nicht kann angelegt werden', '2,2,false,4')]
-    [Testcase( 'Neuer User soll erstellt werden' , '1,1,true,4')]
+    [Testcase( 'User existiert noch nicht kann angelegt werden', '2,2,false,4' ) ]
+    [Testcase( 'Neuer User soll erstellt werden' , '1,1,true,4' ) ]
     procedure LoginTestNewUser( User , Passwort : String; CB_Checked : Boolean; Result : Integer );
+    [Test] //Test für das colorierte Editfeld hinzugefügt
+    [Testcase( 'User existiert bereits', '1,1,true' ) ]
+    [Testcase( 'User existiert noch nicht', '2,1,false' ) ]
+    procedure WriteUserName( Username, ExistUsername : String; Result : Boolean);
   end;
 
 {
@@ -56,7 +59,7 @@ var
 implementation
 
 uses
-  ShellAPI, Windows,  System.Classes,Vcl.StdCtrls;
+  ShellAPI, Windows,  System.Classes,Vcl.StdCtrls, Hash_Functions;
 
 function DeleteFiles(const AFile: string): boolean;
 var
@@ -73,6 +76,28 @@ begin
   result := SHFileOperation(sh) = 0;
 end;
 
+procedure TMyLoginTest.WriteUserName( Username, ExistUsername : String; Result : Boolean);
+var
+txt : TStringlist;
+begin
+  {$DEFINE TESTLOGIN}
+  fForm.CBNewUser.Checked := true;
+  txt := TStringList.Create;
+  try
+    UserData.PersonalUserSavePath := Test_Folder_Out;
+    saveFile := Test_Folder_Out + GetMD5String( ExistUsername ) + '.KTP';
+    txt.SaveToFile( savefile );
+  finally
+    txt.Free;
+  end;
+
+  fForm.UsernameEdit.Text := Username;
+
+  Assert.AreEqual( fForm.UsernameEdit.UserExist, Result, 'Fehler bei Prüfung ob der User existiert.' );
+
+  {$UNDEF TESTLOGIN}
+end;
+
 procedure TMyLoginTest.LoginTest(User: string; Passwort: string; CB_Checked : Boolean; Result : Integer);
 var
 txt : TStringlist;
@@ -85,7 +110,7 @@ begin
   //PseudoNutzer Datei erstellt
   txt := TStringList.Create;
   try
-    saveFile := Test_Folder_Out + MD5String( User ) + '.PMPK';
+    saveFile := Test_Folder_Out + GetMD5String( User ) + '.KTP';
     txt.SaveToFile( savefile );
   finally
     txt.Free;

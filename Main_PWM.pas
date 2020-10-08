@@ -228,8 +228,8 @@ type
     procedure UpdateNodeByEntry( Sender : TObject );
     procedure EnableDBFields( enable : Boolean );
     procedure UpdateChildrenByEntry;
-    procedure LoadPMPK( ArchivFileName : String);
-    procedure SavePMPK; overload;
+    procedure LoadKTP( ArchivFileName : String);
+    procedure SaveKTP; overload;
 //    procedure SavePMPK(FileForArchiv : String); overload;    //erstmal nicht benutzt
     procedure LoadDBNodeStructur;
 //    procedure TextDBChange( Edit : TDBEdit; Str : String );  //erstmal nicht benutzt
@@ -357,7 +357,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
-procedure TMain.LoadPMPK( ArchivFileName : String );
+procedure TMain.LoadKTP( ArchivFileName : String );
 var
   archiver : TZipForge;
   ArchivPath : String;
@@ -366,7 +366,8 @@ var
   stream : TMemoryStream;
 begin
   //Ort der Gespeicherten und verschlüsselten Datei
-  ArchivPath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
+//  ArchivPath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
+  ArchivPath := UserData.PersonalUserSavePath;
   // Create an instance of the TZipForge class
   archiver := TZipForge.Create(nil);
   //erzeugt den Stream aus dem die DB aufgebaut wird
@@ -374,7 +375,7 @@ begin
   with archiver do
   begin
     // Set the name of the archive file we want to create
-    //TODO: später soll abhängig vom User die jeweilige PMPK Datei genommen werden
+    //TODO: später soll abhängig vom User die jeweilige KTP Datei genommen werden
     FileName := ArchivPath + ArchivFileName;
 
     OpenArchive(fmOpenReadWrite);
@@ -403,7 +404,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.loadTestClick(Sender: TObject);
 begin
-  LoadPMPK('test.PMPK');
+  LoadKTP('test.KTP');
   LoadDBNodeStructur;
 end;
 
@@ -504,7 +505,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
-procedure TMain.SavePMPK;
+procedure TMain.SaveKTP;
 var
   archiver : TZipForge;
 //  ArchivFile : String;
@@ -524,7 +525,8 @@ begin
 
   //erzeugen des Speicherpfades (dieser ist abhängig vvon der .Exe)
 //  SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\' ;
-  SavePath := UserData.SavePath;
+//  SavePath := UserData.AppSavePath;
+  SavePath := UserData.PersonalUserSavePath;
   if not DirectoryExists( SavePath ) then
     ForceDirectories( SavePath );
 
@@ -535,7 +537,7 @@ begin
   try
     iniList.Values[SC_USER] := UserData.User;
     IniList.Values[SC_PW] := UserData.PW_Str;
-    IniList.Values[SC_PMPK] := UserData.PMPK_Name_MD5;
+    IniList.Values[SC_KTP] := UserData.KTP_Name_MD5;
     //ini-ende
 
     // Create an instance of the TZipForge class
@@ -543,7 +545,7 @@ begin
     with archiver do
     begin
       // Name des Archives was wir erstellen wollen
-      FileName := SavePath + UserData.PMPK_Name_MD5;
+      FileName := SavePath + UserData.KTP_Name_MD5;
       // Because we create a new archive,
       // we set Mode to fmCreate
       OpenArchive(fmCreate);
@@ -596,7 +598,7 @@ Author: Seidel 2020-09-18
 //  begin
 //    // Name des Archives was wir erstellen wollen
 //    //TODO: Name des Archives später als Kombi aus Username und irgendwas
-//    FileName := SavePath + 'test.PMPK';
+//    FileName := SavePath + 'test.KTP';
 //    // Because we create a new archive,
 //    // we set Mode to fmCreate
 //    OpenArchive(fmOpenReadWrite);
@@ -634,7 +636,7 @@ Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.saveTestClick(Sender: TObject);
 begin
-  SavePMPK;
+  SaveKTP;
 end;
 
 {------------------------------------------------------------------------------
@@ -1253,7 +1255,7 @@ begin
     + 'Sollen die Änderungen an Ihrem KiiTree gespeichert werden?';
     MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
     if MResult = mrYes then
-      SavePMPK;
+      SaveKTP;
   end;
 end;
 
@@ -1286,7 +1288,7 @@ begin
   else if Login.ModalResult = mrOk then//laden einer alten DB
   begin
     ClientDataSet1.LoadFromFile( XMLFile );
-    LoadPMPK( UserData.PMPK_Name_MD5 );
+    LoadKTP( UserData.KTP_Name_MD5 );
     //soll die Node entsprechend der Datenbank erzeugen
     LoadDBNodeStructur;
     //XMLFile := 'D:\Delphie Embarcadero\Passwort_Manager\DB\PMTable6.xml';
@@ -1437,7 +1439,7 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.SaveDataBtnClick(Sender: TObject);
 begin
-  SavePMPK;
+  SaveKTP;
   DoChangeStates( [], [msChanged] );
 end;
 

@@ -4,12 +4,12 @@ object Login: TLogin
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Anmeldung KiiTree'
-  ClientHeight = 311
+  ClientHeight = 351
   ClientWidth = 344
   Color = clMenu
-  Constraints.MaxHeight = 340
+  Constraints.MaxHeight = 380
   Constraints.MaxWidth = 350
-  Constraints.MinHeight = 340
+  Constraints.MinHeight = 380
   Constraints.MinWidth = 350
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -29,7 +29,7 @@ object Login: TLogin
     Left = 0
     Top = 0
     Width = 344
-    Height = 311
+    Height = 351
     Align = alClient
     Caption = 'GradientPanel1'
     DoubleBuffered = True
@@ -85,7 +85,7 @@ object Login: TLogin
     end
     object AnmeldeBtn: TButton
       Left = 8
-      Top = 254
+      Top = 294
       Width = 328
       Height = 49
       Caption = 'Passwort-Safe '#246'ffnen'
@@ -106,17 +106,15 @@ object Login: TLogin
       Width = 297
       Height = 24
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clScrollBar
+      Font.Color = clBlack
       Font.Height = -13
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
       PasswordChar = '*'
       TabOrder = 2
-      Text = 'Master-Passwort eingeben...'
+      TextHint = 'Master-Passwort eingeben...'
       OnChange = UserMasterPWEditChange
-      OnClick = UserMasterPWEditClick
-      OnExit = UserMasterPWEditExit
       OnKeyPress = UserMasterPWEditKeyPress
     end
     object UsernameEdit: TEdit
@@ -125,17 +123,42 @@ object Login: TLogin
       Width = 328
       Height = 24
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clScrollBar
+      Font.Color = clBlack
       Font.Height = -13
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 1
-      Text = 'Benutzername eingeben...'
+      TextHint = 'Benutzername eingeben...'
       OnChange = UsernameEditChange
-      OnClick = UsernameEditClick
-      OnExit = UsernameEditExit
       OnKeyPress = UsernameEditKeyPress
+    end
+    object ESavePathForKTPs: TEdit
+      Left = 8
+      Top = 264
+      Width = 297
+      Height = 24
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      TabOrder = 4
+    end
+    object BGetKTPSavePath: TButton
+      Left = 304
+      Top = 264
+      Width = 32
+      Height = 26
+      Caption = '...'
+      Enabled = False
+      TabOrder = 5
+      OnClick = BGetKTPSavePathClick
     end
   end
   object ImageList1: TImageList

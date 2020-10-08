@@ -19,6 +19,27 @@ uses
 //    lUnitTest              //nur für den Unit test
 //    );
 
+//Editfeld mit Rahmen 2020-10-08
+type
+  TEdit = Class(Vcl.StdCtrls.TEdit)
+    procedure WMPaint( var Message: TWMPaint ); message WM_PAINT;
+    procedure WMKEYUP( var Message: TWMPaint ); message WM_KEYUP;
+  private
+    FPaintedRed: Boolean;
+//    FPaintedGreen : Boolean;
+    FRequired: Boolean;
+    FUserExist : Boolean;
+    FTextHintStr : String;
+    procedure CheckForInvalidate;
+    procedure DrawBorder( AColor : TColor );
+  published
+  public
+    Property Required: Boolean read FRequired write FRequired;
+    Property UserExist: Boolean read FUserExist Write FUserExist;
+    property TextHintStr: String read FTextHintStr write FTextHintStr;
+    Property Font;
+  End;
+
 type
   TLogin = class(TForm)
     Image1: TImage;
@@ -32,30 +53,29 @@ type
     GradientPanel1: TGradientPanel;
     SBToogleHide: TSpeedButton;
     Label1: TLabel;
+    ESavePathForKTPs: TEdit;
+    BGetKTPSavePath: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure AnmeldeBtnClick(Sender: TObject);
     procedure UsernameEditChange(Sender: TObject);
     procedure UserMasterPWEditChange(Sender: TObject);
-    procedure UsernameEditClick(Sender: TObject);
-    procedure UsernameEditExit(Sender: TObject);
-    procedure UserMasterPWEditClick(Sender: TObject);
-    procedure UserMasterPWEditExit(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure CBNewUserClick(Sender: TObject);
     procedure UserMasterPWEditKeyPress(Sender: TObject; var Key: Char);
     procedure UsernameEditKeyPress(Sender: TObject; var Key: Char);
     procedure SBToogleHideClick(Sender: TObject);
+    procedure BGetKTPSavePathClick(Sender: TObject);
   private
 //    LoginStates : TLoginStates;                                             //erstmal nicht benutzt
 //    property LoginState : TLoginStates read LoginStates write LoginStates;  //erstmal nicht benutzt
-//    function CheckPMPKExist( PMPK_Str : string): Boolean;                   //erstmal nicht benutzt
+    function CheckKTPExist( SaveFile : string ): Boolean;                   //erstmal nicht benutzt
     function CheckUserAndPW : Boolean;
     procedure EnableAnmeldeBtn;
-    procedure TextChange( Edit : TEdit; Str : String );
-    procedure TextStandart( Edit : TEdit; Str : String );
-    procedure TextClick( Edit : TEdit; Str : String );
+//    procedure TextChange( Edit : TEdit; Str : String );
+//    procedure TextStandart( Edit : TEdit; Str : String );
+//    procedure TextClick( Edit : TEdit; Str : String );
     { Private-Deklarationen }
   public
 //    class procedure TextChange( Edit : TEdit; Str : String );              //erstmal nicht benutzt
@@ -78,6 +98,120 @@ uses
 {$R *.dfm}
 
 {------------------------------------------------------------------------------
+*******************************************************************************
+TEdit mit Farbigen Rand
+*******************************************************************************
+Author: Seidel 2020-10-08
+-------------------------------------------------------------------------------}
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-08
+-------------------------------------------------------------------------------}
+procedure TEdit.CheckForInvalidate;
+begin
+  if Required and ( ( Length( Trim( Text ) ) = 0 ) or UserExist ) then
+  begin
+    if not FPaintedRed then
+      Invalidate;
+  end
+//  else if Required and UserExist then
+//  begin
+//    if not FPaintedRed then
+//      Invalidate;
+//  end
+  else if Required and not UserExist then
+  begin
+    if {not FPaintedGreen}FPaintedRed then
+      Invalidate;
+  end
+  else if FPaintedRed then
+    Invalidate
+//  else if FPaintedGreen then
+//    Invalidate;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-08
+-------------------------------------------------------------------------------}
+procedure TEdit.WMKEYUP(var Message: TWMPaint);
+begin
+  CheckForInvalidate;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-08
+-------------------------------------------------------------------------------}
+procedure TEdit.WMPaint(var Message: TWMPaint);
+begin
+  inherited;
+  if Required and ( ( Length( Trim( Text ) ) = 0 ) or UserExist ) then
+  begin
+    FPaintedRed := true;
+//    FPaintedGreen := false;
+    DrawBorder( clRed );
+    if Length( Trim( Text ) ) = 0 then
+      Hint := 'Bitte einen Benutzer eingeben!'
+    else
+      Hint := 'Der eigebene Benutzer ist bereits vorhanden!' + sLineBreak + 'Bitte wählen Sie einen Anderen.';
+  end
+  else
+  if Required and ( not UserExist ) then
+  begin
+//    FPaintedGreen := true;
+    FPaintedRed := false;
+    DrawBorder( clGreen );
+//    if not UserExist then
+      Hint := 'Der eigebene Benutzer kann verwendet werden.';
+  end
+  else
+  begin
+    FPaintedRed := false;
+//    FPaintedGreen := false;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-08
+-------------------------------------------------------------------------------}
+procedure TEdit.DrawBorder( AColor : TColor );
+var
+  CC: TControlCanvas;
+  OldFontSize : Integer;
+  TextStr : String;
+  Rect : TRect;
+begin
+  OldFontSize := Font.Size;
+  TextStr := Text;
+  Rect := ClientRect;
+  CC := TControlCanvas.Create;
+  try
+    CC.Control := Self;
+    CC.Pen.Color := AColor;
+    CC.Pen.Width := 3;
+    CC.Rectangle( ClientRect );
+    CC.Font.Size := OldFontSize;
+    if length( Trim ( Text ) ) = 0 then
+    begin
+      CC.Font.Color := clSilver;
+      CC.TextOut( 2, 2, TextHintStr )
+    end
+    else
+    begin
+      CC.Font.Color := clBlack;
+      CC.TextOut( 2, 2, Text );
+    end;
+
+  finally
+    CC.Free;
+  end;
+end;
+{------------------------------------------------------------------------------
+*******************************************************************************
+TEdit mit Farbigen Rand - Ende
+*******************************************************************************
+-------------------------------------------------------------------------------}
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.EnableAnmeldeBtn;
@@ -90,6 +224,24 @@ begin
   begin
     AnmeldeBtn.Enabled := false;
     SBToogleHide.Enabled := false;
+  end
+  else
+  if ( not UsernameEdit.UserExist ) and ( CBNewUser.Checked ) then
+  begin
+    AnmeldeBtn.Enabled := true;
+    SBToogleHide.Enabled := true;
+  end
+  else
+  if UsernameEdit.UserExist and ( CBNewUser.Checked ) then
+  begin
+    AnmeldeBtn.Enabled := false;
+    SBToogleHide.Enabled := false;
+  end
+  else
+  if UsernameEdit.UserExist and ( not CBNewUser.Checked ) then
+  begin
+    AnmeldeBtn.Enabled := true;
+    SBToogleHide.Enabled := true;
   end
 //  else if Usertext.Equals( SC_BENUTZER ) or PwText.Equals( SC_MASTER_PW ) then
 //  begin
@@ -124,7 +276,7 @@ begin
   try
     with ZipForge do
     begin
-      FileName := UserData.SavePath + UserData.PMPK_Name_MD5;
+      FileName := UserData.PersonalUserSavePath + UserData.KTP_Name_MD5;
       OpenArchive( fmOpenRead );
       EncryptionMethod := caAES_256;
       Password := AnsiString( GetCryptStr( PM_PW, UserData.User, UserData.PW_Str ) );
@@ -149,6 +301,23 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-10-07
+-------------------------------------------------------------------------------}
+procedure TLogin.BGetKTPSavePathClick(Sender: TObject);
+var
+OpenDialog : TFileOpenDialog;
+begin
+  OpenDialog := TFileOpenDialog.Create( nil );
+  try
+    //TODO: opendialog implementieren und den Login Dialog fertig stellen -> soll in PersonalUserSavePath gespeichert werden
+    OpenDialog.Options := [fdoPathMustExist, fdoPickFolders];
+    OpenDialog.Title := 'Wählen Sie ihren letzten KTP Speicherpfad';
+  finally
+    OpenDialog.Free;
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.CBNewUserClick(Sender: TObject);
@@ -157,21 +326,23 @@ begin
     AnmeldeBtn.Caption := 'Passwort-Safe öffnen und neuen Benutzer erzeugen'
   else
     AnmeldeBtn.Caption := 'Passwort-Safe öffnen';
+
+  UsernameEdit.Required := CBNewUser.Checked;
+  BGetKTPSavePath.Enabled := CBNewUser.Checked;
+  ESavePathForKTPs.Enabled := CBNewUser.Checked;
+  UsernameEdit.Invalidate;
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-//function TLogin.CheckPMPKExist( PMPK_Str : string ): Boolean;
-//var
-//SaveFile : string;
-//begin
-//  SaveFile := Concat( UserData.SavePath, PMPK_str , SC_EXT );
-//  if FileExists( SaveFile ) then
-//    Result := true
-//  else
-//    Result := false;
-//end;
+function TLogin.CheckKTPExist( SaveFile : string ): Boolean;
+begin
+  if FileExists( SaveFile ) then
+    Result := true
+  else
+    Result := false;
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
@@ -186,10 +357,10 @@ begin
   try
     USer := Trim( UsernameEdit.Text );
     PwStr := UserMasterPWEdit.Text;
-    UserData.PMPK_Name_MD5 := GetMD5String( User ) + SC_EXT;
+    UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
     UserData.User := User;
     UserData.PW_Str := PwStr;
-    SaveStr := Concat( UserData.SavePath, UserData.PMPK_Name_MD5 );
+    SaveStr := Concat( UserData.PersonalUserSavePath, UserData.KTP_Name_MD5 );
 
 
     //Imagelist 0 = start; 1 = OK; 2 = fail
@@ -233,7 +404,7 @@ begin
 //          ImageList1.GetIcon( 1, Image1.Picture.Icon );
           ImageList3.GetIcon( 1, Image1.Picture.Icon );
           ModalResult := mrRetry; //retry = 4 neuer Benutzer
-          UserData.PMPK_Name_MD5 := GetMD5String( User ) + SC_EXT;
+          UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
           UserData.User := User;
           UserData.PW_Str := PwStr;
           Login.Refresh;
@@ -246,24 +417,24 @@ begin
     end
     else //neuer Benutzer soll erstellt werden
     begin
-      if FileExists( SaveStr )  then  //prüfen ob es den Benutzer schon gibt
-      begin
-        {$IFNDEF TESTLOGIN}
-        if MessageDlg( 'Der Benutzer existiert bereits!' + sLineBreak + 'Wollen Sie stattdessen sich mit diesen Benutzernamen anmelden?',
-                  mtInformation,
-                  [mbYes, mbNo], 0 ) = mrYes then
-        begin
-          ImageList3.GetIcon( 0, Image1.Picture.Icon );
-//          ImageList1.GetIcon( 0, Image1.Picture.Icon );
-          CBNewUser.Checked := false;
-          AnmeldeBtnClick( Sender );
-        end;
-        {$ELSE}
-          ModalResult := mrYes // = 6 für ja neuen User
-        {$ENDIF}
-      end
-      else  //wenn nein dann  neu anlegen
-      begin
+//      if FileExists( SaveStr )  then  //prüfen ob es den Benutzer schon gibt
+//      begin
+//        {$IFNDEF TESTLOGIN} //neuer User existiert bereits
+//        if MessageDlg( 'Der Benutzer existiert bereits!' + sLineBreak + 'Wollen Sie stattdessen sich mit diesen Benutzernamen anmelden?',
+//                  mtInformation,
+//                  [mbYes, mbNo], 0 ) = mrYes then
+//        begin
+//          ImageList3.GetIcon( 0, Image1.Picture.Icon );
+////          ImageList1.GetIcon( 0, Image1.Picture.Icon );
+//          CBNewUser.Checked := false;
+//          AnmeldeBtnClick( Sender );
+//        end;
+//        {$ELSE}
+//          ModalResult := mrYes // = 6 für ja neuen User
+//        {$ENDIF}
+//      end
+//      else  //wenn nein dann  neu anlegen
+//      begin
 //        if MessageDlg( 'Benutzername existiert noch nicht, soll dieser angelegt werden?',
 //                    mtInformation,
 //                    [mbYes, mbNo], 0 ) = mrYes then
@@ -272,13 +443,13 @@ begin
 //          ImageList1.GetIcon( 1, Image1.Picture.Icon );
           ModalResult := mrRetry; //retry = 4 neuer Benutzer
           {$IFNDEF TESTLOGIN}
-            UserData.PMPK_Name_MD5 := GetMD5String( User ) + SC_EXT;
+            UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
             UserData.User := User;
             UserData.PW_Str := PwStr;
             Login.Refresh;
             Sleep(500);
           {$ENDIF}
-      end;
+//      end;
     end;
   finally
     Ini.Free;
@@ -302,8 +473,17 @@ begin
 //    ShowMessage( 'Testlogin aktiviert' );
 //  {$ENDIF}
 
-  UserData.SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
+  UserData.PersonalUserSavePath := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'KiiTree\';
+  if not DirectoryExists( UserData.PersonalUserSavePath ) then
+     ForceDirectories( UserData.PersonalUserSavePath );
+
+//  UsernameEdit.Required := true;
+  UsernameEdit.TextHintStr := UsernameEdit.TextHint;
+
+  UserData.AppSavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
   UserData.FirstLoadPath := ExtractFileDir( ParamStr(0) ) + '\DB\';
+
+  ESavePathForKTPs.Text := UserData.PersonalUserSavePath;
 //  ImageList2.GetBitmap( 1, HideToggleBtn.Glyph );
   ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
   SBToogleHide.Flat := true;
@@ -352,24 +532,7 @@ Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.UserMasterPWEditChange(Sender: TObject);
 begin
-  TextChange( UserMasterPWEdit, SC_MASTER_PW );
   EnableAnmeldeBtn;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-09-20
--------------------------------------------------------------------------------}
-procedure TLogin.UserMasterPWEditClick(Sender: TObject);
-begin
-  TextClick( UserMasterPWEdit, SC_MASTER_PW );
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-09-20
--------------------------------------------------------------------------------}
-procedure TLogin.UserMasterPWEditExit(Sender: TObject);
-begin
-  TextStandart( UserMasterPWEdit, SC_MASTER_PW );
 end;
 
 {------------------------------------------------------------------------------
@@ -388,25 +551,31 @@ end;
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.UsernameEditChange(Sender: TObject);
+var
+Username :String;
+//NameWithPath : String;
+UserDataWithPath : String;
 begin
-  TextChange( UsernameEdit, SC_BENUTZER );
+  if CBNewUser.Checked then
+  begin
+    Username := GetMD5String( UsernameEdit.Text ) + SC_EXT;
+  //speicherpfad innerhalb des Programms
+//  NameWithPath := Concat( UserData.AppSavePath, Username );
+  //Speicherpfad im "Eigene Dateien" Ordner
+    UserDataWithPath := Concat( UserData.PersonalUserSavePath, Username );
+//  if CheckKTPExist( NameWithPath ) then
+//    UsernameEdit.UserExist := true
+//  else
+    if CheckKTPExist( UserDataWithPath ) then
+    begin
+      UsernameEdit.UserExist := true;
+    end
+    else
+    begin
+      UsernameEdit.UserExist := false;
+    end;
+  end;
   EnableAnmeldeBtn;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-09-20
--------------------------------------------------------------------------------}
-procedure TLogin.UsernameEditClick(Sender: TObject);
-begin
-  TextClick( UsernameEdit, SC_BENUTZER );
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-09-20
--------------------------------------------------------------------------------}
-procedure TLogin.UsernameEditExit(Sender: TObject);
-begin
-  TextStandart( UsernameEdit, SC_BENUTZER );
 end;
 
 {------------------------------------------------------------------------------
@@ -425,53 +594,54 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-procedure TLogin.TextChange( Edit : TEdit; Str : String);
-var
-EditText : String;
-begin
-  EditText := Edit.Text;
-  if not EditText.Equals('') then
-    Edit.Font.Color := clBlack
-  else
-    Edit.Font.Color := clMedGray;
-end;
+//procedure TLogin.TextChange( Edit : TEdit; Str : String);
+//var
+//EditText : String;
+//begin
+//  EditText := Edit.Text;
+//  if not EditText.Equals('') then
+//    Edit.Font.Color := clBlack
+//  else
+//    Edit.Font.Color := clMedGray;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-procedure TLogin.TextStandart( Edit : TEdit; Str : String);
-var
-EditText : String;
-begin
-  EditText := Edit.Text;
-  if EditText.Equals('') then
-  begin
-    Edit.Text := Str;
-    Edit.Font.Color := clMedGray;
-  end
-  else if EditText.Equals(Str) then
-  begin
-    Edit.Font.Color := clMedGray;
-  end
-  else
-  begin
-    Edit.Font.Color := clBlack;
-  end;
-
-end;
+//procedure TLogin.TextStandart( Edit : TEdit; Str : String);
+//var
+//EditText : String;
+//begin
+//  EditText := Edit.Text;
+//  if EditText.Equals('') then
+//  begin
+//    Edit.Text := Str;
+//    Edit.Font.Color := clMedGray;
+//  end
+//  else if EditText.Equals(Str) then
+//  begin
+//    Edit.Font.Color := clMedGray;
+//  end
+//  else
+//  begin
+//    Edit.Font.Color := clBlack;
+//  end;
+//
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-procedure TLogin.TextClick( Edit : TEdit; Str : String);
-var
-EditText : String;
-begin
-  EditText := Edit.Text;
-  if not EditText.Equals( Str ) then
-    Edit.SelectAll
-  else
-    Edit.Clear;
-end;
+//procedure TLogin.TextClick( Edit : TEdit; Str : String);
+//var
+//EditText : String;
+//begin
+//  EditText := Edit.Text;
+//  if not EditText.Equals( Str ) then
+//    Edit.SelectAll
+//  else
+//    Edit.Clear;
+//end;
 
 end.
+

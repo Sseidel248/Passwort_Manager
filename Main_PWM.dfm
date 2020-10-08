@@ -785,10 +785,6 @@ object Main: TMain
         Caption = 'EinstellTab'
         ImageIndex = 1
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object GBDarstellung: TGroupBox
           Left = 0
           Top = 0
@@ -1046,19 +1042,11 @@ object Main: TMain
         Caption = 'PWCheckTab'
         ImageIndex = 2
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
       end
       object DB_Tabelle: TTabSheet
         Caption = 'DB_Tabelle'
         ImageIndex = 3
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
