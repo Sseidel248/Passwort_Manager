@@ -25,28 +25,24 @@ object Login: TLogin
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object GradientPanel1: TGradientPanel
+  object GradientPanel2: TGradientPanel
     Left = 0
     Top = 0
     Width = 344
     Height = 351
     Align = alClient
-    Caption = 'GradientPanel1'
+    Caption = 'GradientPanel2'
+    Color = clSkyBlue
     DoubleBuffered = True
     ParentDoubleBuffered = False
     TabOrder = 0
     ColorGradient = cgHorizontal
-    RGB_Gradient = rgbNonLinear
-    ColorFrom = clSkyBlue
+    RGB_Gradient = rgbLinear
     ColorTo = clMoneyGreen
-    object Image1: TImage
-      Left = 96
-      Top = 8
-      Width = 150
-      Height = 150
-      AutoSize = True
-      Stretch = True
-    end
+    ExplicitLeft = 159
+    ExplicitTop = 136
+    ExplicitWidth = 185
+    ExplicitHeight = 41
     object SBToogleHide: TSpeedButton
       Left = 304
       Top = 222
@@ -69,11 +65,20 @@ object Login: TLogin
       Font.Style = []
       ParentFont = False
     end
-    object CBNewUser: TCheckBox
+    object Image1: TImage
+      Left = 96
+      Top = 8
+      Width = 150
+      Height = 150
+      AutoSize = True
+      Stretch = True
+    end
+    object UsernameEdit: TEdit4User
       Left = 8
-      Top = 205
-      Width = 13
-      Height = 13
+      Top = 175
+      Width = 328
+      Height = 24
+      Hint = 'Bitte einen Benutzer eingeben!'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -13
@@ -81,24 +86,9 @@ object Login: TLogin
       Font.Style = []
       ParentFont = False
       TabOrder = 0
-      OnClick = CBNewUserClick
-    end
-    object AnmeldeBtn: TButton
-      Left = 8
-      Top = 294
-      Width = 328
-      Height = 49
-      Caption = 'Passwort-Safe '#246'ffnen'
-      Enabled = False
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 3
-      WordWrap = True
-      OnClick = AnmeldeBtnClick
+      TextHint = 'Benutzername eingeben...'
+      OnChange = UsernameEditChange
+      OnKeyPress = UsernameEditKeyPress
     end
     object UserMasterPWEdit: TEdit
       Left = 8
@@ -112,28 +102,10 @@ object Login: TLogin
       Font.Style = []
       ParentFont = False
       PasswordChar = '*'
-      TabOrder = 2
+      TabOrder = 1
       TextHint = 'Master-Passwort eingeben...'
       OnChange = UserMasterPWEditChange
       OnKeyPress = UserMasterPWEditKeyPress
-    end
-    object UsernameEdit: TEdit
-      Left = 8
-      Top = 176
-      Width = 328
-      Height = 24
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 1
-      TextHint = 'Benutzername eingeben...'
-      OnChange = UsernameEditChange
-      OnKeyPress = UsernameEditKeyPress
     end
     object ESavePathForKTPs: TEdit
       Left = 8
@@ -148,7 +120,21 @@ object Login: TLogin
       Font.Style = []
       ParentFont = False
       ReadOnly = True
-      TabOrder = 4
+      TabOrder = 2
+    end
+    object CBNewUser: TCheckBox
+      Left = 8
+      Top = 205
+      Width = 13
+      Height = 13
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 3
+      OnClick = CBNewUserClick
     end
     object BGetKTPSavePath: TButton
       Left = 304
@@ -157,8 +143,25 @@ object Login: TLogin
       Height = 26
       Caption = '...'
       Enabled = False
-      TabOrder = 5
+      TabOrder = 4
       OnClick = BGetKTPSavePathClick
+    end
+    object AnmeldeBtn: TButton
+      Left = 8
+      Top = 294
+      Width = 328
+      Height = 49
+      Caption = 'Passwort-Safe '#246'ffnen'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 5
+      WordWrap = True
+      OnClick = AnmeldeBtnClick
     end
   end
   object ImageList1: TImageList

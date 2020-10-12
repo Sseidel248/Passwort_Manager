@@ -24,7 +24,6 @@ Type
                                               FolderNameList : TStringList );
 //      function AddDBNodeAtStandartWithoutData( Nodes : TVTVirtualNodeEnumeration ) : PVirtualNode;
       function AddDBNodeWithoutDataAt( Nodes : TVTVirtualNodeEnumeration; Ordner : String ) : PVirtualNode;
-
     public
       Constructor Create( VST : TVirtualStringTree ); overload; virtual;
       procedure FirstOpen;
@@ -45,9 +44,8 @@ Type
       procedure LoadNodes( Nodes : TVTVirtualNodeEnumeration;
                              FolderNameList : TStringList;
                              CDS : TClientDataSet );
-      procedure FilterTree( Bezeichnung : String);
+      procedure FilterTree( const Bezeichnung : String);
       procedure UnfilterAllTree;
-
   end;
 
 procedure TogglePWSign( Edit : TCustomEdit; hide : Boolean );
@@ -67,7 +65,7 @@ const
 implementation
 
 uses
-  Vcl.Dialogs, Main_PWM, Global_PWM;
+  Vcl.Dialogs, Main_PWM, Global_PWM, System.StrUtils;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,7 +220,7 @@ var
 pNode, pNode2 : PVirtualNode;
 begin
   pNode := AVST.AddChild( nil );
-  SetData( pNode, true, 'Passwort-Manager' );
+  SetData( pNode, true, 'Ihr KiiTree' );
   pNode2 := AVST.AddChild( pNode );
   SetData( pNode2, true,  SC_FAVORITEN  );
   pNode2 := AVST.AddChild( pNode );
@@ -434,7 +432,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-21
 -------------------------------------------------------------------------------}
-procedure TDBTree.FilterTree( Bezeichnung : String);
+procedure TDBTree.FilterTree( const Bezeichnung : String );
 var
 Nodes, Children : TVTVirtualNodeEnumeration;
 pNode, pChild : PVirtualNode;
@@ -450,7 +448,7 @@ begin
       begin
         pChildData := AVST.GetNodeData( pChild );
 
-        if not pChildData^.Bezeichnung.Contains( Bezeichnung ) then
+        if not ContainsText( pChildData^.Bezeichnung, Bezeichnung ) then //Change 2020-10-12
           AVST.IsVisible[pChild] := false
         else
           AVST.IsVisible[pChild] := true;

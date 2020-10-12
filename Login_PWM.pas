@@ -11,50 +11,24 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes;
-
-
-//type
-//  TLoginStates = set of (
-//    lUnitTest              //nur für den Unit test
-//    );
-
-//Editfeld mit Rahmen 2020-10-08
-type
-  TEdit = Class(Vcl.StdCtrls.TEdit)
-    procedure WMPaint( var Message: TWMPaint ); message WM_PAINT;
-    procedure WMKEYUP( var Message: TWMPaint ); message WM_KEYUP;
-  private
-    FPaintedRed: Boolean;
-//    FPaintedGreen : Boolean;
-    FRequired: Boolean;
-    FUserExist : Boolean;
-    FTextHintStr : String;
-    procedure CheckForInvalidate;
-    procedure DrawBorder( AColor : TColor );
-  published
-  public
-    Property Required: Boolean read FRequired write FRequired;
-    Property UserExist: Boolean read FUserExist Write FUserExist;
-    property TextHintStr: String read FTextHintStr write FTextHintStr;
-    Property Font;
-  End;
+  System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes,
+  Edit4User;
 
 type
   TLogin = class(TForm)
     Image1: TImage;
-    UsernameEdit: TEdit;
     UserMasterPWEdit: TEdit;
     AnmeldeBtn: TButton;
     ImageList1: TImageList;
     CBNewUser: TCheckBox;
     ImageList2: TImageList;
     ImageList3: TImageList;
-    GradientPanel1: TGradientPanel;
     SBToogleHide: TSpeedButton;
     Label1: TLabel;
     ESavePathForKTPs: TEdit;
     BGetKTPSavePath: TButton;
+    UsernameEdit: TEdit4User;
+    GradientPanel2: TGradientPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -73,6 +47,9 @@ type
     function CheckKTPExist( SaveFile : string ): Boolean;                   //erstmal nicht benutzt
     function CheckUserAndPW : Boolean;
     procedure EnableAnmeldeBtn;
+    function Check4FirstStart: Boolean;
+
+
 //    procedure TextChange( Edit : TEdit; Str : String );
 //    procedure TextStandart( Edit : TEdit; Str : String );
 //    procedure TextClick( Edit : TEdit; Str : String );
@@ -98,118 +75,20 @@ uses
 {$R *.dfm}
 
 {------------------------------------------------------------------------------
-*******************************************************************************
-TEdit mit Farbigen Rand
-*******************************************************************************
-Author: Seidel 2020-10-08
+Author: Seidel 2020-10-10
 -------------------------------------------------------------------------------}
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-10-08
--------------------------------------------------------------------------------}
-procedure TEdit.CheckForInvalidate;
-begin
-  if Required and ( ( Length( Trim( Text ) ) = 0 ) or UserExist ) then
-  begin
-    if not FPaintedRed then
-      Invalidate;
-  end
-//  else if Required and UserExist then
-//  begin
-//    if not FPaintedRed then
-//      Invalidate;
-//  end
-  else if Required and not UserExist then
-  begin
-    if {not FPaintedGreen}FPaintedRed then
-      Invalidate;
-  end
-  else if FPaintedRed then
-    Invalidate
-//  else if FPaintedGreen then
-//    Invalidate;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-10-08
--------------------------------------------------------------------------------}
-procedure TEdit.WMKEYUP(var Message: TWMPaint);
-begin
-  CheckForInvalidate;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-10-08
--------------------------------------------------------------------------------}
-procedure TEdit.WMPaint(var Message: TWMPaint);
-begin
-  inherited;
-  if Required and ( ( Length( Trim( Text ) ) = 0 ) or UserExist ) then
-  begin
-    FPaintedRed := true;
-//    FPaintedGreen := false;
-    DrawBorder( clRed );
-    if Length( Trim( Text ) ) = 0 then
-      Hint := 'Bitte einen Benutzer eingeben!'
-    else
-      Hint := 'Der eigebene Benutzer ist bereits vorhanden!' + sLineBreak + 'Bitte wählen Sie einen Anderen.';
-  end
-  else
-  if Required and ( not UserExist ) then
-  begin
-//    FPaintedGreen := true;
-    FPaintedRed := false;
-    DrawBorder( clGreen );
-//    if not UserExist then
-      Hint := 'Der eigebene Benutzer kann verwendet werden.';
-  end
-  else
-  begin
-    FPaintedRed := false;
-//    FPaintedGreen := false;
-  end;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-10-08
--------------------------------------------------------------------------------}
-procedure TEdit.DrawBorder( AColor : TColor );
+function TLogin.Check4FirstStart: Boolean;
 var
-  CC: TControlCanvas;
-  OldFontSize : Integer;
-  TextStr : String;
-  Rect : TRect;
+path1, path2 : String;
+SearchRec : TSearchRec;
 begin
-  OldFontSize := Font.Size;
-  TextStr := Text;
-  Rect := ClientRect;
-  CC := TControlCanvas.Create;
-  try
-    CC.Control := Self;
-    CC.Pen.Color := AColor;
-    CC.Pen.Width := 3;
-    CC.Rectangle( ClientRect );
-    CC.Font.Size := OldFontSize;
-    if length( Trim ( Text ) ) = 0 then
-    begin
-      CC.Font.Color := clSilver;
-      CC.TextOut( 2, 2, TextHintStr )
-    end
-    else
-    begin
-      CC.Font.Color := clBlack;
-      CC.TextOut( 2, 2, Text );
-    end;
-
-  finally
-    CC.Free;
-  end;
+  path1 := UserData.AppSavePath + '*.KTP' ;
+  path2 := UserData.PersonalUserSavePath + '*.KTP';
+  if ( FindFirst( path1, faAnyFile, SearchRec ) = 0 ) or ( FindFirst( path2, faAnyFile, SearchRec ) = 0 ) then
+    Result := false
+  else
+    Result := true;
 end;
-{------------------------------------------------------------------------------
-*******************************************************************************
-TEdit mit Farbigen Rand - Ende
-*******************************************************************************
--------------------------------------------------------------------------------}
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
@@ -270,6 +149,7 @@ begin
     Result := UserData.User.Equals( UserData.PW_Str );
     Exit;
   {$ENDIF}
+  Result := false;
   ZipForge := TZipForge.Create( nil );
   stream := TMemoryStream.Create;
   Sl := TStringList.Create;
@@ -284,14 +164,19 @@ begin
 //      Password := MD5String(PM_PW);  //Change 2020.09.28
       if FindFirst( '*.ini', ArchiveItem, faAnyFile ) then
       begin
-        stream.Clear;
-        stream.Position := 0;
-        ExtractToStream( archiveItem.FileName, stream );
-        stream.Position := 0;
-        Sl.LoadFromStream( stream );
-        stream.Position := 0;
+        if IsFilePasswordValid( archiveItem.FileName , Password ) then//Change 2020-10-10
+        begin
+          stream.Clear;
+          stream.Position := 0;
+          ExtractToStream( archiveItem.FileName, stream );
+          stream.Position := 0;
+          Sl.LoadFromStream( stream );
+          stream.Position := 0;
+          Result := ( Sl.Values[SC_USER].Equals( UserData.User) )
+                    and ( Sl.Values[SC_PW].Equals( UserData.PW_Str )
+                    and ( Sl.Values[SC_KTP].Equals( UserData.KTP_Name_MD5 ) ) );
+        end;
       end;
-      Result := ( Sl.Values[SC_USER].Equals( UserData.User) ) and ( Sl.Values[SC_PW].Equals( UserData.PW_Str ) );
     end;
   finally
     ZipForge.Free;
@@ -473,15 +358,17 @@ begin
 //    ShowMessage( 'Testlogin aktiviert' );
 //  {$ENDIF}
 
-  UserData.PersonalUserSavePath := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'KiiTree\';
+  UserData.PersonalUserSavePath := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
   if not DirectoryExists( UserData.PersonalUserSavePath ) then
      ForceDirectories( UserData.PersonalUserSavePath );
 
-//  UsernameEdit.Required := true;
-  UsernameEdit.TextHintStr := UsernameEdit.TextHint;
-
   UserData.AppSavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
   UserData.FirstLoadPath := ExtractFileDir( ParamStr(0) ) + '\DB\';
+
+  {$IFNDEF TESTLOGIN}
+  if Check4FirstStart then
+    CBNewUser.Checked := true;
+  {$ENDIF}
 
   ESavePathForKTPs.Text := UserData.PersonalUserSavePath;
 //  ImageList2.GetBitmap( 1, HideToggleBtn.Glyph );
