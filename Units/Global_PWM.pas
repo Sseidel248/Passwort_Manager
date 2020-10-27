@@ -62,7 +62,7 @@ const
   SC_ZEITIMSPEICHER = 'TimeInClipBrd';
   //ini des Users - Ende -
   //ini vom programm
-  SC_FIRSTSTART     = '';
+  SC_FIRSTSTART     = 'First_Start';
   SC_LASTKTPPATH    = 'LastKTPPath';
   SC_DEFAULTPATH    = 'DefaultPath';
   SC_NOT_USED       = 'Not_Used';

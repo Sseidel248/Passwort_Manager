@@ -24,7 +24,7 @@ VersionInfoProductName=KiiTree
 VersionInfoProductTextVersion=Beta
 AppContact=sseidel248@yahoo.de
 DisableWelcomePage = false
-UninstallDisplayIcon = {app}\KiiTree_v1.ico
+UninstallDisplayIcon = {app}\Bilder\KiiTree_v1.ico
 UninstallDisplayName = {#MyAppName} {#MyAppVersion}.{#MyAppBuild}
 
 [Files]
