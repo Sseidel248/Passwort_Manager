@@ -25,7 +25,6 @@ type
     [Testcase( 'Normaler Login Passwort falsch', '1,2,false,8' ) ]
     procedure LoginTest( User , Passwort : String; CB_Checked : Boolean; Result : Integer );
     [Test]
-    [Testcase( 'User existiert noch nicht kann angelegt werden', '2,2,false,4' ) ]
     [Testcase( 'Neuer User soll erstellt werden' , '1,1,true,4' ) ]
     procedure LoginTestNewUser( User , Passwort : String; CB_Checked : Boolean; Result : Integer );
     [Test] //Test für das colorierte Editfeld hinzugefügt
@@ -59,7 +58,7 @@ var
 implementation
 
 uses
-  ShellAPI, Windows,  System.Classes,Vcl.StdCtrls, Hash_Functions;
+  ShellAPI, Windows,  System.Classes, Vcl.StdCtrls, Hash_Functions;
 
 function DeleteFiles(const AFile: string): boolean;
 var
@@ -84,7 +83,7 @@ begin
   fForm.CBNewUser.Checked := true;
   txt := TStringList.Create;
   try
-    UserData.PersonalUserSavePath := Test_Folder_Out;
+    DefaultSettings.DefaultUserSavePath := Test_Folder_Out;
     saveFile := Test_Folder_Out + GetMD5String( ExistUsername ) + '.KTP';
     txt.SaveToFile( savefile );
   finally
@@ -110,8 +109,9 @@ begin
   //PseudoNutzer Datei erstellt
   txt := TStringList.Create;
   try
-    saveFile := Test_Folder_Out + GetMD5String( User ) + '.KTP';
-    txt.SaveToFile( savefile );
+    DefaultSettings.DefaultUserSavePath := Test_Folder_Out;  //zuweisen des Standart Speicherpfad
+    saveFile := Test_Folder_Out + GetMD5String( User ) + '.KTP';  //Pseudodatei erzeugen
+    txt.SaveToFile( savefile );                                   //im Standart Speicherpfad speichern
   finally
     txt.Free;
   end;

@@ -12,7 +12,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes,
-  Edit4User;
+  Edit4User, U_USB;
 
 type
   TLogin = class(TForm)
@@ -29,6 +29,7 @@ type
     BGetKTPSavePath: TButton;
     UsernameEdit: TEdit4User;
     GradientPanel2: TGradientPanel;
+    USBInput: TComponentUSB;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -41,13 +42,17 @@ type
     procedure UsernameEditKeyPress(Sender: TObject; var Key: Char);
     procedure SBToogleHideClick(Sender: TObject);
     procedure BGetKTPSavePathClick(Sender: TObject);
+    procedure USBInputUSBGetDriveLetter(Sender: TObject;
+      const DrivePath: string);
+    procedure USBInputUSBRemove(Sender: TObject);
   private
 //    LoginStates : TLoginStates;                                             //erstmal nicht benutzt
 //    property LoginState : TLoginStates read LoginStates write LoginStates;  //erstmal nicht benutzt
-    function CheckKTPExist( SaveFile : string ): Boolean;                   //erstmal nicht benutzt
+    procedure CheckKTPExist( SaveFile : string ) ;                   //erstmal nicht benutzt
     function CheckUserAndPW : Boolean;
     procedure EnableAnmeldeBtn;
-    function Check4FirstStart: Boolean;
+    function CheckKTPExistPlus( SaveFile : String ) : Boolean;
+//    function Check4FirstStart: Boolean;
 
 
 //    procedure TextChange( Edit : TEdit; Str : String );
@@ -67,6 +72,7 @@ type
 var
   Login : TLogin;
 
+
 implementation
 
 uses
@@ -74,21 +80,48 @@ uses
 
 {$R *.dfm}
 
+
 {------------------------------------------------------------------------------
-Author: Seidel 2020-10-10
+Author: Seidel 2020-10-17
 -------------------------------------------------------------------------------}
-function TLogin.Check4FirstStart: Boolean;
+//function TLogin.Check4FirstStart: Boolean;
+//var
+//ini : TStringList;
+//iniName : String;
+//begin
+//  ini := TStringList.Create;
+//  try
+//    //nur zum überprüfen falls es doch gelöscht wurde
+//    if not FileExists( MainIni.IniPath ) then
+//    begin
+//      MainIni.CreateIfNotExist;
+//    end;
+//    ini.LoadFromFile( MainIni.IniPath );
+//    Result := StrToBoolDef( ini.Values[ SC_FIRSTSTART ], true );
+//  finally
+//    ini.Free;
+//  end;
+//end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-22
+-------------------------------------------------------------------------------}
+function TLogin.CheckKTPExistPlus( SaveFile : String ) : Boolean;
 var
-path1, path2 : String;
-SearchRec : TSearchRec;
+sText : String;
 begin
-  path1 := UserData.AppSavePath + '*.KTP' ;
-  path2 := UserData.PersonalUserSavePath + '*.KTP';
-  if ( FindFirst( path1, faAnyFile, SearchRec ) = 0 ) or ( FindFirst( path2, faAnyFile, SearchRec ) = 0 ) then
-    Result := false
+  if FileExists( SaveFile ) then
+    Result := true
   else
-    Result := true;
+  begin
+    sText := 'Ihr Datei konnte in dem von Ihnen gewählten Verzeichnis nicht gefunden werden!' + sLineBreak + sLineBreak
+    + 'Prüfe Sie bitte, ob der richtige Pfad gewählt wurde oder wählen Sie einen anderes Verzeichnis.';
+    Result := false;
+    MessageDlg( sText, mtError, [mbOK], 0 );
+    BGetKTPSavePath.SetFocus;
+  end;
 end;
+
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
@@ -122,17 +155,11 @@ begin
     AnmeldeBtn.Enabled := true;
     SBToogleHide.Enabled := true;
   end
-//  else if Usertext.Equals( SC_BENUTZER ) or PwText.Equals( SC_MASTER_PW ) then
-//  begin
-//    AnmeldeBtn.Enabled := false;
-//    SBToogleHide.Enabled := false;
-//  end
   else
   begin
     AnmeldeBtn.Enabled := true;
     SBToogleHide.Enabled := true;
   end;
-
 end;
 
 {------------------------------------------------------------------------------
@@ -156,7 +183,7 @@ begin
   try
     with ZipForge do
     begin
-      FileName := UserData.PersonalUserSavePath + UserData.KTP_Name_MD5;
+      FileName := GetActualSaveFile( UserData.KTP_Name_MD5 );
       OpenArchive( fmOpenRead );
       EncryptionMethod := caAES_256;
       Password := AnsiString( GetCryptStr( PM_PW, UserData.User, UserData.PW_Str ) );
@@ -194,9 +221,13 @@ OpenDialog : TFileOpenDialog;
 begin
   OpenDialog := TFileOpenDialog.Create( nil );
   try
-    //TODO: opendialog implementieren und den Login Dialog fertig stellen -> soll in PersonalUserSavePath gespeichert werden
     OpenDialog.Options := [fdoPathMustExist, fdoPickFolders];
-    OpenDialog.Title := 'Wählen Sie ihren letzten KTP Speicherpfad';
+    OpenDialog.Title := 'Wählen Sie den Ordner in dem Ihr KiiTree gespeichert wurde';
+    if OpenDialog.Execute then //Pfad wird NUR gesetzt wenn ein Ordner erfolgreich gewählt wurde
+    begin
+      MainIni.LastLoadPath := OpenDialog.FileName + '\';
+      ESavePathForKTPs.Text := OpenDialog.FileName + '\';
+    end
   finally
     OpenDialog.Free;
   end;
@@ -213,51 +244,55 @@ begin
     AnmeldeBtn.Caption := 'Passwort-Safe öffnen';
 
   UsernameEdit.Required := CBNewUser.Checked;
-  BGetKTPSavePath.Enabled := CBNewUser.Checked;
-  ESavePathForKTPs.Enabled := CBNewUser.Checked;
+  MainIni.IsNewUserChecked := CBNewUser.Checked;
   UsernameEdit.Invalidate;
+  EnableAnmeldeBtn;
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
-function TLogin.CheckKTPExist( SaveFile : string ): Boolean;
+procedure TLogin.CheckKTPExist( SaveFile : string );
 begin
   if FileExists( SaveFile ) then
-    Result := true
+  begin
+    UsernameEdit.UserExist := true;
+    UsernameEdit.Hint := 'Kein passender KiiTree in dem Verzeichnis gefunden!';
+  end
   else
-    Result := false;
+    UsernameEdit.UserExist := false;
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-20
+Author: Seidel 2020-09-20 !!Modalresult schließt ein Modal geöffnetes Formular
 -------------------------------------------------------------------------------}
 procedure TLogin.AnmeldeBtnClick(Sender: TObject);
 var
 User, PwStr : String;
-INI : TStrings;
 SaveStr : String;
 begin
-  Ini := TStringList.Create;
+
+  USer := Trim( UsernameEdit.Text );
+  PwStr := UserMasterPWEdit.Text;
+  UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
+  UserData.User := User;
+  UserData.PW_Str := PwStr;
+  SaveStr := GetActualSaveFile( UserData.KTP_Name_MD5 );
+
+  //Imagelist 0 = start; 1 = OK; 2 = fail
   try
-    USer := Trim( UsernameEdit.Text );
-    PwStr := UserMasterPWEdit.Text;
-    UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
-    UserData.User := User;
-    UserData.PW_Str := PwStr;
-    SaveStr := Concat( UserData.PersonalUserSavePath, UserData.KTP_Name_MD5 );
-
-
-    //Imagelist 0 = start; 1 = OK; 2 = fail
-
     if {CheckPMKExist( MD5String( User ) )} not CBNewUser.Checked then  //bestehenden Benutzer wählen
     begin
+      {$IFNDEF TESTLOGIN}
+      if not CheckKTPExistPlus( SaveStr ) then
+        Exit;
+      {$ENDIF}
+
       if FileExists( SaveStr ) then  //prüfen ob der Benutzer existiert
       begin
         if ( CheckUserAndPW ) then // und eingabe stimmt
         begin
           ModalResult := mrOk; // ok = 1 login erfolgreich
-//          ImageList1.GetIcon( 1, Image1.Picture.Icon );
           ImageList3.GetIcon( 1, Image1.Picture.Icon );
           {$IFNDEF TESTLOGIN}
             Login.Refresh;
@@ -267,7 +302,6 @@ begin
         end
         else   //und eingabe stimmt nicht
         begin
-//          ImageList1.GetIcon( 2, Image1.Picture.Icon );
           ImageList3.GetIcon( 2, Image1.Picture.Icon );
           {$IFNDEF TESTLOGIN}
             ShowMessage( 'Benutzername und Passwort stimmen nicht überein!' + sLineBreak + 'Versuchen Sie es erneut.');
@@ -286,7 +320,6 @@ begin
                     mtInformation,
                     [mbYes, mbNo], 0 ) = mrYes then
         begin
-//          ImageList1.GetIcon( 1, Image1.Picture.Icon );
           ImageList3.GetIcon( 1, Image1.Picture.Icon );
           ModalResult := mrRetry; //retry = 4 neuer Benutzer
           UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
@@ -302,42 +335,22 @@ begin
     end
     else //neuer Benutzer soll erstellt werden
     begin
-//      if FileExists( SaveStr )  then  //prüfen ob es den Benutzer schon gibt
-//      begin
-//        {$IFNDEF TESTLOGIN} //neuer User existiert bereits
-//        if MessageDlg( 'Der Benutzer existiert bereits!' + sLineBreak + 'Wollen Sie stattdessen sich mit diesen Benutzernamen anmelden?',
-//                  mtInformation,
-//                  [mbYes, mbNo], 0 ) = mrYes then
-//        begin
-//          ImageList3.GetIcon( 0, Image1.Picture.Icon );
-////          ImageList1.GetIcon( 0, Image1.Picture.Icon );
-//          CBNewUser.Checked := false;
-//          AnmeldeBtnClick( Sender );
-//        end;
-//        {$ELSE}
-//          ModalResult := mrYes // = 6 für ja neuen User
-//        {$ENDIF}
-//      end
-//      else  //wenn nein dann  neu anlegen
-//      begin
-//        if MessageDlg( 'Benutzername existiert noch nicht, soll dieser angelegt werden?',
-//                    mtInformation,
-//                    [mbYes, mbNo], 0 ) = mrYes then
-//        begin
-          ImageList3.GetIcon( 1, Image1.Picture.Icon );
-//          ImageList1.GetIcon( 1, Image1.Picture.Icon );
-          ModalResult := mrRetry; //retry = 4 neuer Benutzer
-          {$IFNDEF TESTLOGIN}
-            UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
-            UserData.User := User;
-            UserData.PW_Str := PwStr;
-            Login.Refresh;
-            Sleep(500);
-          {$ENDIF}
-//      end;
+      //es wurde einer neuer Benutzer erstellt, deshalb beim nächsten Start "Neuer Benutzer" Checkbox = false
+      MainIni.IsNewUserChecked := false;
+      ImageList3.GetIcon( 1, Image1.Picture.Icon );
+      {$IFNDEF TESTLOGIN}
+        UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
+        UserData.User := User;
+        UserData.PW_Str := PwStr;
+        Login.Refresh;
+        Sleep(500);
+      {$ENDIF}
+      ModalResult := mrRetry; //retry = 4 neuer Benutzer
     end;
   finally
-    Ini.Free;
+    {$IFNDEF TESTLOGIN}
+    MainIni.SaveSetting;
+    {$ENDIF}
   end;
 end;
 
@@ -346,34 +359,18 @@ Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  //Modalresult := mrClose;
+  // noch nicht benutzt!
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.FormCreate(Sender: TObject);
+
 begin
-//  {$IFDEF TESTLOGIN}
-//    ShowMessage( 'Testlogin aktiviert' );
-//  {$ENDIF}
-
-  UserData.PersonalUserSavePath := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
-  if not DirectoryExists( UserData.PersonalUserSavePath ) then
-     ForceDirectories( UserData.PersonalUserSavePath );
-
-  UserData.AppSavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\';
-  UserData.FirstLoadPath := ExtractFileDir( ParamStr(0) ) + '\DB\';
-
-  {$IFNDEF TESTLOGIN}
-  if Check4FirstStart then
-    CBNewUser.Checked := true;
-  {$ENDIF}
-
-  ESavePathForKTPs.Text := UserData.PersonalUserSavePath;
-//  ImageList2.GetBitmap( 1, HideToggleBtn.Glyph );
   ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
   SBToogleHide.Flat := true;
+  ESavePathForKTPs.Hint := 'Speicherverzeichnis von KiiTree';
 end;
 
 {------------------------------------------------------------------------------
@@ -388,11 +385,29 @@ end;
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.FormShow(Sender: TObject);
+//var
+//EditText : String;
 begin
   UsernameEdit.SetFocus;
   UsernameEdit.Clear;
   ImageList3.GetIcon( 0, Image1.Picture.Icon );
+
+  USBInput.Required := true;
+
+  //Überprüfe ob der Speicherordner vom installieren vorhanden ist ( Standartverzeichnis )
+  if not DirectoryExists( DefaultSettings.DefaultUserSavePath ) then
+    ForceDirectories( DefaultSettings.DefaultUserSavePath );
+
+  {$IFNDEF TESTLOGIN}
+  //nur zur Sicherheit
+  MainIni.CreateIfNotExist;
+  MainIni.LoadSetting( CBNewUser, ESavePathForKTPs );
+
+  {$ENDIF}
 //  ImageList1.GetIcon( 0, Image1.Picture.Icon );
+//  PersonalFolder := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
+//  ESavePathForKTPs.Text := PersonalFolder;
+//  UserData.PersonalUserSavePath := PersonalFolder;
 end;
 
 {------------------------------------------------------------------------------
@@ -412,6 +427,34 @@ begin
     UserMasterPWEdit.PasswordChar := '*';
     ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-23
+-------------------------------------------------------------------------------}
+procedure TLogin.USBInputUSBGetDriveLetter(Sender: TObject;
+  const DrivePath: string);
+var
+sText : String;
+mResult : Integer;
+begin
+  sText := 'Es wurde ein USB Gerät eingesteckt!' + sLineBreak
+          + 'Wollen Sie diesen USB verwenden?';
+  MResult := MessageDlg( sText, mtInformation, [mbYes, mbNo], 0, mbYes );
+  if MResult = mrYes then
+  begin
+    MainIni.LastLoadPath := DrivePath;
+    ESavePathForKTPs.Text := DrivePath;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-23
+-------------------------------------------------------------------------------}
+procedure TLogin.USBInputUSBRemove(Sender: TObject);
+begin
+  MainIni.LastLoadPath := DefaultSettings.DefaultUserSavePath;
+  ESavePathForKTPs.Text := DefaultSettings.DefaultUserSavePath;
 end;
 
 {------------------------------------------------------------------------------
@@ -440,27 +483,24 @@ Author: Seidel 2020-09-20
 procedure TLogin.UsernameEditChange(Sender: TObject);
 var
 Username :String;
+Path : String;
 //NameWithPath : String;
-UserDataWithPath : String;
+UserKTP : String;
 begin
-  if CBNewUser.Checked then
-  begin
+
     Username := GetMD5String( UsernameEdit.Text ) + SC_EXT;
   //speicherpfad innerhalb des Programms
 //  NameWithPath := Concat( UserData.AppSavePath, Username );
   //Speicherpfad im "Eigene Dateien" Ordner
-    UserDataWithPath := Concat( UserData.PersonalUserSavePath, Username );
+  //TODO: MainIni.LastLoadPath anpassen
+    Path := GetActualSavePath;
+    UserKTP := Concat( Path, Username );
 //  if CheckKTPExist( NameWithPath ) then
 //    UsernameEdit.UserExist := true
 //  else
-    if CheckKTPExist( UserDataWithPath ) then
-    begin
-      UsernameEdit.UserExist := true;
-    end
-    else
-    begin
-      UsernameEdit.UserExist := false;
-    end;
+  if CBNewUser.Checked then
+  begin
+    CheckKTPExist( UserKTP );
   end;
   EnableAnmeldeBtn;
 end;

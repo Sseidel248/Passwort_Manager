@@ -39,10 +39,6 @@ object Login: TLogin
     ColorGradient = cgHorizontal
     RGB_Gradient = rgbLinear
     ColorTo = clMoneyGreen
-    ExplicitLeft = 159
-    ExplicitTop = 136
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object SBToogleHide: TSpeedButton
       Left = 304
       Top = 222
@@ -85,6 +81,8 @@ object Login: TLogin
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
       TextHint = 'Benutzername eingeben...'
       OnChange = UsernameEditChange
@@ -112,14 +110,15 @@ object Login: TLogin
       Top = 264
       Width = 297
       Height = 24
-      Enabled = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
       Font.Height = -13
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      ParentShowHint = False
       ReadOnly = True
+      ShowHint = True
       TabOrder = 2
     end
     object CBNewUser: TCheckBox
@@ -142,7 +141,6 @@ object Login: TLogin
       Width = 32
       Height = 26
       Caption = '...'
-      Enabled = False
       TabOrder = 4
       OnClick = BGetKTPSavePathClick
     end
@@ -23611,5 +23609,12 @@ object Login: TLogin
       FFFFFFFFFFFFFFFF83FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFC0000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000}
+  end
+  object USBInput: TComponentUSB
+    OnUSBGetDriveLetter = USBInputUSBGetDriveLetter
+    OnUSBRemove = USBInputUSBRemove
+    Required = False
+    Left = 32
+    Top = 88
   end
 end

@@ -1,0 +1,1 @@
+call ..\..\UPX_packer_64\upx.exe -9 ..\Release\KiiTree.exe

@@ -6,7 +6,7 @@
         <Projects Include="KiiTree.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tests\PWM_TESTS.dproj">
+        <Projects Include="..\Tests\PWM_TESTS.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -27,13 +27,13 @@
         <MSBuild Projects="KiiTree.dproj" Targets="Make"/>
     </Target>
     <Target Name="PWM_TESTS">
-        <MSBuild Projects="Tests\PWM_TESTS.dproj"/>
+        <MSBuild Projects="..\Tests\PWM_TESTS.dproj"/>
     </Target>
     <Target Name="PWM_TESTS:Clean">
-        <MSBuild Projects="Tests\PWM_TESTS.dproj" Targets="Clean"/>
+        <MSBuild Projects="..\Tests\PWM_TESTS.dproj" Targets="Clean"/>
     </Target>
     <Target Name="PWM_TESTS:Make">
-        <MSBuild Projects="Tests\PWM_TESTS.dproj" Targets="Make"/>
+        <MSBuild Projects="..\Tests\PWM_TESTS.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
         <CallTarget Targets="KiiTree;PWM_TESTS"/>

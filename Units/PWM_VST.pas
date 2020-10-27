@@ -94,9 +94,14 @@ begin
   AVST.Refresh;
   pNode := AVST.GetFirst();
 //  pData := AVST.GetNodeData(PNode);
-  Result := AVST.AddChild( pNode );
+  Result := AVST.InsertNode( pNode,amAddChildLast );
 
   SetData( Result, true, 'Neuer Ordner' );
+
+  AVST.Selected[ Result ] := true;
+  AVST.FocusedNode := Result;
+  AVST.Refresh;
+  Avst.EditNode( Result, -1 );
 
 end;
 
@@ -271,8 +276,14 @@ begin
     end;
   end
   else
-  begin
-    AVST.DeleteNode( pNode );
+  begin  //Change 2020-10-15 sicherheitsabfrage hinzugefügt
+    if MessageDlg( 'Sind Sie sich sicher, dass Sie diesen Ordner löschen wollen?'
+                + sLineBreak + sLineBreak
+                + 'Zu löschender Ordner: "'
+                + pData^.Bezeichnung + '"',
+                mtWarning,
+                [mbYes, mbNo], 0, mbNo ) = 6 then //Ja Btn gedrückt
+      AVST.DeleteNode( pNode );
   end;
 end;
 
