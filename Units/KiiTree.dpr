@@ -7,7 +7,8 @@ uses
   Login_PWM in 'Login_PWM.pas' {Login},
   Global_PWM in 'Global_PWM.pas',
   About_PWM in 'About_PWM.pas' {About_Dlg},
-  MPW_Change_PWM in 'MPW_Change_PWM.pas' {MasterPasswortChange};
+  MPW_Change_PWM in 'MPW_Change_PWM.pas' {MasterPasswortChange},
+  PWCheck_PWM in 'PWCheck_PWM.pas';
 
 {$R *.res}
 

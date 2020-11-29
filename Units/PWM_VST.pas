@@ -28,12 +28,13 @@ Type
       Constructor Create( VST : TVirtualStringTree ); overload; virtual;
       procedure FirstOpen;
       function AddDBNodeAtStandart : PVirtualNode;
-      function AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
+      function AddDBNodeAsChildOf( ParentNode : PVirtualNode ) : PVirtualNode;
       procedure SetNodeDBID( Node : PVirtualNode; ID : Integer );
       procedure MoveNodeToFav( pNode : PVirtualNode );
       procedure MoveNodeTo( pNode : PVirtualNode; Location : String);
       function AddDBNodeFolder : PVirtualNode;
-      function IsAddedInFav( pNode : PVirtualNode) : Boolean;
+      function IsParentFavFolder( pNode : PVirtualNode) : Boolean;
+      function GetSelectedNode : PVirtualNode;
       function IsFavFolder( pNode : PVirtualNode ) : Boolean;
       function IsAddedInAll( pNode : PVirtualNode) : Boolean;
       function IsAllFolder( pNode : PVirtualNode ) : Boolean;
@@ -108,7 +109,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-17
 -------------------------------------------------------------------------------}
-function TDBTree.IsAddedInFav( pNode : PVirtualNode ) : Boolean;
+function TDBTree.IsParentFavFolder( pNode : PVirtualNode ) : Boolean;
 var
 pData : pVTNodeData;
 begin
@@ -117,6 +118,26 @@ begin
   if pData^.Bezeichnung.Equals( SC_FAVORITEN ) then
   begin
     Result := true;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-28
+-------------------------------------------------------------------------------}
+function TDBTree.GetSelectedNode : PVirtualNode;
+var
+Nodes : TVTVirtualNodeEnumeration;
+pNode : PVirtualNode;
+begin
+  Nodes := AVST.Nodes();
+  Result := nil;
+  for pNode in Nodes do
+  begin
+    if AVST.Selected[ pNode ] then
+    begin
+      Result := pNode;
+      Break;
+    end;
   end;
 end;
 
@@ -539,7 +560,7 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-17
 -------------------------------------------------------------------------------}
-function TDBTree.AddDBNodeAt( ParentNode : PVirtualNode ) : PVirtualNode;
+function TDBTree.AddDBNodeAsChildOf( ParentNode : PVirtualNode ) : PVirtualNode;
 var
 pChildNode : PVirtualNode;
 begin

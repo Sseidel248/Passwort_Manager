@@ -15,13 +15,16 @@ uses
   Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees, Data.DB,
   Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls, PWM_VST,
   System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX, System.UITypes,
-  DBEditWithTextHint;
+  DBEditWithTextHint, StringGridEx;
 
 type
   TMainStates = Set of (
     msChanged,                  //wenn gesetzt, dann hat sich etwas im Bäumchen geändert
     msAutoSave,                 //AutoSave aktivieren
-    msMPW_Change                //gerade am ändern des Masterpasswortes
+    msMPW_Change,               //gerade am ändern des Masterpasswortes
+    msSomethingInClipBrd,       //es wurde etwas von KiiTree in die Zwischenablage gepackt
+    msEditAfterNewKiiCreate,    //nachdem ein Kii erzeugt wurde, wird gleich das Editfeld fokosiert
+    msHideAsTrayIcon            //zeigt an das die Anwendung sich in der Taskbar rechts befindet
     );
 
 type
@@ -156,8 +159,14 @@ type
     SBAbisZ: TSpeedButton;
     SBZbisA: TSpeedButton;
     Einfgen1: TMenuItem;
-    Kopieren1: TMenuItem;
+    PKopieren: TMenuItem;
     BPW_Print: TButton;
+    CBEditAfterCreateNewKii: TCheckBox;
+    SG: TStringGridEx;
+    Panel1: TPanel;
+    GBPWHinweis: TGroupBox;
+    LPWHinweis: TLabel;
+    TrayIconKT: TTrayIcon;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -283,9 +292,15 @@ type
     procedure CBThemenChange(Sender: TObject);
     procedure SBAboutClick(Sender: TObject);
     procedure Einfgen1Click(Sender: TObject);
-    procedure Kopieren1Click(Sender: TObject);
+    procedure PKopierenClick(Sender: TObject);
     procedure BPW_PrintClick(Sender: TObject);
     procedure Fill_PW_List( var PWList : TStringlist );
+    procedure CBEditAfterCreateNewKiiClick(Sender: TObject);
+    procedure SGDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
+      State: TGridDrawState);
+    procedure SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
+    procedure SGMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
 //    FFonts : TFonts;
     DBTree : TDBTree;
@@ -295,6 +310,7 @@ type
     FPasswortOld,
     FURLOld,
     FInfoOld : String;
+    FOldRow : Integer;
 //    FFirstNewUser : Boolean;
     procedure SetFontSizes( size : Integer );
     procedure SetTreeImageListForSize( Number : Integer );
@@ -317,6 +333,10 @@ type
 //    procedure ColorCBEntry( var Canvas : TCanvas; var Rect : TRect; y : Integer; colorStart, colorMid, colorTo : TColor );
     procedure SetThemeColor( Color1, color2, color3 : TColor );
 //    procedure SaveMainIni;
+    procedure InitGridHeader;
+    procedure FillGrid;
+    procedure CheckPasswords;
+    Procedure ChangePageControlToKiiTree;
     { Private-Deklarationen }
   public
     function GetMaxID : Integer;
@@ -336,7 +356,7 @@ implementation
 {$R *.dfm}
 uses
   ZipForge, Login_PWM, Global_PWM, Hash_Functions{$IFNDEF TESTLOGIN},ClipBrd{$ENDIF},
-  About_PWM, MPW_Change_PWM{$IFNDEF TESTLOGIN}, Printers{$ENDIF};
+  About_PWM, MPW_Change_PWM{$IFNDEF TESTLOGIN}, Printers{$ENDIF}, PWCheck_PWM;
 
 //*****************************************************************************
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -405,12 +425,76 @@ begin
     GradientPanelMain.ColorTo := color2;
     TBMenu.GradientStartColor := color2;
     TBMenu.GradientEndColor := color3;
+
+    SG.GradientStartColor := color3;//Change: Seidel 2020-11-19
+    SG.GradientEndColor := color2;
 //    GradientPanelMain.Refresh;
 //    TBMenu.Refresh;
     Refresh;
   finally
     Screen.Cursor := crDefault;
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-12
+-------------------------------------------------------------------------------}
+procedure TMain.InitGridHeader;
+begin
+  SG.Cells[ IC_COL_BEZ,IC_ROW_HEAD ] := 'Bezeichnung';
+  SG.Cells[ IC_COL_PWD,IC_ROW_HEAD ] := 'Passwort';
+  SG.Cells[ IC_COL_ERG,IC_ROW_HEAD ] := 'Sicherheitsstufe';
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-18
+-------------------------------------------------------------------------------}
+procedure TMain.FillGrid;
+var
+id, r : integer;
+NumOfNodes : Integer;
+begin
+  NumOfNodes := GetMaxID;
+  r := 0;
+  for id := 1 to NumOfNodes do
+  begin
+    if ClientDataSet1.Locate( 'ID', id, [] ) then
+    begin
+      inc( r );
+      SG.Cells[ IC_COL_BEZ,r ] := ClientDataSet1Bezeichnung.AsString;
+      SG.Cells[ IC_COL_PWD,r ] := ClientDataSet1Passwort.AsString;
+      if ( SG.RowCount -1 ) < r then
+      begin
+        SG.RowCount := SG.RowCount +1;
+      end;
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-18
+-------------------------------------------------------------------------------}
+procedure TMain.CheckPasswords;
+var
+ThisPW : String;
+r,
+PWResult : integer;
+begin
+  for r := 1 to ( SG.RowCount -1 ) do
+  begin
+    ThisPW := SG.Cells[ IC_COL_PWD,r ];
+    PWResult := TPassworCheck.CheckMyPassword( ThisPW );
+    SG.Cells[ IC_COL_ERG,r ] := IntToStr( PWResult );
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-19
+-------------------------------------------------------------------------------}
+Procedure TMain.ChangePageControlToKiiTree;
+begin
+  if PageControl1.ActivePageIndex <> 0 then
+    PageControl1.ActivePageIndex := 0;
 end;
 
 {------------------------------------------------------------------------------
@@ -711,7 +795,12 @@ begin
   DoChangeStates( [msChanged] );
   AddNewDataSet;
   EnableDBFields( true );
-  DBEditBezeichnung.SetFocus;
+
+  if {StrToBoolDef( UserData.FocusEditAfterNewKii, false )}msEditAfterNewKiiCreate in MainStates then//Change: Seidel 2020-10-28
+  begin
+    DBEditBezeichnung.SetFocus;
+    DBEditBezeichnung.SelectAll;
+  end;
 end;
 
 {------------------------------------------------------------------------------
@@ -732,8 +821,8 @@ begin
   pNode := DBTRee.AVST.FocusedNode;
   if DBTree.AVST.GetNodeLevel( pNode ) = 2 then
   begin
-    DoChangeStates( [msChanged] );
     DBTree.DelDBNode;
+    DoChangeStates( [msChanged] );//Change: Seidel 2020-11-18 Speichern nachdem man gelöscht hat nicht davor
     EnableDBFields( false );
   end;
 end;
@@ -748,8 +837,8 @@ begin
   pNode := DBTRee.AVST.FocusedNode;
   if DBTree.AVST.GetNodeLevel( pNode ) = 1 then
   begin
-    DoChangeStates( [msChanged] );
     DBtree.DelFolder;
+    DoChangeStates( [msChanged] );//Change: Seidel 2020-11-18 Speichern nachdem man gelöscht hat nicht davor
   end;
 end;
 
@@ -800,8 +889,27 @@ end;
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.SaveKTP;
+
+  function GetChangedDir: String;
+  var
+  OpenDialog : TFileOpenDialog;
+  begin
+    OpenDialog := TFileOpenDialog.Create( Application );
+    try
+      OpenDialog.Options := [fdoPickFolders];
+      OpenDialog.Title := 'Wählen Sie ihren letzten Speicherpfad';
+      if OpenDialog.Execute then
+        Result := OpenDialog.FileName
+      else
+        Result := '';
+    finally
+      OpenDialog.Free;
+    end;
+  end;
+
 var
   archiver : TZipForge;
+  Text : String;
 //  ArchivFile : String;
   KiiTreeForArchiv : String;
   IniForArchiv : String;
@@ -823,6 +931,7 @@ begin
   //  SavePath := ExtractFileDir( ParamStr(0) ) + '\PM_DB\' ;
   //  SavePath := UserData.AppSavePath;
     SavePath := GetActualSavePath;
+
     if not DirectoryExists( SavePath ) then
       ForceDirectories( SavePath );
 
@@ -841,9 +950,20 @@ begin
       begin
         // Name des Archives was wir erstellen wollen
         FileName := SavePath + UserData.KTP_Name_MD5;
-        // Because we create a new archive,
-        // we set Mode to fmCreate
-        OpenArchive( fmCreate );
+        // das alte Archiv mit dem alten Masterpasswort wird überschrieben
+        //hat den Vorteil, wenn die KiiTree Datei gelöscht wurde, wird diese trotzdem neu erstellt!! <--!
+        try//Change: Seidel 2020-11-29 prüfen ob ein Speichermedium entfernt wurde
+          OpenArchive( fmCreate );
+        except
+          Text := 'Ihr Speicherpfad' + sLineBreak + '"' + SavePath + '"' + sLineBreak + 'existiert nicht mehr!'
+                + sLineBreak + 'Bitte prüfen Sie, ob Ihr Speichermedium vorhanden ist bevor Sie speichern.';
+          if MessageDlg( Text, mtError, [mbCancel, mbRetry], 0, mbRetry ) = mrRetry then
+          begin
+            SaveKTP;//rekursiver aufruf
+            archiver.Free;//verhindert dass das zuvorgeöffnete Archiv offenbleibt
+          end;
+          Exit;
+        end;
         // Setzen des Verzeichnisses in dem das Archiv platziert wird
         BaseDir := SavePath;
         // Set encryption algorithm and password
@@ -858,6 +978,12 @@ begin
         //Speicherdialog {Debug}
   //      ShowMessage( FileForArchiv + ' und ' + IniForArchiv + ' wurde in ' + FileName + ' gepackt' );
         //Speicherdialog {Debug} - Ende -
+        //Testet das erstellte Archiv und repariert es ggf.
+        try
+          TestFiles( '*.*' );
+        except
+          RepairArchive;
+        end;
 
         //Speicherdialog {Debug}
         if ( not ( msAutoSave in MainStates ) ) and ( not ( msMPW_Change in MainStates ) ) then
@@ -905,7 +1031,6 @@ Author: Seidel 2020-09-18
 //  with archiver do
 //  begin
 //    // Name des Archives was wir erstellen wollen
-//    //TODO: Name des Archives später als Kombi aus Username und irgendwas
 //    FileName := SavePath + 'test.KTP';
 //    // Because we create a new archive,
 //    // we set Mode to fmCreate
@@ -1015,6 +1140,8 @@ begin
     RGSchriftgreosse.Font.Size := size;
     RGSymbole.Font.Size := size;
     LAutoSaveHinweis.Font.Size := size;
+    CBEditAfterCreateNewKii.Font.Size := Size;
+    BPW_Print.Font.Size := Size;
     //Passwörter
     SuchenEdit.Font.Size := size;
     DBTree.AVST.Font.Size := size;
@@ -1029,6 +1156,11 @@ begin
     LPasswort.Font.Size := size;
     LInfo.Font.Size := size;
     LURL.Font.Size := size;
+
+    //KiiChecker//Change: Seidel 2020-11-18
+    SG.Font.Size := size;
+    GBPWHinweis.Font.Size := Size;
+    LPWHinweis.Font.Size := Size;
 
     //größere
     //Menüleiste
@@ -1068,6 +1200,7 @@ begin
         begin
           DBTree.AVST.NodeHeight[ Node ] := 36;
         end;
+        DBTree.AVST.DefaultNodeHeight := 36;//Change: Seidel 2020-11-26 vergrößert bei Start die Node Größe
       end;
       1: begin
         DBTree.AVST.Images := ILNormal;
@@ -1075,6 +1208,7 @@ begin
         begin
           DBTree.AVST.NodeHeight[ Node ] := 26;
         end;
+        DBTree.AVST.DefaultNodeHeight := 26;//Change: Seidel 2020-11-26
       end;
       2: begin
         DBTree.AVST.Images := ILklein;
@@ -1082,12 +1216,121 @@ begin
         begin
           DBTree.AVST.NodeHeight[ Node ] := 18;
         end;
+        DBTree.AVST.DefaultNodeHeight := 18;//Change: Seidel 2020-11-26
       end;
     end;
     Refresh;
   finally
     Screen.Cursor := crDefault;
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-18
+-------------------------------------------------------------------------------}
+procedure TMain.SGDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
+  State: TGridDrawState);
+var
+ResultStr : String;
+Rect2 : TRect;
+begin
+with SG.Canvas do
+  begin
+    if ( ARow > IC_ROW_HEAD ) and ( ACol = IC_COL_ERG ) then
+    begin
+      Rect2 := SG.CellRect( ACol,ARow );//Change: Seidel 2020-11-19 Besseres Ausfüllen der Zelle
+
+      if SG.Cells[ ACol,ARow ].Equals('1') then
+      begin
+        Brush.Color:= clRed;
+        ResultStr := 'Sehr schwach';
+      end
+      else
+      if SG.Cells[ ACol,ARow ].Equals('2') then
+      begin
+        Brush.Color:= clWebOrange;
+        ResultStr := 'Schwach';
+      end
+      else
+      if SG.Cells[ ACol,ARow ].Equals('3') then
+      begin
+        Brush.Color:= clYellow;
+        ResultStr := 'Mäßig';
+      end
+      else
+      if SG.Cells[ ACol,ARow ].Equals('4') then
+      begin
+        Brush.Color:= clWebGreenYellow;
+        ResultStr := 'Stark';
+      end
+      else
+      if SG.Cells[ ACol,ARow ].Equals('5') then
+      begin
+        Brush.Color:= clGreen;
+        ResultStr := 'Sehr stark';
+      end;
+
+      FillRect( Rect2 );
+
+      TextOut( Rect2.Left+6, Rect2.Top+6, ResultStr );
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-18
+-------------------------------------------------------------------------------}
+procedure TMain.SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
+begin
+  SG.Sort( ACol );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-19
+-------------------------------------------------------------------------------}
+procedure TMain.SGMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+
+  function GetResultDeskription( ARow : Integer ): String;
+  var
+  s : String;
+  begin
+    s := SG.Cells[ IC_COL_ERG,ARow ];
+    if S.Equals('1') then
+      Result := 'Qualität: Sehr schwach' + sLineBreak + 'Ihr Passwort ist kleiner als 8 Zeichen!'
+    else
+    if S.Equals('2') then
+      Result := 'Qualität: Schwach' + sLineBreak + 'Ihr Passwort enthält nur Zeichen eines Zeichentyps!'
+    else
+    if S.Equals('3') then
+      Result := 'Qualität: Mäßig' + sLineBreak + 'Ihr Passwort enthält nur Buchstaben!'
+    else
+    if S.Equals('4') then
+      Result := 'Qualität: Stark' + sLineBreak + 'Ihr Passwort enthält noch keine Sonderzeichen!'
+    else
+    if S.Equals('5') then
+      Result := 'Qualität: Sehr stark' + sLineBreak + 'Ihr Passwort enthält viele verschiedene Zeichentypen!';
+  end;
+
+  procedure ShowCellHint( X, Y : Integer );
+  var
+  ACol, ARow : Integer;
+  begin
+    //Col und Row Position lesen
+    SG.MouseToCell( X, Y, ACol, ARow );
+    if FOldRow <> ARow then
+    begin
+      Application.CancelHint;
+      FOldRow := ARow;
+    end;
+    //wenn im gültigen Bereich zeige Zelleninhalt als Hint
+    If ( ACol = IC_COL_ERG ) And ( ARow <> -1 ) Then
+      SG.Hint:=GetResultDeskription( ARow )
+    else
+      Application.CancelHint;
+  end;
+
+begin
+  ShowCellHint( X, Y );
 end;
 
 {------------------------------------------------------------------------------
@@ -1108,10 +1351,16 @@ begin
   SBZbisA.Hint := 'Sortiert die Kii`s absteigend';
   SuchenEdit.Hint := 'Tippen Sie den Namen des Schlüssels ein nachdem Sie suchen möchten.';
   BPW_Print.Hint := 'Druckt Ihre Passwörter als Liste im Querformat aus';
+  CBEditAfterCreateNewKii.Hint := 'Nachdem Sie ein Kii erstellt haben, werden die Editierfelder fokosiert';
 
-  //Caption vom AutoSave Hinweis
+  //Caption vom AutoSave Hinweis 2020-11-19
   LAutoSaveHinweis.Caption := 'Achtung!' + sLineBreak + 'Das automatisierte speichern beginnt erst bei der nächsten Änderung an ihren KiiTree!';
   LBtnErkl.Visible := false;
+  LPWHinweis.Caption := 'Mindestens 8 Zeichen' + sLineBreak
+                       +'Mindestens eine Zahl enthalten' + sLineBreak
+                       +'Groß und Kleinbuchstaben beinhalten' + sLineBreak
+                       +'Mindestens ein Sonderzeichen ( $, %, §, #, +, u.a. ) enthalten';
+
 end;
 
 {------------------------------------------------------------------------------
@@ -1120,8 +1369,11 @@ Author: Seidel 2020-09-18
 procedure TMain.AddNewDataSet;
 var
 pNode, pParentNode : PVirtualNode;
+//Data : pVTNodeData;
 begin
+  //holen das aktuell ausgewählten Nodes
   pParentNode := DBTree.AVST.FocusedNode;
+//  Data := DBTree.AVST.GetNodeData( pParentNode );
 
   ClientDataSet1.Append;
   //in den EditierModus Wechseln
@@ -1129,11 +1381,17 @@ begin
   //erzeugt einen neuen DatenSatz
   if ( DBTree.AVST.GetNodeLevel( pParentNode ) = 1 ) then
   begin
-    pNode := DBTree.AddDBNodeAt( pParentNode );
-    if DBTree.IsAddedInFav( pNode ) then
+    pNode := DBTree.AddDBNodeAsChildOf( pParentNode );
+    if DBTree.IsParentFavFolder( pNode ) then
       InitNewData( pNode, true )
     else
       InitNewData( pNode );
+  end
+  else
+  if ( DBTree.AVST.GetNodeLevel( pParentNode ) = 2 ) then
+  begin
+    pNode := DBTree.AddDBNodeAsChildOf( pParentNode.Parent );
+    InitNewData( pNode );
   end
   else
   begin
@@ -1147,6 +1405,7 @@ begin
   //aktiviert die Datensatz Felder
   EnableDBFields( true );
   DBTree.AVST.Selected[ pNode ] := true; //change 2020-10-11
+  DBTree.AVST.FocusedNode := pNode;
 end;
 
 {------------------------------------------------------------------------------
@@ -1190,10 +1449,12 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-19
 -------------------------------------------------------------------------------}
-procedure TMain.Kopieren1Click(Sender: TObject);
+procedure TMain.PKopierenClick(Sender: TObject);
 begin
   TimerStart;
   {$IFNDEF TESTLOGIN}
+  DoChangeStates( [msSomethingInClipBrd], [] );
+
   if DBEditBezeichnung.Focused then
     DBEditBezeichnung.CopyToClipboard
   else
@@ -1317,6 +1578,7 @@ procedure TMain.BenutzerInZwischenablage1Click(Sender: TObject);
 begin
   TimerStart;
   {$IFNDEF TESTLOGIN}
+  DoChangeStates( [msSomethingInClipBrd], [] );
   DBEditBenutzer.SelectAll;
   DBEditBenutzer.CopyToClipboard;
   DBEditBenutzer.SelStart := 0;
@@ -1324,7 +1586,7 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-10-**
+Author: Seidel 2020-**-**
 -------------------------------------------------------------------------------}
 procedure TMain.BErzeugeTANClick(Sender: TObject);
 begin
@@ -1625,6 +1887,18 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-10-28
+-------------------------------------------------------------------------------}
+procedure TMain.CBEditAfterCreateNewKiiClick(Sender: TObject);
+begin
+  UserData.FocusEditAfterNewKii := BoolToStr( CBEditAfterCreateNewKii.Checked );
+  if CBEditAfterCreateNewKii.Checked then
+    DoChangeStates( [msEditAfterNewKiiCreate] )
+  else
+    DoChangeStates( [], [msEditAfterNewKiiCreate] );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.CBZeitImSpeicherChange(Sender: TObject);
@@ -1672,7 +1946,7 @@ begin
   if DBTree.AVST.GetNodeLevel( pNode ) <= 1 then
     Exit;
 
-  if not DBTree.IsAddedInFav( pNode ) then
+  if not DBTree.IsParentFavFolder( pNode ) then
     DBTree.MoveNodeToFav( pNode )
   else
     DBTree.MoveNodeTo( pNode, SC_ALLE );
@@ -1893,7 +2167,7 @@ begin
     VST.SetFocus;
   end
   else
-  if Ord( Key ) = 27 then
+  if Ord( Key ) = 27 then //Esc Button
   begin
     Key := #0;
     GBDaten.SetFocus;
@@ -1980,14 +2254,12 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-30
 -------------------------------------------------------------------------------}
-procedure TMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
 Text : String;
 MResult : Integer;
-//ini : TStringList;
-//SaveName : String;
 begin
-  if ( msChanged in MainStates ) and not ( msAutoSave in MainStates ) then
+    if ( msChanged in MainStates ) and not ( msAutoSave in MainStates ) then
   begin
     Text := 'Es sind Änderungen vorhanden.'
     + sLineBreak
@@ -1997,6 +2269,27 @@ begin
       SaveKTP;
   end;
   MainIni.SaveSetting;
+  if msSomethingInClipBrd in MainStates then//Change: Seidel 2020-11-04
+  begin
+    Text := 'Soll die Zwischenablage geleert werden bevor Sie die Anwendung schließen?';
+    MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
+    if MResult = mrYes then
+    {$IFNDEF TESTLOGIN}
+      Clipboard.Clear;
+    {$ENDIF}
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-25
+-------------------------------------------------------------------------------}
+procedure TMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+//var
+//Text : String;
+begin
+  //TODO: SystemTrayIcon
+//  Text := 'Anwendung Schließen oder Minimieren?';
+//  if MessageDlg then
 end;
 
 {------------------------------------------------------------------------------
@@ -2013,16 +2306,17 @@ begin
   {$IFDEF DEBUG}
   DB_Tabelle.TabVisible := true;
   {$ENDIF}
-  //TODO: Popup im VST: Passwort kopieren hinzufügen
   //TODO: für den Beta Installer; alles was false ist wurde noch nicht implementiert
-  BErzeugeTAN.Enabled := false;
-  SBPasswortCheck.Enabled := false;
+  BErzeugeTAN.Visible := false;
+//  SBPasswortCheck.Enabled := false;
   //Beta Installer - Ende -
   //hole den Pfad zu Eigene Dateien/Dokumente
 //  PersonalFolder := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
 
   DefaultSettings.Init( handle );
-  MainIni.CreateIfNotExist;
+  //prüft auch ob Schreibrecht vorhanden sind
+  if not MainIni.CreateIfNotExist then
+    Application.Terminate;
 
   //setzen der maximalen Länge
   DBEditBezeichnung.MaxLength := ClientDataSet1Bezeichnung.Size;
@@ -2032,6 +2326,7 @@ begin
   KeyPreview := true;
   PageControl1.ActivePage := PW_Manager;
   InitInfosHints;
+  InitGridHeader;
 
   DBTree := TDBTree.Create( VST );
   DBTree.Create( VST );
@@ -2074,7 +2369,8 @@ end;
 Author: Seidel 2020-09-28
 -------------------------------------------------------------------------------}
 procedure TMain.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-
+var
+pNode : PVirtualNode;
 begin
   if ( Key = 70 ) and ( Shift = [ssCtrl] ) then //Strg + F
   begin
@@ -2084,9 +2380,16 @@ begin
   else
   if ( Key = 78 ) and ( Shift = [ssCtrl] ) then  // Strg + N //Change 2020-10-11
   begin
+    if not ( msEditAfterNewKiiCreate in MainStates ) then//Change: Seidel 2020-11-19
+    begin
+      pNode := DBTree.GetSelectedNode;
+      if ( not DBTree.AVST.Focused ) and ( DBTree.AVST.SelectedCount = 1 ) then
+        DBtree.AVST.SetFocus;
+    end;
 
-    if not NeuerSchlssel1.Enabled then
-      AddNewKii;
+    if ( not NeuerSchlssel1.Enabled ) then
+      SBAddNewKiiClick( nil );
+
   end
   else
   if ( Key = 83 ) and ( Shift = [ssCtrl] ) then  // Strg + S //Change 2020-10-17
@@ -2129,6 +2432,7 @@ procedure TMain.PasswortinZwischenablage1Click(Sender: TObject);
 begin
   TimerStart;
   {$IFNDEF TESTLOGIN}
+  DoChangeStates( [msSomethingInClipBrd], [] );
   DBEditPasswort.SelectAll;
   DBEditPasswort.CopyToClipboard;
   DBEditPasswort.SelStart := 0;
@@ -2185,7 +2489,7 @@ begin
     //Nodelevel = 2 -> Schlüssel in einem Ordner
     else if DBTree.AVST.GetNodeLevel( pNode ) = 2 then
     begin
-      NeuerSchlssel1.Enabled        := false;
+      NeuerSchlssel1.Enabled        := true;//Change: Seidel 2020-10-28
       NeuerOrdner1.Enabled          := false;
       ZuFavoritenhinzufgen1.Enabled := true;
       Ordnerlschen1.Enabled         := false;
@@ -2193,7 +2497,7 @@ begin
       OrdnerUmbenennen1.Enabled       := false;
       BenutzerInZwischenablage1.Enabled := true;
       PasswortinZwischenablage1.Enabled := true;
-      if DBTree.IsAddedInFav( pNode ) then
+      if DBTree.IsParentFavFolder( pNode ) then
         ZuFavoritenhinzufgen1.Caption := 'Nach "Alle" verschieben'
       else
         ZuFavoritenhinzufgen1.Caption := 'Nach "Favoriten" verschieben';
@@ -2220,30 +2524,32 @@ end;
 Author: Seidel 2020-10-10
 -------------------------------------------------------------------------------}
 procedure TMain.PopupMenuDatenPopup(Sender: TObject);
+
+  procedure ChangePopupDaten( DBEdit : TDBEdit; Caption : String = '' );//Change: Seidel 2020-11-23
+  begin
+    if DBEdit.Focused then
+    begin
+      if Caption.Equals( '' ) then
+        PZwischenspeichern.Visible := false
+      else
+      begin
+        PZwischenspeichern.Caption := Caption;
+        PZwischenspeichern.Visible := true;
+      end;
+
+      PURLimBrowseOerffnen.Visible := false;
+      if DBEdit.SelLength > 0 then
+        PKopieren.Enabled := true
+      else
+        PKopieren.Enabled := false;
+    end;
+  end;
+
 begin
-  if DBEditBenutzer.Focused then
-  begin
-    PZwischenspeichern.Caption := 'Benutzername in Zwischenablage kopieren';
-    PURLimBrowseOerffnen.Visible := false;
-    PZwischenspeichern.Visible := true;
-  end;
-  if DBEditPasswort.Focused then
-  begin
-    PZwischenspeichern.Caption := 'Passwort in Zwischenablage kopieren';
-    PURLimBrowseOerffnen.Visible := false;
-    PZwischenspeichern.Visible := true;
-  end;
-  if DBEditURL.Focused then
-  begin
-    PZwischenspeichern.Caption := 'Internetseite in Zwischenablage kopieren';
-    PURLimBrowseOerffnen.Visible := true;
-    PZwischenspeichern.Visible := false;
-  end;
-  if DBEditBezeichnung.Focused then
-  begin
-    PURLimBrowseOerffnen.Visible := false;
-    PZwischenspeichern.Visible := false;
-  end;
+  ChangePopupDaten( DBEditBezeichnung );
+  ChangePopupDaten( DBEditBenutzer , 'Benutzername in Zwischenablage kopieren' );
+  ChangePopupDaten( DBEditPasswort , 'Passwort in Zwischenablage kopieren' );
+  ChangePopupDaten( DBEditURL , 'InternetSeite in Zwischenablage kopieren' );
 end;
 
 {------------------------------------------------------------------------------
@@ -2253,6 +2559,7 @@ procedure TMain.PZwischenspeichernClick(Sender: TObject);
 begin
   TimerStart;
   {$IFNDEF TESTLOGIN}
+  DoChangeStates( [msSomethingInClipBrd], [] );
   if DBEditBenutzer.Focused then
   begin
     DBEditBenutzer.SelectAll;
@@ -2316,6 +2623,7 @@ Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.SBAbisZClick(Sender: TObject);
 begin
+  ChangePageControlToKiiTree;
   DBtree.AVST.SortTree( -1, sdAscending );
 end;
 
@@ -2327,6 +2635,7 @@ end;
 
 procedure TMain.SBAddNewFolderClick(Sender: TObject);
 begin
+  ChangePageControlToKiiTree;
   AddNewFolder;
 end;
 
@@ -2335,6 +2644,7 @@ Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.SBAddNewKiiClick(Sender: TObject);
 begin
+  ChangePageControlToKiiTree;
   AddNewKii;
 end;
 
@@ -2343,6 +2653,7 @@ Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.SBDelFolderClick(Sender: TObject);
 begin
+  ChangePageControlToKiiTree;
   DelFolder;
 end;
 
@@ -2351,6 +2662,7 @@ Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.SBDelKiiClick(Sender: TObject);
 begin
+  ChangePageControlToKiiTree;
   DelKii;
 end;
 
@@ -2379,7 +2691,13 @@ procedure TMain.SBPasswortCheckClick(Sender: TObject);
 begin
   PageControl1.ActivePage := PasswortChecker;
   MarkSpeedBtn( false, true, false );
+  FillGrid;
+  CheckPasswords;
 end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-11
+-------------------------------------------------------------------------------}
 
 procedure TMain.SBSaveKiiTreeClick(Sender: TObject);
 begin
@@ -2387,8 +2705,13 @@ begin
   DoChangeStates( [], [msChanged] );
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-11
+-------------------------------------------------------------------------------}
+
 procedure TMain.SBZbisAClick(Sender: TObject);
 begin
+  ChangePageControlToKiiTree;
   DBtree.AVST.SortTree( -1, sdDescending );
 end;
 
@@ -2399,8 +2722,8 @@ procedure TMain.Schlssellschen1Click(Sender: TObject);
 begin
   if DBTree.AVST.Focused then
   begin
-    DoChangeStates( [msChanged] );
     DBTree.DelDBNode;
+    DoChangeStates( [msChanged] );//Change: Seidel 2020-11-18 Speichern nachdem man gelöscht hat nicht davor
     EnableDBFields( false );
   end;
 end;
@@ -2796,7 +3119,7 @@ begin
   if DBTree.AVST.Focused then
   begin
     pNode := DBTree.AVST.FocusedNode;
-    if not DBTree.IsAddedInFav( pNode ) then
+    if not DBTree.IsParentFavFolder( pNode ) then
       DBTree.MoveNodeToFav( pNode )
     else
       DBTree.MoveNodeTo( pNode, SC_ALLE );

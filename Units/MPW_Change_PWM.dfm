@@ -3,12 +3,12 @@ object MasterPasswortChange: TMasterPasswortChange
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = #196'nderung des Masterpasswortes'
-  ClientHeight = 261
+  ClientHeight = 211
   ClientWidth = 384
   Color = clBtnFace
-  Constraints.MaxHeight = 300
+  Constraints.MaxHeight = 250
   Constraints.MaxWidth = 400
-  Constraints.MinHeight = 300
+  Constraints.MinHeight = 250
   Constraints.MinWidth = 400
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,7 +25,7 @@ object MasterPasswortChange: TMasterPasswortChange
     Left = 0
     Top = 0
     Width = 384
-    Height = 261
+    Height = 211
     Align = alClient
     Caption = 'GradientPanelMPWChange'
     Color = clSkyBlue
@@ -35,6 +35,7 @@ object MasterPasswortChange: TMasterPasswortChange
     ColorGradient = cgHorizontal
     RGB_Gradient = rgbLinear
     ColorTo = clMoneyGreen
+    ExplicitHeight = 261
     object LStep1: TLabel
       Left = 16
       Top = 46
@@ -52,7 +53,7 @@ object MasterPasswortChange: TMasterPasswortChange
     end
     object LStep2: TLabel
       Left = 16
-      Top = 173
+      Top = 131
       Width = 353
       Height = 20
       AutoSize = False
@@ -67,7 +68,7 @@ object MasterPasswortChange: TMasterPasswortChange
     end
     object BChangeMasterPW: TButton
       Left = 16
-      Top = 208
+      Top = 157
       Width = 353
       Height = 33
       Caption = 'Masterpasswort '#228'ndern'
@@ -105,7 +106,7 @@ object MasterPasswortChange: TMasterPasswortChange
     end
     object ENewMPW: TEditWithBorder
       Left = 16
-      Top = 80
+      Top = 71
       Width = 353
       Height = 24
       Font.Charset = DEFAULT_CHARSET
@@ -126,7 +127,7 @@ object MasterPasswortChange: TMasterPasswortChange
     end
     object ENewMPW2: TEditWithBorder
       Left = 16
-      Top = 143
+      Top = 101
       Width = 353
       Height = 24
       Font.Charset = DEFAULT_CHARSET

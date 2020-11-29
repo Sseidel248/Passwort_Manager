@@ -62,7 +62,7 @@ Edit1, Edit2 : String;
 begin
   Edit1 := ENewMPW.Text;
   Edit2 := ENewMPW2.Text;
-  if ( Edit1 ).Equals( Edit2 ) then  //sicherheitsüberprüfung
+  if ( Edit1 ).Equals( Edit2 ) then  //Zusätzliche Sicherheitsüberprüfung
   begin
     NewPW := ENewMPW.Text;
     UserData.PW_Str := NewPW;

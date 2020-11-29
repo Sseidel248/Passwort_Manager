@@ -10,7 +10,7 @@ interface
 
 uses
   ActiveX, ShellAPI, ShlObj, vcl.Dialogs, WinAPI.Windows, System.Classes, MidasLib,
-  System.SysUtils, Vcl.StdCtrls;
+  System.SysUtils, Vcl.StdCtrls, Edit4User;
 
 type
   TUserData = record
@@ -22,6 +22,7 @@ type
     SymbolSize : String;
     UserTheme : String;
     ZeitImSpeicher : String;
+    FocusEditAfterNewKii : String;//Change: Seidel 2020-10-28
     procedure SaveUserData( Ini : TStringlist );
     procedure LoadUserData( ini : TStringList );
   end;
@@ -40,15 +41,25 @@ type
     IniPath : String;
     IsNewUserChecked : Boolean;
     LastLoadPath : String;
+    LastUser : String;
+    IsLastUserAgainChecked : Boolean;
 //    DefaultPath : String;
 //    PersonalUserSavePath : String;   // z.B. C:\Users\<Name des Benutzers>\KiiTree\
-    procedure CreateIfNotExist;
-    procedure LoadSetting( var CBNewUser : TCheckBox; var Edit : TEdit );
+    function CreateIfNotExist: Boolean;
+    procedure LoadSetting( var CBNewUser, CBMerkeUser : TCheckBox;
+                                var EditPath: TEdit;
+                                var EditUser: TEdit4User );
     procedure SaveSetting;
+    function CheckWriteAccessAndSave( SaveFile : String; ini : TStringList; forCreate : Boolean = false ): Boolean;
   end;
 
 const
   PM_PW = 'pW!M3Pw1gH,A!<3D';
+
+  IC_ROW_HEAD       = 0;
+  IC_COL_BEZ        = 0;
+  IC_COL_PWD        = 1;
+  IC_COL_ERG        = 2;
 
   //ini des Users
   SC_USER           = 'User';
@@ -60,11 +71,14 @@ const
   SC_SYMBOLSIZE     = 'SymbolSIze';
   SC_THEMEN         = 'Themen';
   SC_ZEITIMSPEICHER = 'TimeInClipBrd';
+  SC_WORKWITHKIIS   = 'FocusEditAfterCreate';
   //ini des Users - Ende -
   //ini vom programm
   SC_FIRSTSTART     = 'First_Start';
   SC_LASTKTPPATH    = 'LastKTPPath';
   SC_DEFAULTPATH    = 'DefaultPath';
+  SC_LASTUSER       = 'LastUser';
+  SC_ISLASTUSERCHK  = 'IsLastUserChecked';
   SC_NOT_USED       = 'Not_Used';
   //ini vom programm - Ende -
   //Feste Node Ordner
@@ -139,6 +153,7 @@ begin
   Ini.Values[SC_THEMEN] := UserTheme;
 //    IniList.Values[SC_LASTKTPPATH] := LastKTPPath;
   Ini.Values[SC_ZEITIMSPEICHER] := ZeitImSpeicher;
+  Ini.Values[SC_WORKWITHKIIS] := FocusEditAfterNewKii;
 end;
 
 {------------------------------------------------------------------------------
@@ -154,9 +169,9 @@ begin
     CBThemen.ItemIndex := StrToIntDef( Ini.Values[SC_THEMEN], 0 );
     CBThemenChange( nil );
     CBZeitImSpeicher.ItemIndex := StrToIntDef( Ini.Values[SC_ZEITIMSPEICHER], 3 );
+    CBEditAfterCreateNewKii.Checked := StrToBoolDef( Ini.Values[SC_WORKWITHKIIS], false );
 //    CBZeitImSpeicherChange( nil );
   end;
-
 end;
 
 {------------------------------------------------------------------------------
@@ -202,14 +217,17 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
-procedure TMainINI.CreateIfNotExist;
+function TMainINI.CreateIfNotExist : Boolean;
 var
 ini : TStringList;
 begin
+  Result := true;
   IniPath := ExtractFilePath( ParamStr( 0 ) ) + 'KiiTree.ini';
   //Eigenschaften der MainINI
   IsNewUserChecked := true;
+  IsLastUserAgainChecked := false;
   LastLoadPath := SC_NOT_USED;
+  LastUser := SC_NOT_USED;
 
   ini := TStringList.Create;
   try
@@ -217,13 +235,19 @@ begin
     begin
       ini.LoadFromFile( IniPath );
       IsNewUserChecked := StrToBoolDef( ini.Values[SC_FIRSTSTART], true );
+      IsLastUserAgainChecked := StrToBoolDef( ini.Values[SC_ISLASTUSERCHK], true );
       LastLoadPath := ini.Values[SC_LASTKTPPATH];
+      LastUser := ini.Values[ SC_LASTUSER];
     end
     else //wenn es keine Gibt das erstell die INI
     begin
       ini.Values[SC_FIRSTSTART] := BoolToStr( IsNewUserChecked, true );  //standart auf neuer User = true
+      ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );
       ini.Values[SC_LASTKTPPATH] := LastLoadPath;             //standart Not_Used
-      ini.SaveToFile( IniPath );
+      ini.Values[SC_LASTUSER] := LastUser;
+//    prüft ob Schreibrechte vorhanden sind
+      if not CheckWriteAccessAndSave( IniPath, ini, true ) then
+        Result := false;
     end;
   finally
     ini.Free;
@@ -233,9 +257,11 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-20
 -------------------------------------------------------------------------------}
-procedure TMainINI.LoadSetting( var CBNewUser : TCheckBox; var Edit : TEdit );
+procedure TMainINI.LoadSetting( var CBNewUser, CBMerkeUser : TCheckBox;
+                                var EditPath: TEdit;
+                                var EditUser: TEdit4User );
 var
-LastPath : String;
+LastPath, LastUserStr : String;
 ini : TStringList;
 begin
   ini := TStringList.Create;
@@ -248,12 +274,20 @@ begin
     LastPath := ini.Values[ SC_LASTKTPPATH ];
     //prüfe ob der Pfad noch existiert
     if DirectoryExists( LastPath ) then
-      Edit.Text := LastPath
+      EditPath.Text := LastPath
     else //wenn der Pfad nicht mehr existiert dann setzt den Pfad auf standart zurück
     begin
-      Edit.Text := DefaultSettings.DefaultUserSavePath;
+      EditPath.Text := DefaultSettings.DefaultUserSavePath;
       LastLoadPath := DefaultSettings.DefaultUserSavePath;
     end;
+
+    LastUserStr := ini.Values[ SC_LASTUSER ];
+    if ( not LastUserStr.Equals( SC_NOT_USED ) ) and ( not LastUserStr.Equals( '' ) )
+    and ( IsLastUserAgainChecked ) then
+      EditUser.Text := LastUserStr;
+
+    CBMerkeUser.Checked := StrToBoolDef( ini.Values[ SC_ISLASTUSERCHK ], true );//Change: Seidel 2020-11-23
+
   finally
     ini.Free;
   end;
@@ -272,9 +306,36 @@ begin
     ini.Values[ SC_FIRSTSTART ] := BoolToStr( IsNewUserChecked, true );
     if not LastLoadPath.equals( SC_NOT_USED ) then
       ini.Values[ SC_LASTKTPPATH ] := LastLoadPath;
-    ini.SaveToFile( IniPath );
+    ini.Values[ SC_LASTUSER ] := LastUser;//Change: Seidel 2020-11-23 speicherplatz zuletzt eingegebenen User
+    ini.Values[ SC_ISLASTUSERCHK ] := BoolToStr( IsLastUserAgainChecked, true );//Change: Seidel 2020-11-23 Zustand der CheckBox
+    CheckWriteAccessAndSave( IniPath, ini );
   finally
     ini.Free;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-28
+-------------------------------------------------------------------------------}
+function TMainINI.CheckWriteAccessAndSave( SaveFile : String; ini : TStringList; forCreate : Boolean = false ): Boolean;
+var
+Text : String;
+begin
+  Result := true;
+  if forCreate then
+    Text := 'Beim Starten ihrer Anwendung ist ein Fehler aufgetreten!' + slineBreak + slineBreak
+  else
+    Text := 'Beim speichern ihrer Einstellungen ist ein Fehler aufgetreten!' + slineBreak + slineBreak;
+
+  Text := Text + 'Möglicherweise verfügt das von Ihnen ausgeführte Programm nicht über die notwendigen Rechte. '
+        + 'Bitte führen sie Ihre Anwendung erneut als Administrator aus.' + slineBreak + slineBreak
+        + 'Anwendung als Administrator ausführen: Rechtsklick auf die Anwendung und "Als Administrator ausführen" auswählen.';
+  try
+    ini.SaveToFile( IniPath );
+  except
+    Result := false;
+    //wenn keine Schreibrechte vorhanden sind
+    MessageDlg( Text, mtError, [mbOk], 0 );
   end;
 end;
 

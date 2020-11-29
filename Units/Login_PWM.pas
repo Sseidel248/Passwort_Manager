@@ -15,6 +15,11 @@ uses
   Edit4User, U_USB;
 
 type
+  TLoginState = Set of (
+    lsWrongPW              //wird gesetzt wenn das Passwort falsch ist
+    );
+
+type
   TLogin = class(TForm)
     Image1: TImage;
     UserMasterPWEdit: TEdit;
@@ -30,6 +35,9 @@ type
     UsernameEdit: TEdit4User;
     GradientPanel2: TGradientPanel;
     USBInput: TComponentUSB;
+    CBMerkeUser: TCheckBox;
+    Label2: TLabel;
+    AnmeldeTimer: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -45,13 +53,18 @@ type
     procedure USBInputUSBGetDriveLetter(Sender: TObject;
       const DrivePath: string);
     procedure USBInputUSBRemove(Sender: TObject);
+    procedure CBMerkeUserClick(Sender: TObject);
+    procedure AnmeldeTimerTimer(Sender: TObject);
   private
 //    LoginStates : TLoginStates;                                             //erstmal nicht benutzt
 //    property LoginState : TLoginStates read LoginStates write LoginStates;  //erstmal nicht benutzt
+    AnmeldeSek : Integer;
+    FLoginState : TLoginState;
     procedure CheckKTPExist( SaveFile : string ) ;                   //erstmal nicht benutzt
     function CheckUserAndPW : Boolean;
     procedure EnableAnmeldeBtn;
     function CheckKTPExistPlus( SaveFile : String ) : Boolean;
+    procedure DoChangeState( Enter : TLoginState; Leave : TLoginState = [] );
 //    function Check4FirstStart: Boolean;
 
 
@@ -76,10 +89,10 @@ var
 implementation
 
 uses
-  IdHashMessageDigest, IdHash, Main_PWM, Global_PWM, IniFiles, ZipForge, Hash_Functions;
+  IdHashMessageDigest, IdHash, Main_PWM, Global_PWM, IniFiles,
+  System.Zip, ZipForge, Hash_Functions;
 
 {$R *.dfm}
-
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-17
@@ -104,14 +117,63 @@ Author: Seidel 2020-10-17
 //end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-11-24
+-------------------------------------------------------------------------------}
+procedure TLogin.DoChangeState( Enter : TLoginState; Leave : TLoginState = [] );
+begin
+  FLoginState := FLoginState + Enter - Leave;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-22
 -------------------------------------------------------------------------------}
 function TLogin.CheckKTPExistPlus( SaveFile : String ) : Boolean;
+
+  function IsFileValid( SaveFile : String) : Boolean;//Change: Seidel 2020-11-22 kontrolle von 0 Byte Dateien
+  var
+  FileStream: TFileStream;
+  ZipFile : TZipFile;
+  begin
+    //teste 0 Bate Dateien
+    FileStream := TFileStream.Create( SaveFile, fmOpenRead or fmShareDenyNone );
+    try
+      try
+        if FileStream.Size <= 0 then
+          Result := false
+        else
+          Result := true;
+      except
+        Result := false;
+      end;
+    finally
+      FileStream.Free;
+    end;
+    //teste ob es ein Archiv ist
+    ZipFile := TZipFile.Create;
+    try
+      if not ZipFile.IsValid( SaveFile ) then
+        Result := false;
+    finally
+      ZipFile.Free;
+    end;
+  end;
+
 var
 sText : String;
 begin
   if FileExists( SaveFile ) then
-    Result := true
+  begin
+    if not IsFileValid( SaveFile ) then
+    begin
+      Result := false;
+      //TODO: Datei statt Benutzername wählen können
+//      sText := 'Ihre Datei ist möglicherweise defekt. Bitte wählen Sie eine anderen Benutzer oder eine andere Datei.';
+      sText := 'Ihre Datei ist möglicherweise defekt. Bitte wählen Sie eine anderen Benutzer.';
+      MessageDlg( sText, mtError, [mbOk], 0 );
+    end
+    else
+      Result := true;
+  end
   else
   begin
     sText := 'Ihr Datei konnte in dem von Ihnen gewählten Verzeichnis nicht gefunden werden!' + sLineBreak + sLineBreak
@@ -204,11 +266,35 @@ begin
                     and ( Sl.Values[SC_KTP].Equals( UserData.KTP_Name_MD5 ) ) );
         end;
       end;
+      CloseArchive;
     end;
   finally
     ZipForge.Free;
     stream.Free;
     Sl.Free;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-24
+-------------------------------------------------------------------------------}
+procedure TLogin.AnmeldeTimerTimer(Sender: TObject);
+begin
+  dec( AnmeldeSek );
+  UserMasterPWEdit.Text := 'Passwort falsch, ' + IntToStr( AnmeldeSek ) + ' Sek. warten';
+
+  if AnmeldeSek = 0 then
+  begin
+    UserMasterPWEdit.Text := '';
+    UserMasterPWEdit.Enabled := true;
+    UserMasterPWEdit.PasswordChar := '*';
+
+    AnmeldeBtn.Enabled := true;
+    SBToogleHide.Enabled := true;
+
+    DoChangeState( [], [lsWrongPW] );
+    AnmeldeTimer.Enabled := false;
+    AnmeldeSek := 5;
   end;
 end;
 
@@ -231,6 +317,14 @@ begin
   finally
     OpenDialog.Free;
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-23
+-------------------------------------------------------------------------------}
+procedure TLogin.CBMerkeUserClick(Sender: TObject);
+begin
+  MainIni.IsLastUserAgainChecked := CBMerkeUser.Checked;
 end;
 
 {------------------------------------------------------------------------------
@@ -267,6 +361,23 @@ end;
 Author: Seidel 2020-09-20 !!Modalresult schließt ein Modal geöffnetes Formular
 -------------------------------------------------------------------------------}
 procedure TLogin.AnmeldeBtnClick(Sender: TObject);
+
+  procedure TimerWrongPWOn;
+  begin
+    if AnmeldeSek = 5 then
+    begin
+      AnmeldeTimer.Enabled := true;
+
+      UserMasterPWEdit.Text := 'Passwort falsch, ' + IntToStr( AnmeldeSek ) + ' Sek. warten';
+      UserMasterPWEdit.Enabled := false;
+
+      UserMasterPWEdit.PasswordChar := #0;
+      AnmeldeBtn.Enabled := false;
+      SBToogleHide.Enabled := false;
+      DoChangeState( [lsWrongPW] );
+    end;
+  end;
+
 var
 User, PwStr : String;
 SaveStr : String;
@@ -298,19 +409,18 @@ begin
             Login.Refresh;
             Sleep(500);
           {$ENDIF}
-
         end
         else   //und eingabe stimmt nicht
         begin
           ImageList3.GetIcon( 2, Image1.Picture.Icon );
           {$IFNDEF TESTLOGIN}
-            ShowMessage( 'Benutzername und Passwort stimmen nicht überein!' + sLineBreak + 'Versuchen Sie es erneut.');
-            UsernameEdit.SelectAll;
+//            ShowMessage( 'Benutzername und Passwort stimmen nicht überein!' + sLineBreak + 'Versuchen Sie es erneut.');
+//            UsernameEdit.SelectAll;
             Login.Refresh;
           {$ELSE}
           ModalResult := mrClose;  // = 8
           {$ENDIF}
-
+          TimerWrongPWOn;
         end;
       end
       else //Benutzer existiert nicht
@@ -359,7 +469,8 @@ Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  // noch nicht benutzt!
+  // abschalten der USB Erkennung
+  USBInput.Required := false;
 end;
 
 {------------------------------------------------------------------------------
@@ -371,6 +482,7 @@ begin
   ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
   SBToogleHide.Flat := true;
   ESavePathForKTPs.Hint := 'Speicherverzeichnis von KiiTree';
+  AnmeldeSek := 5;
 end;
 
 {------------------------------------------------------------------------------
@@ -385,11 +497,9 @@ end;
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.FormShow(Sender: TObject);
-//var
-//EditText : String;
+var
+EditText : String;
 begin
-  UsernameEdit.SetFocus;
-  UsernameEdit.Clear;
   ImageList3.GetIcon( 0, Image1.Picture.Icon );
 
   USBInput.Required := true;
@@ -401,9 +511,17 @@ begin
   {$IFNDEF TESTLOGIN}
   //nur zur Sicherheit
   MainIni.CreateIfNotExist;
-  MainIni.LoadSetting( CBNewUser, ESavePathForKTPs );
+  MainIni.LoadSetting( CBNewUser, CBMerkeUser, ESavePathForKTPs, UsernameEdit );
 
   {$ENDIF}
+  EditText := UsernameEdit.Text;
+  if CBMerkeUser.Checked and not EditText.Equals( '' ) then
+    UserMasterPWEdit.SetFocus
+  else
+  begin
+    UsernameEdit.SetFocus;
+    UsernameEdit.Clear;
+  end;
 //  ImageList1.GetIcon( 0, Image1.Picture.Icon );
 //  PersonalFolder := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
 //  ESavePathForKTPs.Text := PersonalFolder;
@@ -462,7 +580,8 @@ Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.UserMasterPWEditChange(Sender: TObject);
 begin
-  EnableAnmeldeBtn;
+  if not ( lsWrongPW in FLoginState ) then//Change: Seidel 2020-11-24
+    EnableAnmeldeBtn;
 end;
 
 {------------------------------------------------------------------------------
@@ -489,6 +608,7 @@ UserKTP : String;
 begin
 
     Username := GetMD5String( UsernameEdit.Text ) + SC_EXT;
+    MainIni.LastUser := UsernameEdit.Text;//Change: Seidel 2020-11-23
   //speicherpfad innerhalb des Programms
 //  NameWithPath := Concat( UserData.AppSavePath, Username );
   //Speicherpfad im "Eigene Dateien" Ordner
