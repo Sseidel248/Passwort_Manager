@@ -3,7 +3,7 @@
 
 #define MyAppVersion "1.0.0"
 #define MyAppBuild "0"
-#define MyAppName "KiiTree_Beta"
+#define MyAppName "KiiTree"
 
 [Setup]
 AppName = {#MyAppName}
@@ -23,7 +23,7 @@ OutputDir = ..\Installer\
 VersionInfoCompany=Sebastian Seidel
 VersionInfoCopyright=Sebastian Seidel
 VersionInfoProductName=KiiTree
-VersionInfoProductTextVersion=Beta
+;VersionInfoProductTextVersion=Beta
 WizardStyle=modern
 AppContact=sseidel248@yahoo.de
 DisableWelcomePage = false
@@ -47,7 +47,7 @@ Source: "..\VerionInfo.txt"; DestDir: "{app}\Anwendung"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\KiiTree_Icon"; Filename: "{app}\Bilder\KiiTree_v1.ico"; WorkingDir: "{app}\Bilder"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0
-Name: "{userdesktop}\KiiTree_beta"; Filename: "{app}\Anwendung\KiiTree.exe"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0; Tasks: Desktop_Icon
+Name: "{userdesktop}\KiiTree"; Filename: "{app}\Anwendung\KiiTree.exe"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0; Tasks: Desktop_Icon
 Name: "{userappdata}\MicrosoftInternetExplorerQuickLaunchTest"; Filename: "{app}\Anwendung\KiiTree.exe"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0; Tasks: quicklaunchicon
 
 [Dirs]

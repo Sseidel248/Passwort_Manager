@@ -1,0 +1,12 @@
+Legende
++-----------------------------------------------------------------+
+
+NEW - Neue Funktionalität
+UPD - Erweiterung einer Funktionalität
+CHG - Änderungen einer Funtkionalität
+FIX - Behöbene Fehler
+
++-----------------------------------------------------------------+
+
+V1.0.0.0 (29.12.2020)
+- Basis

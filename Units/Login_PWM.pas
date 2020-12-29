@@ -12,7 +12,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes,
-  Edit4User, U_USB;
+  Edit4User, U_USB, Vcl.VirtualImageList, Vcl.BaseImageCollection,
+  Vcl.ImageCollection;
 
 type
   TLoginState = Set of (
@@ -24,7 +25,6 @@ type
     Image1: TImage;
     UserMasterPWEdit: TEdit;
     AnmeldeBtn: TButton;
-    ImageList1: TImageList;
     CBNewUser: TCheckBox;
     ImageList2: TImageList;
     ImageList3: TImageList;
@@ -38,6 +38,8 @@ type
     CBMerkeUser: TCheckBox;
     Label2: TLabel;
     AnmeldeTimer: TTimer;
+    ImageCollection1: TImageCollection;
+    VirtualImageList1: TVirtualImageList;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -55,9 +57,13 @@ type
     procedure USBInputUSBRemove(Sender: TObject);
     procedure CBMerkeUserClick(Sender: TObject);
     procedure AnmeldeTimerTimer(Sender: TObject);
+    procedure ESavePathForKTPsChange(Sender: TObject);
+    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
+      NewDPI: Integer);
   private
 //    LoginStates : TLoginStates;                                             //erstmal nicht benutzt
 //    property LoginState : TLoginStates read LoginStates write LoginStates;  //erstmal nicht benutzt
+    ImageIndex : Integer;//Change: Seidel 2020-12-29
     AnmeldeSek : Integer;
     FLoginState : TLoginState;
     procedure CheckKTPExist( SaveFile : string ) ;                   //erstmal nicht benutzt
@@ -225,6 +231,15 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-12-03
+-------------------------------------------------------------------------------}
+procedure TLogin.ESavePathForKTPsChange(Sender: TObject);
+begin
+  //fügt den manuell veränderten Pfad in die MainIni hinzu, dieser wird dann kontrolliert
+  MainIni.LastLoadPath := ESavePathForKTPs.Text;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 function TLogin.CheckUserAndPW : Boolean;
@@ -332,15 +347,17 @@ Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.CBNewUserClick(Sender: TObject);
 begin
+  UsernameEdit.Clear;
+
   if CBNewUser.Checked then
     AnmeldeBtn.Caption := 'Passwort-Safe öffnen und neuen Benutzer erzeugen'
   else
     AnmeldeBtn.Caption := 'Passwort-Safe öffnen';
 
+  EnableAnmeldeBtn;
   UsernameEdit.Required := CBNewUser.Checked;
   MainIni.IsNewUserChecked := CBNewUser.Checked;
   UsernameEdit.Invalidate;
-  EnableAnmeldeBtn;
 end;
 
 {------------------------------------------------------------------------------
@@ -404,7 +421,8 @@ begin
         if ( CheckUserAndPW ) then // und eingabe stimmt
         begin
           ModalResult := mrOk; // ok = 1 login erfolgreich
-          ImageList3.GetIcon( 1, Image1.Picture.Icon );
+          VirtualImageList1.GetIcon( 1, Image1.Picture.Icon );
+          ImageIndex := 1;
           {$IFNDEF TESTLOGIN}
             Login.Refresh;
             Sleep(500);
@@ -412,7 +430,8 @@ begin
         end
         else   //und eingabe stimmt nicht
         begin
-          ImageList3.GetIcon( 2, Image1.Picture.Icon );
+          VirtualImageList1.GetIcon( 2, Image1.Picture.Icon );
+          ImageIndex := 2;
           {$IFNDEF TESTLOGIN}
 //            ShowMessage( 'Benutzername und Passwort stimmen nicht überein!' + sLineBreak + 'Versuchen Sie es erneut.');
 //            UsernameEdit.SelectAll;
@@ -430,7 +449,8 @@ begin
                     mtInformation,
                     [mbYes, mbNo], 0 ) = mrYes then
         begin
-          ImageList3.GetIcon( 1, Image1.Picture.Icon );
+          VirtualImageList1.GetIcon( 1, Image1.Picture.Icon );
+          ImageIndex := 1;
           ModalResult := mrRetry; //retry = 4 neuer Benutzer
           UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
           UserData.User := User;
@@ -447,7 +467,8 @@ begin
     begin
       //es wurde einer neuer Benutzer erstellt, deshalb beim nächsten Start "Neuer Benutzer" Checkbox = false
       MainIni.IsNewUserChecked := false;
-      ImageList3.GetIcon( 1, Image1.Picture.Icon );
+      VirtualImageList1.GetIcon( 1, Image1.Picture.Icon );
+      ImageIndex := 1;
       {$IFNDEF TESTLOGIN}
         UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
         UserData.User := User;
@@ -462,6 +483,15 @@ begin
     MainIni.SaveSetting;
     {$ENDIF}
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-12-29
+-------------------------------------------------------------------------------}
+procedure TLogin.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
+  NewDPI: Integer);
+begin
+  VirtualImageList1.GetIcon( ImageIndex, Image1.Picture.Icon );
 end;
 
 {------------------------------------------------------------------------------
@@ -500,7 +530,8 @@ procedure TLogin.FormShow(Sender: TObject);
 var
 EditText : String;
 begin
-  ImageList3.GetIcon( 0, Image1.Picture.Icon );
+  VirtualImageList1.GetIcon( 0, Image1.Picture.Icon );
+  ImageIndex := 0;
 
   USBInput.Required := true;
 
@@ -510,8 +541,10 @@ begin
 
   {$IFNDEF TESTLOGIN}
   //nur zur Sicherheit
-  MainIni.CreateIfNotExist;
-  MainIni.LoadSetting( CBNewUser, CBMerkeUser, ESavePathForKTPs, UsernameEdit );
+  if not MainIni.CreateIfNotExist then
+    Application.Terminate
+  else
+    MainIni.LoadSetting( CBNewUser, CBMerkeUser, ESavePathForKTPs, UsernameEdit );
 
   {$ENDIF}
   EditText := UsernameEdit.Text;
@@ -592,7 +625,8 @@ begin
   if Key = #13 then
   begin
     Key := #0;
-    AnmeldeBtnClick( Sender );
+    if AnmeldeBtn.Enabled then//Change: Seidel 2020-12-29
+      AnmeldeBtnClick( Sender );
   end;
 end;
 

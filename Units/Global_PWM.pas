@@ -68,7 +68,7 @@ const
   SC_EXT            = '.KTP';
   SC_AUTOSAVE       = 'AutoSave';
   SC_FONTSIZE       = 'FontSize';
-  SC_SYMBOLSIZE     = 'SymbolSIze';
+//  SC_SYMBOLSIZE     = 'SymbolSIze';
   SC_THEMEN         = 'Themen';
   SC_ZEITIMSPEICHER = 'TimeInClipBrd';
   SC_WORKWITHKIIS   = 'FocusEditAfterCreate';
@@ -149,7 +149,7 @@ begin
   Ini.Values[SC_KTP] := KTP_Name_MD5;
   Ini.Values[SC_AUTOSAVE] := AutoSaveChecked;
   Ini.Values[SC_FONTSIZE] := FontSize;
-  Ini.Values[SC_SYMBOLSIZE] := SymbolSize;
+//  Ini.Values[SC_SYMBOLSIZE] := SymbolSize;
   Ini.Values[SC_THEMEN] := UserTheme;
 //    IniList.Values[SC_LASTKTPPATH] := LastKTPPath;
   Ini.Values[SC_ZEITIMSPEICHER] := ZeitImSpeicher;
@@ -165,7 +165,7 @@ begin
   begin
     CBAutoSave.Checked := StrToBoolDef( Ini.Values[SC_AUTOSAVE], false );
     RGSchriftgreosse.ItemIndex  := StrToIntDef( Ini.Values[SC_FONTSIZE], 1 );
-    RGSymbole.ItemIndex := StrToIntDef( Ini.Values[SC_SYMBOLSIZE], 1 );
+//    RGSymbole.ItemIndex := StrToIntDef( Ini.Values[SC_SYMBOLSIZE], 1 );
     CBThemen.ItemIndex := StrToIntDef( Ini.Values[SC_THEMEN], 0 );
     CBThemenChange( nil );
     CBZeitImSpeicher.ItemIndex := StrToIntDef( Ini.Values[SC_ZEITIMSPEICHER], 3 );
@@ -245,7 +245,7 @@ begin
       ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );
       ini.Values[SC_LASTKTPPATH] := LastLoadPath;             //standart Not_Used
       ini.Values[SC_LASTUSER] := LastUser;
-//    prüft ob Schreibrechte vorhanden sind
+//    prüft ob Schreibrechte vorhanden sind und gibt Msg an den User
       if not CheckWriteAccessAndSave( IniPath, ini, true ) then
         Result := false;
     end;

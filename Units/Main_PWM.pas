@@ -15,7 +15,8 @@ uses
   Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees, Data.DB,
   Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls, PWM_VST,
   System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX, System.UITypes,
-  DBEditWithTextHint, StringGridEx;
+  DBEditWithTextHint, StringGridEx, Vcl.BaseImageCollection, Vcl.ImageCollection,
+  Vcl.VirtualImageList, MyGlassButton;
 
 type
   TMainStates = Set of (
@@ -117,9 +118,6 @@ type
     ClientDataSet1URL: TStringField;
     DBEditURL: TDBEdit;
     LURL: TLabel;
-    SBPasswoerter: TSpeedButton;
-    SBEinstellungen: TSpeedButton;
-    SBPasswortCheck: TSpeedButton;
     GBDarstellung: TGroupBox;
     GBAllgemein: TGroupBox;
     GBSicherheit: TGroupBox;
@@ -133,7 +131,6 @@ type
     BErzeugeTAN: TButton;
     GBInfo: TGroupBox;
     LBtnErkl: TLabel;
-    SBAbout: TSpeedButton;
     RGSymbole: TRadioGroup;
     ILklein: TImageList;
     ILGross: TImageList;
@@ -150,14 +147,6 @@ type
     N5: TMenuItem;
     PasswortinZwischenablage1: TMenuItem;
     BenutzerInZwischenablage1: TMenuItem;
-    TBMenu: TToolBar;
-    SBSaveKiiTree: TSpeedButton;
-    SBAddNewKii: TSpeedButton;
-    SBAddNewFolder: TSpeedButton;
-    SBDelKii: TSpeedButton;
-    SBDelFolder: TSpeedButton;
-    SBAbisZ: TSpeedButton;
-    SBZbisA: TSpeedButton;
     Einfgen1: TMenuItem;
     PKopieren: TMenuItem;
     BPW_Print: TButton;
@@ -167,6 +156,24 @@ type
     GBPWHinweis: TGroupBox;
     LPWHinweis: TLabel;
     TrayIconKT: TTrayIcon;
+    IL_TB_Menu: TImageList;
+    ImageCollection1: TImageCollection;
+    VirtualImageList1: TVirtualImageList;
+    VirtualImageListTB_Menu: TVirtualImageList;
+    Menu_Panel: TGradientPanel;
+    CBTestDisableMenuButton: TCheckBox;
+    SBSaveKiiTree: TGlassButton;
+    SBAddNewKii: TGlassButton;
+    SBAddNewFolder: TGlassButton;
+    SBDelKii: TGlassButton;
+    SBDelFolder: TGlassButton;
+    SBAbisZ: TGlassButton;
+    SBZbisA: TGlassButton;
+    VILHauptmenu: TVirtualImageList;
+    SBPasswoerter: TGlassButton;
+    SBPasswortCheck: TGlassButton;
+    SBEinstellungen: TGlassButton;
+    SBAbout: TGlassButton;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -301,6 +308,10 @@ type
     procedure SGFixedCellClick(Sender: TObject; ACol, ARow: Integer);
     procedure SGMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure CBTestDisableMenuButtonClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
+      NewDPI: Integer);
   private
 //    FFonts : TFonts;
     DBTree : TDBTree;
@@ -334,6 +345,7 @@ type
     procedure SetThemeColor( Color1, color2, color3 : TColor );
 //    procedure SaveMainIni;
     procedure InitGridHeader;
+//    procedure InitMenuBtns;
     procedure FillGrid;
     procedure CheckPasswords;
     Procedure ChangePageControlToKiiTree;
@@ -355,8 +367,17 @@ var
 implementation
 {$R *.dfm}
 uses
-  ZipForge, Login_PWM, Global_PWM, Hash_Functions{$IFNDEF TESTLOGIN},ClipBrd{$ENDIF},
-  About_PWM, MPW_Change_PWM{$IFNDEF TESTLOGIN}, Printers{$ENDIF}, PWCheck_PWM;
+  ZipForge,
+  Login_PWM,
+  Global_PWM,
+  Hash_Functions,
+  {$IFNDEF TESTLOGIN}ClipBrd,{$ENDIF}
+  About_PWM,
+  MPW_Change_PWM,
+  {$IFNDEF TESTLOGIN}Printers,{$ENDIF}
+  PWCheck_PWM,
+  Vcl.Imaging.pngimage,
+  PWM_ResizeImages;
 
 //*****************************************************************************
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -423,11 +444,19 @@ begin
   try
     GradientPanelMain.Color := color1;
     GradientPanelMain.ColorTo := color2;
-    TBMenu.GradientStartColor := color2;
-    TBMenu.GradientEndColor := color3;
+    Menu_Panel.Color := color2;
+    Menu_Panel.ColorTo := color3;
 
     SG.GradientStartColor := color3;//Change: Seidel 2020-11-19
     SG.GradientEndColor := color2;
+
+    SBSaveKiiTree.Update;
+    SBAddNewKii.Update;
+    SBAddNewFolder.Update;
+    SBDelKii.Update;
+    SBDelFolder.Update;
+    SBAbisZ.Update;
+    SBZbisA.Update;
 //    GradientPanelMain.Refresh;
 //    TBMenu.Refresh;
     Refresh;
@@ -469,6 +498,14 @@ begin
       end;
     end;
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-12-29
+-------------------------------------------------------------------------------}
+procedure TMain.CBTestDisableMenuButtonClick(Sender: TObject);
+begin
+  SBSaveKiiTree.Enabled := CBTestDisableMenuButton.Checked;
 end;
 
 {------------------------------------------------------------------------------
@@ -782,7 +819,7 @@ begin
   else
   begin
     Main.Caption := 'KiiTree von ' + UserData.User;
-    SBSaveKiiTree.Enabled := false;
+    SBSaveKiiTree.Enabled := false//Change: Seidel 2020-12-25
 //    SaveDataBtn.Enabled := false;
   end;
 end;
@@ -883,6 +920,11 @@ begin
     SBPasswortCheck.Font.Style := [fsBold]
   else
     SBPasswortCheck.Font.Style := [];
+
+  SBPasswoerter.Refresh;
+  SBEinstellungen.Refresh;
+  SBPasswortCheck.Refresh;
+
 end;
 
 {------------------------------------------------------------------------------
@@ -1195,7 +1237,7 @@ begin
   try
     case Number of
       0: begin
-        DBTree.AVST.Images := ILGross;
+//        DBTree.AVST.Images := ILGross;
         for Node in Nodes do
         begin
           DBTree.AVST.NodeHeight[ Node ] := 36;
@@ -1203,7 +1245,7 @@ begin
         DBTree.AVST.DefaultNodeHeight := 36;//Change: Seidel 2020-11-26 vergrößert bei Start die Node Größe
       end;
       1: begin
-        DBTree.AVST.Images := ILNormal;
+//        DBTree.AVST.Images := ILNormal;
         for Node in Nodes do
         begin
           DBTree.AVST.NodeHeight[ Node ] := 26;
@@ -1211,7 +1253,7 @@ begin
         DBTree.AVST.DefaultNodeHeight := 26;//Change: Seidel 2020-11-26
       end;
       2: begin
-        DBTree.AVST.Images := ILklein;
+//        DBTree.AVST.Images := ILklein;
         for Node in Nodes do
         begin
           DBTree.AVST.NodeHeight[ Node ] := 18;
@@ -2252,7 +2294,29 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-30
+Author: Seidel 2020-12-29
+-------------------------------------------------------------------------------}
+procedure TMain.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
+  NewDPI: Integer);
+
+  procedure ScaleBtnFont( Btn : TGlassButton; NewDPI : Integer );
+  var
+  Faktor : Double;
+  begin
+    Faktor := NewDPI / 96;
+    Btn.Font.Size := Round( SBAbout.Font.Size * Faktor);
+    Btn.Refresh;
+  end;
+
+begin
+  ScaleBtnFont( SBAbout, NewDPI );
+  ScaleBtnFont( SBPasswoerter, NewDPI );
+  ScaleBtnFont( SBPasswortCheck, NewDPI );
+  ScaleBtnFont( SBEinstellungen, NewDPI );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-11-25
 -------------------------------------------------------------------------------}
 procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
@@ -2305,6 +2369,7 @@ begin
 
   {$IFDEF DEBUG}
   DB_Tabelle.TabVisible := true;
+  CBTestDisableMenuButton.Visible := true;
   {$ENDIF}
   //TODO: für den Beta Installer; alles was false ist wurde noch nicht implementiert
   BErzeugeTAN.Visible := false;
@@ -2327,6 +2392,7 @@ begin
   PageControl1.ActivePage := PW_Manager;
   InitInfosHints;
   InitGridHeader;
+//  InitMenuBtns;
 
   DBTree := TDBTree.Create( VST );
   DBTree.Create( VST );
@@ -2369,8 +2435,8 @@ end;
 Author: Seidel 2020-09-28
 -------------------------------------------------------------------------------}
 procedure TMain.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-var
-pNode : PVirtualNode;
+//var
+//pNode : PVirtualNode;
 begin
   if ( Key = 70 ) and ( Shift = [ssCtrl] ) then //Strg + F
   begin
@@ -2382,7 +2448,7 @@ begin
   begin
     if not ( msEditAfterNewKiiCreate in MainStates ) then//Change: Seidel 2020-11-19
     begin
-      pNode := DBTree.GetSelectedNode;
+//      pNode := DBTree.GetSelectedNode;
       if ( not DBTree.AVST.Focused ) and ( DBTree.AVST.SelectedCount = 1 ) then
         DBtree.AVST.SetFocus;
     end;
@@ -2397,6 +2463,14 @@ begin
     if SBSaveKiiTree.Enabled then
       SBSaveKiiTreeClick( nil );
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-12-29
+-------------------------------------------------------------------------------}
+procedure TMain.FormResize(Sender: TObject);
+begin
+  Main.Invalidate;
 end;
 
 {------------------------------------------------------------------------------
@@ -2601,6 +2675,8 @@ Author: Seidel 2020-10-04
 -------------------------------------------------------------------------------}
 procedure TMain.RGSymboleClick(Sender: TObject);
 begin
+  //Bildgröße wird über VirtualImageList geregelt
+  //RGSymbole deaktiviert //Change: Seidel 2020-12-18
   case RGSymbole.ItemIndex of
     0: SetTreeImageListForSize( 0 );
     1: SetTreeImageListForSize( 1 );
@@ -2662,7 +2738,7 @@ Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.SBDelKiiClick(Sender: TObject);
 begin
-  ChangePageControlToKiiTree;
+ ChangePageControlToKiiTree;
   DelKii;
 end;
 
@@ -3123,6 +3199,7 @@ begin
       DBTree.MoveNodeToFav( pNode )
     else
       DBTree.MoveNodeTo( pNode, SC_ALLE );
+      //TODO: Aktualisieren des Node nachdem verschieben
   end;
 end;
 
