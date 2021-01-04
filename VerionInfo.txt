@@ -8,5 +8,8 @@ FIX - Behöbene Fehler
 
 +-----------------------------------------------------------------+
 
+V1.0.0.1 (04.01.2021)
+- FIX: (KT-54) Textskalierung der Buttons beim Verändern der Windowsskalierung 
+
 V1.0.0.0 (29.12.2020)
 - Basis

@@ -310,8 +310,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure CBTestDisableMenuButtonClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
-      NewDPI: Integer);
+//    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
+//      NewDPI: Integer);
   private
 //    FFonts : TFonts;
     DBTree : TDBTree;
@@ -376,8 +376,7 @@ uses
   MPW_Change_PWM,
   {$IFNDEF TESTLOGIN}Printers,{$ENDIF}
   PWCheck_PWM,
-  Vcl.Imaging.pngimage,
-  PWM_ResizeImages;
+  Vcl.Imaging.pngimage;
 
 //*****************************************************************************
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2294,26 +2293,31 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-12-29
+Author: Seidel 2020-12-29//Change: Seidel 2021-01-04 Skalierung der Button wurde gefixxt
 -------------------------------------------------------------------------------}
-procedure TMain.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
-  NewDPI: Integer);
+//procedure TMain.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
+//  NewDPI: Integer);
+//
+//  procedure ScaleBtnFont( Btn : TGlassButton; NewDPI, OldDPI : Integer );
+//  var
+//  Faktor : Double;
+//  begin
+//    //TODO; Skalierungsfehler hier oder dierekt im GlassButton
+//
+//    Faktor := NewDPI / 96;  //96 = 100%
+//    if NewDPI > OldDPI then
+//      Btn.Font.Size := Round( SBAbout.Font.Size * Faktor)
+//    else if NewDPI < OldDPI then
+//      Btn.Font.Size := Round( SBAbout.Font.Size / Faktor);
+//    Btn.Refresh;
+//  end;
 
-  procedure ScaleBtnFont( Btn : TGlassButton; NewDPI : Integer );
-  var
-  Faktor : Double;
-  begin
-    Faktor := NewDPI / 96;
-    Btn.Font.Size := Round( SBAbout.Font.Size * Faktor);
-    Btn.Refresh;
-  end;
-
-begin
-  ScaleBtnFont( SBAbout, NewDPI );
-  ScaleBtnFont( SBPasswoerter, NewDPI );
-  ScaleBtnFont( SBPasswortCheck, NewDPI );
-  ScaleBtnFont( SBEinstellungen, NewDPI );
-end;
+//begin
+//  ScaleBtnFont( SBAbout, NewDPI, OldDPI );
+//  ScaleBtnFont( SBPasswoerter, NewDPI, OldDPI );
+//  ScaleBtnFont( SBPasswortCheck, NewDPI, OldDPI );
+//  ScaleBtnFont( SBEinstellungen, NewDPI, OldDPI );
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-11-25

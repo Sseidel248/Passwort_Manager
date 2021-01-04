@@ -26,6 +26,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     function GetVersion: string;
+    procedure LOrtProgMouseEnter(Sender: TObject);
+    procedure LOrtProgMouseLeave(Sender: TObject);
+    procedure LOrtProgClick(Sender: TObject);
   private
     { Private-Deklarationen }
   public
@@ -38,7 +41,8 @@ var
 implementation
 
 uses
-  Main_PWM;
+  Main_PWM,
+  ShellApi;
 
 {$R *.dfm}
 
@@ -47,10 +51,10 @@ Author: Seidel 2020-10-16
 -------------------------------------------------------------------------------}
 procedure TAbout_Dlg.FormCreate(Sender: TObject);
 begin
-  LVersion.Caption := 'Version: ' + GetVersion +  ' (beta)';
+  LVersion.Caption := 'Version: ' + GetVersion;// +  ' (beta)';
   LInfo.Caption := 'Dieses Programm ist ein Open Source Ein-Mann Projekt unter Verwendung von ZipForge von Component Ace. Vorschläge für Verbesserungen oder Anmerkungen sind Herzlich willkommen.';
   LOrtProg.Caption := 'Besucht: https://github.com/Sseidel248/KiiTree für weitere Informtionen.';
-  LCopyright.Caption := 'Copyright © 2020 Sebastian Seidel. Alle Rechte sind vorbehalten.';
+  LCopyright.Caption := 'Copyright © 2021 Sebastian Seidel. Alle Rechte sind vorbehalten.';
 end;
 
 {------------------------------------------------------------------------------
@@ -89,6 +93,34 @@ begin
     Result := Result + '.' + IntToStr(dwFileVersionLS and $FFFF);
   end;
   FreeMem(VerInfo, VerInfoSize);
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-12-30
+-------------------------------------------------------------------------------}
+procedure TAbout_Dlg.LOrtProgClick(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open', 'https://github.com/Sseidel248/KiiTree', nil, nil, SW_SHOWNORMAL);
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-12-30
+-------------------------------------------------------------------------------}
+procedure TAbout_Dlg.LOrtProgMouseEnter(Sender: TObject);
+begin
+  LOrtProg.Font.Color := clHotLight;
+  LOrtProg.Font.Style := [fsUnderline];
+  Screen.Cursor := crHandPoint;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-12-30
+-------------------------------------------------------------------------------}
+procedure TAbout_Dlg.LOrtProgMouseLeave(Sender: TObject);
+begin
+  LOrtProg.Font.Color := clBlack;
+  LOrtProg.Font.Style := [];
+  Screen.Cursor := crDefault;
 end;
 
 end.

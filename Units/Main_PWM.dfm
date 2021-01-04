@@ -16,7 +16,6 @@ object Main: TMain
   OldCreateOrder = False
   ParentBiDiMode = False
   Position = poMainFormCenter
-  OnAfterMonitorDpiChanged = FormAfterMonitorDpiChanged
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -40,7 +39,7 @@ object Main: TMain
       Top = 48
       Width = 929
       Height = 677
-      ActivePage = PW_Manager
+      ActivePage = Options
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       MultiLine = True
@@ -1035,7 +1034,7 @@ object Main: TMain
             Top = 55
             Width = 281
             Height = 17
-            Caption = 'Kii nach dem erzeugen bearbeiten'
+            Caption = 'Kii nach dem Erzeugen bearbeiten'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
@@ -1448,12 +1447,12 @@ object Main: TMain
     object LUser: TLabel
       Left = 16
       Top = 31
-      Width = 91
-      Height = 19
+      Width = 106
+      Height = 23
       Caption = 'User-Name'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -16
+      Font.Height = -19
       Font.Name = 'Tahoma'
       Font.Style = [fsBold]
       ParentFont = False

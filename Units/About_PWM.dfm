@@ -1366,17 +1366,22 @@ object About_Dlg: TAbout_Dlg
       Alignment = taCenter
       AutoSize = False
       Caption = 'Ort des Programms'
+      Color = clBlack
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
       Font.Name = 'Tahoma'
       Font.Style = []
+      ParentColor = False
       ParentFont = False
       WordWrap = True
+      OnClick = LOrtProgClick
+      OnMouseEnter = LOrtProgMouseEnter
+      OnMouseLeave = LOrtProgMouseLeave
     end
     object LCopyright: TLabel
       Left = 222
-      Top = 179
+      Top = 185
       Width = 259
       Height = 29
       Alignment = taCenter
