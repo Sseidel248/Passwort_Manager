@@ -869,9 +869,17 @@ Author: Seidel 2020-10-15
 procedure TMain.DelFolder;
 var
 pNode :PVirtualNode;
+Text : String;
 begin
   pNode := DBTRee.AVST.FocusedNode;
-  if DBTree.AVST.GetNodeLevel( pNode ) = 1 then
+  if DBTree.IsFavFolder( pNode ) or DBtree.IsAllFolder( pNode ) then//Change: Seidel 2021-01-15
+  begin
+    Text := 'Die Ordner "Alle" oder "Favoriten" sind Standartordner und können nicht gelöscht werden';
+    MessageDlg( Text, mtError, [mbOk], 0 );
+    Exit;
+  end;
+
+  if (DBTree.AVST.GetNodeLevel( pNode ) = 1) then
   begin
     DBtree.DelFolder;
     DoChangeStates( [msChanged] );//Change: Seidel 2020-11-18 Speichern nachdem man gelöscht hat nicht davor
@@ -2962,14 +2970,20 @@ Node : PVirtualNode;
 begin
   Node := DBTree.AVST.DropTargetNode;
   case DBTree.AVST.GetNodeLevel( Node ) of
-    1: Accept := true;
+    1: begin
+      case Mode of //Change: Seidel 2021-01-15
+        dmAbove:    Accept := false;
+        dmOnNode:   Accept := true;
+        dmBelow:    Accept := false;
+      end;
+    end;
     2: begin
       case Mode of // DropPosition in NodeAttachMode umsetzen
         dmAbove:    Accept := true;
         dmOnNode:   Accept := false;
         dmBelow:    Accept := true;
       end;
-    end
+    end;
     else
     begin
       Accept := false;
