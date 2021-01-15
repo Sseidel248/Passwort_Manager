@@ -893,7 +893,6 @@ object Main: TMain
               Top = 31
               Width = 281
               Height = 24
-              ItemIndex = 0
               TabOrder = 0
               Text = 'Gr'#252'ner Fluss'
               OnChange = CBThemenChange
@@ -901,7 +900,9 @@ object Main: TMain
                 'Gr'#252'ner Fluss'
                 'Strand'
                 'Sonne'
-                'Meer')
+                'Meer'
+                'Team-Orange'
+                'Team-Rot')
             end
           end
           object RGSymbole: TRadioGroup

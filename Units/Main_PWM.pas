@@ -1916,13 +1916,21 @@ end;
 Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.CBThemenChange(Sender: TObject);
+var
+ TeamOrange,
+ grau_50P,
+ TeamRot : TColor;
 begin
+ TeamOrange := $006bff;
+ grau_50P   := $7F7F7F;
+ TeamRot    := RGB( 229, 50, 18 );
   case CBThemen.ItemIndex of
     0: SetThemeColor( clGreen, clMoneyGreen, clWhite );
     1: SetThemeColor( clWebGoldenRod, clWebMoccasin, clWhite );
     2: SetThemeColor( clWebRed, clWebOrange, clWhite );
     3: SetThemeColor( clWebRoyalBlue, clWebSkyBlue, clWhite );
-    4: SetThemeColor( clWebRed, clWebLightYellow, clWhite );
+    4: SetThemeColor( TeamOrange, TeamOrange, grau_50P );//Change: Seidel 2021-01-12 TeamOrange Design
+    5: SetThemeColor( TeamRot, TeamRot, grau_50P );//Change: Seidel 2021-01-12 Team Rot Design
   end;
   UserData.UserTheme := IntToStr ( CBThemen.ItemIndex );
 end;

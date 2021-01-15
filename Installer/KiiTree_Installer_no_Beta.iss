@@ -2,8 +2,9 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppVersion "1.0.0"
-#define MyAppBuild "0"
+#define MyAppBuild "2"
 #define MyAppName "KiiTree"
+#define MyName "Sebastian Seidel"
 
 [Setup]
 AppName = {#MyAppName}
@@ -27,11 +28,14 @@ VersionInfoProductTextVersion=Release
 WizardStyle=modern
 AppContact=sseidel248@yahoo.de
 DisableWelcomePage = false
+//damit werden Netzwerke sichtbar
+PrivilegesRequired=lowest
 //zeigt die Seite wo der User aussucht wohin er es installieren möchte
 DisableDirPage = no
 AlwaysShowDirOnReadyPage = yes
 UninstallDisplayIcon = {app}\Bilder\KiiTree_v1.ico
 UninstallDisplayName = {#MyAppName} {#MyAppVersion}.{#MyAppBuild}
+
 //zum eintragen von Organisation etc.
 ;UserInfoPage = true
 
@@ -46,7 +50,7 @@ Source: "..\VerionInfo.txt"; DestDir: "{app}\Anwendung"; Flags: ignoreversion
 ;Source: "KiiTree.ini"; DestDir: "{app}\Anwendung"; Attribs: hidden
 
 [Icons]
-Name: "{group}\KiiTree_Icon"; Filename: "{app}\Bilder\KiiTree_v1.ico"; WorkingDir: "{app}\Bilder"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0
+Name: "{group}\KiiTree"; Filename: "{app}\Anwendung\KiiTree.exe"; WorkingDir: "{app}\Bilder"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0
 Name: "{userdesktop}\KiiTree"; Filename: "{app}\Anwendung\KiiTree.exe"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0; Tasks: Desktop_Icon
 Name: "{userappdata}\MicrosoftInternetExplorerQuickLaunchTest"; Filename: "{app}\Anwendung\KiiTree.exe"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0; Tasks: quicklaunchicon
 
@@ -73,7 +77,82 @@ Type: files; Name: "{app}\Anwendung\KiiTree.ini"
 [Languages]
 Name: "German"; MessagesFile: "compiler:Languages\German.isl"
 
+[Messages]
+BeveledLabel={#MyAppName} {#MyAppVersion} © 2021 {#MyName}
+
 [Code]
+var
+UsagePage: TInputOptionWizardPage;
+InputDirWizardPage: TInputDirWizardPage;
+
+procedure InitializeWizard;
+begin
+  { Create the pages }
+   UsagePage := CreateInputOptionPage(wpWelcome,
+    'Benutzerinformation', 'Wie soll Kiitree eingerichtet werden?',
+    'Bitte geben Sie an, wie Sie Kiitree verwenden möchten, und klicken Sie dann auf Weiter.',
+    True, False);
+  UsagePage.Add('Lokalen Speicherort verwenden (Verwendung nur auf diesem PC)');
+  UsagePage.Add('Serverpfad verwenden (Verwendung im Netzwerk)');
+
+  InputDirWizardPage := CreateInputDirPage(UsagePage.ID, 'CreateInputDirPage', 'ADescription', 'ASubCaption', False, 'AKiiTreeFolder');
+  InputDirWizardPage.Add('Serverpfad:');
+  InputDirWizardPage.Values[0] := '?:\';
+
+   case GetPreviousData('UsageMode', '') of
+    'Lokal': UsagePage.SelectedValueIndex := 0;
+    'Server': UsagePage.SelectedValueIndex := 1;
+  else
+    UsagePage.SelectedValueIndex := 0;
+  end;
+end;
+
+procedure RegisterPreviousData(PreviousDataKey: Integer);
+var
+  UsageMode: String;
+begin
+  { Store the settings so we can restore them next time }
+  case UsagePage.SelectedValueIndex of
+    0: UsageMode := 'Lokal';
+    1: UsageMode := 'Server';
+  end;
+  SetPreviousData(PreviousDataKey, 'UsageMode', UsageMode);
+  SetPreviousData(PreviousDataKey, 'ServerDir', InputDirWizardPage.Values[0]);
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  { Skip pages that shouldn't be shown }
+  if (PageID = InputDirWizardPage.ID) and (UsagePage.SelectedValueIndex = 0) then
+    Result := True
+  else
+    Result := False;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  I: Integer;
+begin
+  { Validate certain pages before allowing the user to proceed }
+  if CurPageID = InputDirWizardPage.ID then 
+  begin
+    if InputDirWizardPage.Values[0] = '' then 
+    begin
+      Result := False;
+    end 
+    else
+    if DirExists(InputDirWizardPage.Values[0]) then 
+    begin
+      Result := False;
+    end
+    else
+    begin
+      Result := true;
+    end;
+  end;
+  Result := true; 
+end;
+
 procedure VergleicheVersion;
 var
 Version,
@@ -86,7 +165,6 @@ begin
     MsgBox( Version + ' < ' + VersionNew, mbInformation, MB_OK )
   else
     MsgBox( Version + ' >= ' + VersionNew, mbInformation, MB_OK );
-
 end;
 
 //wird ausgeführt bevor das Setup startet
@@ -100,8 +178,28 @@ begin
 end;
 }
 
-//wird ausgelöst bevor alles verarbeitet wird, also der grüne ladebalken kommt
 
+
+procedure InputServerPath( AName, AValue: string );
+var
+  Tag,
+  SaveName: string;
+  FileLines: TStringList;
+begin
+  Savename := ExpandConstant('{app}') + '\Anwendung\KiiTree.ini';
+  FileLines := TStringList.Create;
+  try
+    Tag := AName + '=' + AValue;
+    FileLines.LoadFromFile( Savename );
+    FileLines.append( Tag );
+    //fehler beim speichern der Ini
+    FileLines.SaveToFile( Savename );
+  finally
+    FileLines.Free;
+  end;
+end;
+
+//wird ausgelöst bevor alles verarbeitet wird, also der grüne ladebalken kommt
 procedure CurPageChanged(CurPageID: Integer);
 var
 str : String;
@@ -113,8 +211,14 @@ begin
 
     MsgBox( Str, mbInformation, MB_OK );
   end;
+  if CurPageID = wpFinished then
+  begin
+    if GetPreviousData('UsageMode', '') = 'Server' then
+    begin
+      InputServerPath( 'ServerPath', GetPreviousData('ServerDir', '') );
+    end;
+  end;
 end;
-
 
 //wird beim den Pfaden und den aussuchen von dektop verknüpfung und so aufgerufen
 
