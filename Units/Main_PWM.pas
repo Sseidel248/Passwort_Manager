@@ -2688,14 +2688,23 @@ end;
 Author: Seidel 2020-10-04
 -------------------------------------------------------------------------------}
 procedure TMain.RGSchriftgreosseClick(Sender: TObject);
+var
+Size : Integer;
 begin
   case RGSchriftgreosse.ItemIndex of
-    0: SetFontSizes( 12 );
-    1: SetFontSizes( 10 );
-    2: SetFontSizes( 8 );
+//    0: SetFontSizes( 12 );
+//    1: SetFontSizes( 10 );
+//    2: SetFontSizes( 8 );
+    0: Size := MulDiv( 12, FCurrentPPI, 96 );//Change: Seidel 2021-01-15
+    1: Size := MulDiv( 10, FCurrentPPI, 96 );//Change: Seidel 2021-01-15
+    2: Size := MulDiv( 8, FCurrentPPI, 96 );//Change: Seidel 2021-01-15
   end;
   if not (Sender = nil) then//Change: Seidel 2021-01-15
-    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
+  begin
+    //TODO: Fehler wenn nicht auskommentiert, kann sie nicht finden, öffnet sie aber trotzdem
+//    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
+    SetFontSizes( Size );
+  end;
 end;
 
 {------------------------------------------------------------------------------
