@@ -39,7 +39,7 @@ object Main: TMain
       Top = 48
       Width = 929
       Height = 677
-      ActivePage = PW_Manager
+      ActivePage = Options
       Align = alCustom
       Anchors = [akLeft, akTop, akRight, akBottom]
       MultiLine = True

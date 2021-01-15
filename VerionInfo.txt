@@ -8,6 +8,12 @@ FIX - Behöbene Fehler
 
 +-----------------------------------------------------------------+
 
+V1.0.0.4 (15.01.2021)
+- UPD: 2 neuen Themen Team-Orange und Team-Rot
+- FIX: nicht speichern der Benutzereinstellungen bei Aktiviertung von Autosave
+- FIX: Drag and Drop Bug von Kii's zwischen Ordnern
+- FIX: "Alle" und "Favoriten" Ordner konnten gelöscht werden
+
 V1.0.0.1 (04.01.2021)
 - FIX: (KT-54) Textskalierung der Buttons beim Verändern der Windowsskalierung 
 

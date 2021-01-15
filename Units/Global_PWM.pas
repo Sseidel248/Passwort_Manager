@@ -18,13 +18,16 @@ type
     PW_Str : string;
     KTP_Name_MD5 : String;
     AutoSaveChecked : string;
-    FontSize : String;
     SymbolSize : String;
-    UserTheme : String;
     ZeitImSpeicher : String;
     FocusEditAfterNewKii : String;//Change: Seidel 2020-10-28
     procedure SaveUserData( Ini : TStringlist );
+    procedure SetUserTheme( Value : String );
+    procedure SetFontSize( Value : String );
     procedure LoadUserData( ini : TStringList );
+  private
+    UserTheme : String;
+    FontSize : String;
   end;
 
 type
@@ -154,6 +157,24 @@ begin
 //    IniList.Values[SC_LASTKTPPATH] := LastKTPPath;
   Ini.Values[SC_ZEITIMSPEICHER] := ZeitImSpeicher;
   Ini.Values[SC_WORKWITHKIIS] := FocusEditAfterNewKii;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-15
+-------------------------------------------------------------------------------}
+procedure TUserData.SetUserTheme( Value : String );
+begin
+  Self.UserTheme := Value;
+  Main.DoChangeStates( [msChanged] );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-15
+-------------------------------------------------------------------------------}
+procedure TUserData.SetFontSize( Value : String );
+begin
+  Self.FontSize := Value;
+  Main.DoChangeStates( [msChanged] );
 end;
 
 {------------------------------------------------------------------------------

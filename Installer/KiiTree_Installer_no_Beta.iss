@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppVersion "1.0.0"
-#define MyAppBuild "3"
+#define MyAppBuild "4"
 #define MyAppName "KiiTree"
 #define MyName "Sebastian Seidel"
 

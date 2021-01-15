@@ -20,7 +20,7 @@ uses
 
 type
   TMainStates = Set of (
-    msChanged,                  //wenn gesetzt, dann hat sich etwas im Bäumchen geändert
+    msChanged,                  //wenn gesetzt, dann hat sich etwas im Bäumchen geändert oder an den Einstellungen
     msAutoSave,                 //AutoSave aktivieren
     msMPW_Change,               //gerade am ändern des Masterpasswortes
     msSomethingInClipBrd,       //es wurde etwas von KiiTree in die Zwischenablage gepackt
@@ -1036,7 +1036,7 @@ begin
 
         //Speicherdialog {Debug}
         if ( not ( msAutoSave in MainStates ) ) and ( not ( msMPW_Change in MainStates ) ) then
-          ShowMessage( 'Ihr KiiTree wurde erfolgreich in gepackt und gespeichert!' )
+          ShowMessage( 'Ihr KiiTree wurde erfolgreich gespeichert!' )
         else
         if msMPW_Change in MainStates then
           ShowMessage( 'Ihr Masterpasswort wurde erfolgreich geändert!' );
@@ -1269,6 +1269,7 @@ begin
       end;
     end;
     Refresh;
+
   finally
     Screen.Cursor := crDefault;
   end;
@@ -1940,7 +1941,8 @@ begin
     4: SetThemeColor( TeamOrange, TeamOrange, grau_50P );//Change: Seidel 2021-01-12 TeamOrange Design
     5: SetThemeColor( TeamRot, TeamRot, grau_50P );//Change: Seidel 2021-01-12 Team Rot Design
   end;
-  UserData.UserTheme := IntToStr ( CBThemen.ItemIndex );
+  if not (Sender = nil) then
+    UserData.SetUserTheme( IntToStr( CBThemen.ItemIndex ) );
 end;
 
 {------------------------------------------------------------------------------
@@ -2343,12 +2345,17 @@ var
 Text : String;
 MResult : Integer;
 begin
-    if ( msChanged in MainStates ) and not ( msAutoSave in MainStates ) then
+  if ( msChanged in MainStates ) then
   begin
-    Text := 'Es sind Änderungen vorhanden.'
-    + sLineBreak
-    + 'Sollen die Änderungen an Ihrem KiiTree gespeichert werden?';
-    MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
+    if not ( msAutoSave in MainStates ) then
+    begin
+      Text := 'Es sind Änderungen vorhanden.'
+      + sLineBreak
+      + 'Sollen die Änderungen an Ihrem KiiTree gespeichert werden?';
+      MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
+    end
+    else
+      MResult := mrYes;
     if MResult = mrYes then
       SaveKTP;
   end;
@@ -2687,7 +2694,8 @@ begin
     1: SetFontSizes( 10 );
     2: SetFontSizes( 8 );
   end;
-  UserData.FontSize := IntToStr( RGSchriftgreosse.ItemIndex );
+  if not (Sender = nil) then//Change: Seidel 2021-01-15
+    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
 end;
 
 {------------------------------------------------------------------------------
@@ -2702,7 +2710,8 @@ begin
     1: SetTreeImageListForSize( 1 );
     2: SetTreeImageListForSize( 2 );
   end;
-  UserData.SymbolSize := IntToStr( RGSymbole.ItemIndex );
+  if not (Sender = nil) then//Change: Seidel 2021-01-15
+    UserData.SymbolSize := IntToStr( RGSymbole.ItemIndex );
 end;
 
 {------------------------------------------------------------------------------
