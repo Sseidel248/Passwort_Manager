@@ -8,6 +8,7 @@ object Main: TMain
   Color = clWhite
   Constraints.MinHeight = 764
   Constraints.MinWidth = 1128
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -13
@@ -15,7 +16,7 @@ object Main: TMain
   Font.Style = []
   OldCreateOrder = False
   ParentBiDiMode = False
-  Position = poMainFormCenter
+  WindowState = wsMinimized
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -893,11 +894,12 @@ object Main: TMain
               Top = 31
               Width = 281
               Height = 24
+              ItemIndex = 0
               TabOrder = 0
-              Text = 'Gr'#252'ner Fluss'
+              Text = 'Wiese'
               OnChange = CBThemenChange
               Items.Strings = (
-                'Gr'#252'ner Fluss'
+                'Wiese'
                 'Strand'
                 'Sonne'
                 'Meer'
@@ -1143,6 +1145,10 @@ object Main: TMain
         Caption = 'PWCheckTab'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object SG: TStringGridEx
           Left = 0
           Top = 0
@@ -1196,8 +1202,8 @@ object Main: TMain
             object LPWHinweis: TLabel
               Left = 2
               Top = 18
-              Width = 915
-              Height = 124
+              Width = 69
+              Height = 16
               Align = alClient
               Caption = 'LPWHinweis'
               Font.Charset = DEFAULT_CHARSET
@@ -1206,8 +1212,6 @@ object Main: TMain
               Font.Name = 'Tahoma'
               Font.Style = []
               ParentFont = False
-              ExplicitWidth = 69
-              ExplicitHeight = 16
             end
           end
         end
@@ -1216,6 +1220,10 @@ object Main: TMain
         Caption = 'DB_Tabelle'
         ImageIndex = 3
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
@@ -3695,6 +3703,7 @@ object Main: TMain
       Caption = 'URL im Browser '#246'ffnen'
       Enabled = False
       ShortCut = 16463
+      OnClick = PURLimBrowseOerffnenClick
     end
   end
   object ZwischenablageTimer: TTimer

@@ -2,7 +2,7 @@ unit About_PWM;
 
 {******************************************************************************
 Aboutdialog "KiiTree"
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 Gibt Informationen über das Programm und den Entwickler preis
 *******************************************************************************}

@@ -2,9 +2,10 @@ object MasterPasswortChange: TMasterPasswortChange
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
   Caption = #196'nderung des Masterpasswortes'
-  ClientHeight = 211
-  ClientWidth = 384
+  ClientHeight = 221
+  ClientWidth = 394
   Color = clBtnFace
   Constraints.MaxHeight = 250
   Constraints.MaxWidth = 400
@@ -17,6 +18,7 @@ object MasterPasswortChange: TMasterPasswortChange
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
@@ -24,8 +26,8 @@ object MasterPasswortChange: TMasterPasswortChange
   object GradientPanelMPWChange: TGradientPanel
     Left = 0
     Top = 0
-    Width = 384
-    Height = 211
+    Width = 394
+    Height = 221
     Align = alClient
     Caption = 'GradientPanelMPWChange'
     Color = clSkyBlue
@@ -35,7 +37,6 @@ object MasterPasswortChange: TMasterPasswortChange
     ColorGradient = cgHorizontal
     RGB_Gradient = rgbLinear
     ColorTo = clMoneyGreen
-    ExplicitHeight = 261
     object LStep1: TLabel
       Left = 16
       Top = 46
@@ -80,12 +81,12 @@ object MasterPasswortChange: TMasterPasswortChange
       Font.Style = []
       ModalResult = 1
       ParentFont = False
-      TabOrder = 3
+      TabOrder = 0
       OnClick = BChangeMasterPWClick
     end
-    object EOldMPW: TEditWithBorder
+    object EOldMPW: TEditEx
       Left = 16
-      Top = 16
+      Top = 19
       Width = 353
       Height = 24
       Font.Charset = DEFAULT_CHARSET
@@ -94,17 +95,15 @@ object MasterPasswortChange: TMasterPasswortChange
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 0
-      TextHint = 'Altes Masterpasswort eingeben...'
+      TabOrder = 1
+      TextHint = '<Aktuelles Masterpasswort>'
       OnChange = EOldMPWChange
       OnKeyPress = EOldMPWKeyPress
-      Required = False
-      ForEmptyText = True
-      TextBorderColor = clRed
+      Bordercolor = clNone
+      FocusBorderColor = clNone
+      TextHintOnFocus = True
     end
-    object ENewMPW: TEditWithBorder
+    object ENewMPW: TEditEx
       Left = 16
       Top = 71
       Width = 353
@@ -115,17 +114,15 @@ object MasterPasswortChange: TMasterPasswortChange
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 1
-      TextHint = 'Neues Masterpasswort eingeben...'
+      TabOrder = 2
+      TextHint = '<Neues Masterpasswort>'
       OnChange = ENewMPWChange
-      OnKeyPress = ENewMPWKeyPress
-      Required = False
-      ForEmptyText = True
-      TextBorderColor = clRed
+      OnKeyPress = EOldMPWKeyPress
+      Bordercolor = clNone
+      FocusBorderColor = clNone
+      TextHintOnFocus = True
     end
-    object ENewMPW2: TEditWithBorder
+    object ENewMPW2: TEditEx
       Left = 16
       Top = 101
       Width = 353
@@ -136,14 +133,12 @@ object MasterPasswortChange: TMasterPasswortChange
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 2
-      TextHint = 'Neues Masterpasswort erneut eingeben...'
+      TabOrder = 3
+      TextHint = '<Neues Masterpasswort wiederholen>'
       OnChange = ENewMPW2Change
-      Required = False
-      ForEmptyText = True
-      TextBorderColor = clRed
+      Bordercolor = clNone
+      FocusBorderColor = clNone
+      TextHintOnFocus = True
     end
   end
 end

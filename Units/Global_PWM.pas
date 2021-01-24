@@ -2,7 +2,7 @@ unit Global_PWM;
 
 {******************************************************************************
 Konstanten von "KiiTree"
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 *******************************************************************************}
 
@@ -65,6 +65,7 @@ const
   IC_COL_ERG        = 2;
 
   //ini des Users
+  SC_SEC            = '[App]';
   SC_USER           = 'User';
   SC_PW             = 'Password';
   SC_KTP            = 'KTP-File';
@@ -234,7 +235,6 @@ begin
   DefaultUserSavePath := GetSpecialFolder( AHandle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
 end;
 
-
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
@@ -262,6 +262,7 @@ begin
     end
     else //wenn es keine Gibt das erstell die INI
     begin
+      ini.Insert( 0 , SC_SEC );
       ini.Values[SC_FIRSTSTART] := BoolToStr( IsNewUserChecked, true );  //standart auf neuer User = true
       ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );
       ini.Values[SC_LASTKTPPATH] := LastLoadPath;             //standart Not_Used
@@ -321,10 +322,12 @@ procedure TMainINI.SaveSetting;
 var
 ini : TStringList;
 begin
-    ini := TStringList.Create;
-  try
-    ini.LoadFromFile( IniPath );
-    ini.Values[ SC_FIRSTSTART ] := BoolToStr( IsNewUserChecked, true );
+    ini := TStringList.Create;
+  try
+    ini.LoadFromFile( IniPath );
+    if ini.IndexOf( SC_SEC ) = -1 then//Change: Seidel 2021-01-20
+      ini.insert( 0 , SC_SEC );
+    ini.Values[ SC_FIRSTSTART ] := BoolToStr( IsNewUserChecked, true );
     if not LastLoadPath.equals( SC_NOT_USED ) then
       ini.Values[ SC_LASTKTPPATH ] := LastLoadPath;
     ini.Values[ SC_LASTUSER ] := LastUser;//Change: Seidel 2020-11-23 speicherplatz zuletzt eingegebenen User
@@ -347,7 +350,6 @@ begin
     Text := 'Beim Starten ihrer Anwendung ist ein Fehler aufgetreten!' + slineBreak + slineBreak
   else
     Text := 'Beim speichern ihrer Einstellungen ist ein Fehler aufgetreten!' + slineBreak + slineBreak;
-
   Text := Text + 'Möglicherweise verfügt das von Ihnen ausgeführte Programm nicht über die notwendigen Rechte. '
         + 'Bitte führen sie Ihre Anwendung erneut als Administrator aus.' + slineBreak + slineBreak
         + 'Anwendung als Administrator ausführen: Rechtsklick auf die Anwendung und "Als Administrator ausführen" auswählen.';
@@ -361,3 +363,4 @@ begin
 end;
 
 end.
+

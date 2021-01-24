@@ -2,7 +2,7 @@ unit Login_PWM;
 
 {******************************************************************************
 Login Dialog von "KiiTree"
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 *******************************************************************************}
 
@@ -13,7 +13,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes,
   Edit4User, U_USB, Vcl.VirtualImageList, Vcl.BaseImageCollection,
-  Vcl.ImageCollection;
+  Vcl.ImageCollection, EditEx;
 
 type
   TLoginState = Set of (
@@ -23,7 +23,6 @@ type
 type
   TLogin = class(TForm)
     Image1: TImage;
-    UserMasterPWEdit: TEdit;
     AnmeldeBtn: TButton;
     CBNewUser: TCheckBox;
     ImageList2: TImageList;
@@ -40,6 +39,7 @@ type
     AnmeldeTimer: TTimer;
     ImageCollection1: TImageCollection;
     VirtualImageList1: TVirtualImageList;
+    UserMasterPWEdit: TEditEx;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -399,7 +399,6 @@ var
 User, PwStr : String;
 SaveStr : String;
 begin
-
   USer := Trim( UsernameEdit.Text );
   PwStr := UserMasterPWEdit.Text;
   UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;

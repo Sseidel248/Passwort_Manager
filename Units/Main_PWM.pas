@@ -2,7 +2,7 @@ unit Main_PWM;
 
 {******************************************************************************
 Hauptprogramm "KiiTree"
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 Dient der Erzeugung einer Standalone-Datenbank zur Speicherung der Passwörter
 *******************************************************************************}
@@ -10,13 +10,13 @@ Dient der Erzeugung einer Standalone-Datenbank zur Speicherung der Passwörter
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, Winapi.ShellApi, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.StdCtrls, Vcl.Buttons,
   Vcl.ToolWin, Vcl.ComCtrls, Vcl.ExtCtrls, VirtualTrees, Data.DB,
   Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls, PWM_VST,
   System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX, System.UITypes,
-  DBEditWithTextHint, StringGridEx, Vcl.BaseImageCollection, Vcl.ImageCollection,
-  Vcl.VirtualImageList, MyGlassButton;
+  StringGridEx, Vcl.BaseImageCollection, Vcl.ImageCollection,
+  Vcl.VirtualImageList, MyGlassButton, System.RegularExpressions;
 
 type
   TMainStates = Set of (
@@ -310,6 +310,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure CBTestDisableMenuButtonClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure PURLimBrowseOerffnenClick(Sender: TObject);
 //    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
 //      NewDPI: Integer);
   private
@@ -322,6 +323,7 @@ type
     FURLOld,
     FInfoOld : String;
     FOldRow : Integer;
+    FApp_LoginAbort : Boolean;
 //    FFirstNewUser : Boolean;
     procedure SetFontSizes( size : Integer );
     procedure SetTreeImageListForSize( Number : Integer );
@@ -363,6 +365,7 @@ type
 
 var
   Main: TMain;
+  PPI_at_start : Integer;//Change: Seidel 2021-01-20
 
 implementation
 {$R *.dfm}
@@ -643,7 +646,14 @@ begin
       pData^.Info := ClientDataSet1Info.AsString
 
     else if (Sender as TComponent).Name = 'DBCheckBox1' then
-      pData^.isFavorit := DBCBFavorit.Checked;
+      pData^.isFavorit := DBCBFavorit.Checked
+
+    else if (Sender as TComponent).Name = 'ZuFavoritenhinzufgen1' then
+    begin
+      DBCBFavorit.Checked := DBTree.IsParentFavFolder( pNode );
+      ClientDataSet1isFavorit.AsBoolean := DBCBFavorit.Checked;
+      pData^.isFavorit := DBCBFavorit.Checked
+    end;
 
     if ClientDataSet1NodeImageIndex.AsInteger <> pData^.NodeImageIdx then
       ClientDataSet1NodeImageIndex.AsInteger := pData^.NodeImageIdx;
@@ -1936,7 +1946,7 @@ begin
   case CBThemen.ItemIndex of
     0: SetThemeColor( clGreen, clMoneyGreen, clWhite );
     1: SetThemeColor( clWebGoldenRod, clWebMoccasin, clWhite );
-    2: SetThemeColor( clWebRed, clWebOrange, clWhite );
+    2: SetThemeColor( clWebOrangeRed, clWebYellow, clWhite );
     3: SetThemeColor( clWebRoyalBlue, clWebSkyBlue, clWhite );
     4: SetThemeColor( TeamOrange, TeamOrange, grau_50P );//Change: Seidel 2021-01-12 TeamOrange Design
     5: SetThemeColor( TeamRot, TeamRot, grau_50P );//Change: Seidel 2021-01-12 Team Rot Design
@@ -2004,6 +2014,10 @@ begin
   //fängt einen Verschieben eines Ordner ab
   if DBTree.AVST.GetNodeLevel( pNode ) <= 1 then
     Exit;
+  //fängt andere Mausklicks ab//Change: Seidel 2021-01-20
+  if ( Button = mbRight ) or ( Button = mbMiddle ) then
+    Exit;
+
 
   if not DBTree.IsParentFavFolder( pNode ) then
     DBTree.MoveNodeToFav( pNode )
@@ -2392,7 +2406,10 @@ procedure TMain.FormCreate(Sender: TObject);
 //PersonalFolder : String;
 //I:Integer;
 begin
+  //TODO: aufblitzen des MainMenüs verhindern
+
   Application.HintHidePause := 10000;
+  PPI_at_start := GetCurrentPPI;
 
   {$IFDEF DEBUG}
   DB_Tabelle.TabVisible := true;
@@ -2425,7 +2442,7 @@ begin
   DBTree.Create( VST );
   DBTree.FirstOpen;
 
-  Login := TLogin.Create(nil);
+  Login := TLogin.Create(Main);
   try
     //StandartOrdner auswählen,jedoch wenn der User einen Speziellen Pfad will dann nim diesen
 //    Login.ESavePathForKTPs.Text := PersonalFolder;
@@ -2436,7 +2453,11 @@ begin
 //    FFirstNewUser := Login.CBNewUser.Checked;
 //    EmptyXMLFile := AppSettings.DefaultDBPath + 'EmtyTable.xml';
     if Login.ModalResult = mrCancel then // schließen der kompletten anwendung
-      Application.Terminate
+    begin
+//      Application.Minimize;
+      FApp_LoginAbort := true;
+      Application.Terminate;
+    end
     else
     begin
       ClientDataSet1.LoadFromFile( DefaultSettings.DefaultDBPath );
@@ -2501,11 +2522,13 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-19
+Author: Seidel 2021-01-23
 -------------------------------------------------------------------------------}
 procedure TMain.FormShow(Sender: TObject);
 begin
-
+//  MessageDlg( 'hallo', mtInformation, [mbOK],0 );
+    if not FApp_LoginAbort then
+      Main.WindowState := wsNormal;
 end;
 
 {------------------------------------------------------------------------------
@@ -2622,6 +2645,49 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-01-20
+-------------------------------------------------------------------------------}
+procedure TMain.PURLimBrowseOerffnenClick(Sender: TObject);
+
+  function PrepareStr( const Value : String ): String;//Change: Seidel 2021-01-20
+  var
+  len : Integer;
+  pattern :String;
+  begin
+    Result := Trim( Value );
+    len := Length( Result );
+    pattern := '^([a-z0-9][a-z0-9\-]*)\.{1}+[a-z0-9][a-z0-9\-]*$'; //findet nur <wort>.<Endung>//Change: Seidel 2021-01-21
+
+    //alles klein schreiben
+    Result := LowerCase( Result );
+
+    if ( Pos( '/', Result ) = len ) or ( Pos( '\', Result ) = len ) then
+      Result := Copy( Result, 1, len-1 );
+
+    if TRegex.IsMatch( Result, pattern ) then
+    begin
+      if ( Pos( 'www', Result ) <> 1 ) then
+        Result := Concat( 'www.', Result );
+    end;
+  end;
+
+var
+regex : TRegex;
+URLStr : String;
+const
+Pattern = '^(http\:\/\/|https\:\/\/)?([a-z0-9][a-z0-9\-]*\.)+[a-z0-9][a-z0-9\-]*$';
+begin
+  regex := TRegex.Create( Pattern );
+  URLStr := PrepareStr( ClientDataSet1URL.AsString );
+  if regex.IsMatch( URLStr ) then
+    ShellExecute(Handle, 'open', PWideChar( URLStr ), nil, nil, SW_SHOWNORMAL)
+  else
+    MessageDlg( 'URL konnte nicht geöffnet werden, bitte überprüfen sie Ihre URL.',
+    mtError, [mbOK], 0 );
+
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-10
 -------------------------------------------------------------------------------}
 procedure TMain.PopupMenuDatenPopup(Sender: TObject);
@@ -2643,6 +2709,18 @@ procedure TMain.PopupMenuDatenPopup(Sender: TObject);
         PKopieren.Enabled := true
       else
         PKopieren.Enabled := false;
+
+      if Caption.Contains( 'Internet' ) then//Change: Seidel 2021-01-20
+      begin
+        PURLimBrowseOerffnen.Enabled := true;
+        PURLimBrowseOerffnen.Visible := true;
+      end
+      else
+      begin
+        PURLimBrowseOerffnen.Enabled := false;
+        PURLimBrowseOerffnen.Visible := false;
+      end;
+
     end;
   end;
 
@@ -2650,7 +2728,7 @@ begin
   ChangePopupDaten( DBEditBezeichnung );
   ChangePopupDaten( DBEditBenutzer , 'Benutzername in Zwischenablage kopieren' );
   ChangePopupDaten( DBEditPasswort , 'Passwort in Zwischenablage kopieren' );
-  ChangePopupDaten( DBEditURL , 'InternetSeite in Zwischenablage kopieren' );
+  ChangePopupDaten( DBEditURL , 'Internetseite in Zwischenablage kopieren' );
 end;
 
 {------------------------------------------------------------------------------
@@ -2691,18 +2769,18 @@ procedure TMain.RGSchriftgreosseClick(Sender: TObject);
 var
 Size : Integer;
 begin
+  Size := 8;
   case RGSchriftgreosse.ItemIndex of
 //    0: SetFontSizes( 12 );
 //    1: SetFontSizes( 10 );
 //    2: SetFontSizes( 8 );
-    0: Size := MulDiv( 12, FCurrentPPI, 96 );//Change: Seidel 2021-01-15
-    1: Size := MulDiv( 10, FCurrentPPI, 96 );//Change: Seidel 2021-01-15
-    2: Size := MulDiv( 8, FCurrentPPI, 96 );//Change: Seidel 2021-01-15
+    0: Size := MulDiv( 12, FCurrentPPI, PPI_at_start );//Change: Seidel 2021-01-20
+    1: Size := MulDiv( 10, FCurrentPPI, PPI_at_start );//Change: Seidel 2021-01-20
+    2: Size := MulDiv( 8, FCurrentPPI, PPI_at_start );//Change: Seidel 2021-01-20
   end;
   if not (Sender = nil) then//Change: Seidel 2021-01-15
   begin
-    //TODO: Fehler wenn nicht auskommentiert, kann sie nicht finden, öffnet sie aber trotzdem
-//    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
+    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
     SetFontSizes( Size );
   end;
 end;
@@ -3243,7 +3321,8 @@ begin
       DBTree.MoveNodeToFav( pNode )
     else
       DBTree.MoveNodeTo( pNode, SC_ALLE );
-      //TODO: Aktualisieren des Node nachdem verschieben
+
+    UpdateNodeByEntry( Sender );
   end;
 end;
 

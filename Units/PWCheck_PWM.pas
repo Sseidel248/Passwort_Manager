@@ -3,7 +3,7 @@ unit PWCheck_PWM;
 {******************************************************************************
 Passwort Checker "KiiTree"
 
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 Überprüft die Qualität des Passwortes
 1 = sehr schwach

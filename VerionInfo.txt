@@ -1,21 +1,25 @@
-Legende
-+-----------------------------------------------------------------+
-
-NEW - Neue FunktionalitÃ¤t
-UPD - Erweiterung einer FunktionalitÃ¤t
-CHG - Ã„nderungen einer FuntkionalitÃ¤t
-FIX - BehÃ¶bene Fehler
-
-+-----------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------+		Kiitree v1.0.0.6
+	Copyleft 2020-2021 Sebastian Seidel
+				
+	NEW - Neue Funktionalität				
+	UPD - Erweiterung einer Funktionalität			
+	CHG - Änderungen einer Funtkionalität			
+	FIX - Behöbene Fehler				
++----------------------------------------------------------------------------------------------------+
+V1.0.0.6 (24.01.2021)
+- NEW: Neue EditEx eingefügt für bessere Interaktion
+- UPD: Gespeicherte URL kann geöffnet werden
+- FIX: Abfangen von anderen Mausklicks bei der Checkbox zum hinzufügen zu Favoriten
+- FIX: Aufflackern der Benutzeroberflächen wenn das Login Fenster geschlossen wird
 
 V1.0.0.4 (15.01.2021)
 - UPD: 2 neuen Themen Team-Orange und Team-Rot
 - FIX: nicht speichern der Benutzereinstellungen bei Aktiviertung von Autosave
 - FIX: Drag and Drop Bug von Kii's zwischen Ordnern
-- FIX: "Alle" und "Favoriten" Ordner konnten gelÃ¶scht werden
+- FIX: "Alle" und "Favoriten" Ordner konnten gelöscht werden
 
 V1.0.0.1 (04.01.2021)
-- FIX: (KT-54) Textskalierung der Buttons beim VerÃ¤ndern der Windowsskalierung 
+- FIX: (KT-54) Textskalierung der Buttons beim Verändern der Windowsskalierung 
 
 V1.0.0.0 (29.12.2020)
-- Basis
+- NEW: Basis

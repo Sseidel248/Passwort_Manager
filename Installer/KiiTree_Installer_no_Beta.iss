@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppVersion "1.0.0"
-#define MyAppBuild "4"
+#define MyAppBuild "6"
 #define MyAppName "KiiTree"
 #define MyName "Sebastian Seidel"
 
@@ -28,10 +28,12 @@ VersionInfoProductTextVersion=Release
 WizardStyle=modern
 AppContact=sseidel248@yahoo.de
 DisableWelcomePage = false
+;LicenseFile=..\license.txt
+InfoBeforeFile=..\README.md
 //damit werden Netzwerke sichtbar
 PrivilegesRequired=lowest
 //zeigt die Seite wo der User aussucht wohin er es installieren möchte
-DisableDirPage = no
+DisableDirPage = auto
 AlwaysShowDirOnReadyPage = yes
 UninstallDisplayIcon = {app}\Bilder\KiiTree_v1.ico
 UninstallDisplayName = {#MyAppName} {#MyAppVersion}.{#MyAppBuild}
@@ -40,14 +42,15 @@ UninstallDisplayName = {#MyAppName} {#MyAppVersion}.{#MyAppBuild}
 ;UserInfoPage = true
 
 [Files]
-Source: "..\Release\KiiTree.exe"; DestDir: "{app}\Anwendung"; Flags: ignoreversion;
+Source: "..\Release\KiiTree.exe"; DestDir: "{app}\Anwendung"; Flags: ignoreversion
 Source: "..\DB\EmtyTable.xml"; DestDir: "{app}\DB"; Flags: ignoreversion
 
 Source: "..\Bilder\KiiTree_v1.ico"; DestDir: "{app}\Bilder"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\VerionInfo.txt"; DestDir: "{app}\Anwendung"; Flags: ignoreversion
 ;Source: "..\Bilder\InstallLogo_test_164x314.bmp"; DestDir: "{app}"; Flags: deleteafterinstall
-;Source: "KiiTree.ini"; DestDir: "{app}\Anwendung"; Attribs: hidden
+;Source: "..\Release\KiiTree.ini"; DestDir: "{app}"
+Source: "..\license.txt"; DestDir: "{app}"
 
 [Icons]
 Name: "{group}\KiiTree"; Filename: "{app}\Anwendung\KiiTree.exe"; WorkingDir: "{app}\Bilder"; IconFilename: "{app}\Bilder\KiiTree_v1.ico"; IconIndex: 0
@@ -64,8 +67,8 @@ Name: "{userdocs}\KiiTree"
 ; Imported INI File: "D:\Delphi embarcadero\Passwort_Manager\README.md"
 
 [Tasks]
-Name: "Desktop_Icon"; Description: "Desktop Icon Erstellen"; GroupDescription: "Additional Icon"
-Name: "quicklaunchicon"; Description: "Quick Launch Icon erstellen"; GroupDescription: "Additional Icon"
+Name: "Desktop_Icon"; Description: "Desktop-Verknüpfung Erstellen"; GroupDescription: "Additional Icon"
+Name: "quicklaunchicon"; Description: "Startmenü-Eintrag erstellen"; GroupDescription: "Additional Icon"
 
 [InstallDelete]
 Type: files; Name: "{app}\KiiTree_v1.ico"
@@ -85,6 +88,22 @@ var
 UsagePage: TInputOptionWizardPage;
 InputDirWizardPage: TInputDirWizardPage;
 
+procedure VergleicheVersion;
+var
+path,
+Version,
+VersionNew : String;
+begin
+  path := ExpandConstant( '{app}' );
+  GetVersionNumbersString( path +'\Anwendung\KiiTree.exe', Version );
+  VersionNew := '{#MyAppVersion}.{#MyAppBuild}';
+
+  if CompareStr( Version, VersionNew ) < 0  then
+    MsgBox( Version + ' < ' + VersionNew, mbInformation, MB_OK )
+  else
+    MsgBox( Version + ' >= ' + VersionNew, mbInformation, MB_OK );
+end;
+
 procedure InitializeWizard;
 begin
   { Create the pages }
@@ -95,7 +114,7 @@ begin
   UsagePage.Add('Lokalen Speicherort verwenden (Verwendung nur auf diesem PC)');
   UsagePage.Add('Serverpfad verwenden (Verwendung im Netzwerk)');
 
-  InputDirWizardPage := CreateInputDirPage(UsagePage.ID, 'CreateInputDirPage', 'ADescription', 'ASubCaption', False, 'AKiiTreeFolder');
+  InputDirWizardPage := CreateInputDirPage(UsagePage.ID, 'Serverpfad', 'Wählen Sie einen Serverpfad in dem die Benutzer angelegt werden sollen.', '', False, 'AKiiTreeFolder');
   InputDirWizardPage.Add('Serverpfad:');
   InputDirWizardPage.Values[0] := '?:\';
 
@@ -153,19 +172,7 @@ begin
   Result := true; 
 end;
 
-procedure VergleicheVersion;
-var
-Version,
-VersionNew : String;
-begin
-  GetVersionNumbersString( '..\Release\KiiTree.exe', Version );
-  VersionNew := '{#MyAppVersion}.{#MyAppBuild}';
 
-  if CompareStr( Version, VersionNew ) < 0  then
-    MsgBox( Version + ' < ' + VersionNew, mbInformation, MB_OK )
-  else
-    MsgBox( Version + ' >= ' + VersionNew, mbInformation, MB_OK );
-end;
 
 //wird ausgeführt bevor das Setup startet
 {
@@ -180,29 +187,11 @@ end;
 
 
 
-procedure InputServerPath( AName, AValue: string );
-var
-  Tag,
-  SaveName: string;
-  FileLines: TStringList;
-begin
-  Savename := ExpandConstant('{app}') + '\Anwendung\KiiTree.ini';
-  FileLines := TStringList.Create;
-  try
-    Tag := AName + '=' + AValue;
-    FileLines.LoadFromFile( Savename );
-    FileLines.append( Tag );
-    //fehler beim speichern der Ini
-    FileLines.SaveToFile( Savename );
-  finally
-    FileLines.Free;
-  end;
-end;
-
 //wird ausgelöst bevor alles verarbeitet wird, also der grüne ladebalken kommt
 procedure CurPageChanged(CurPageID: Integer);
 var
 str : String;
+IniFileName: string;
 begin
   if CurPageID = wpSelectDir then
   begin
@@ -211,11 +200,18 @@ begin
 
     MsgBox( Str, mbInformation, MB_OK );
   end;
-  if CurPageID = wpFinished then
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  IniFileName: string;
+begin
+  if CurStep = ssPostInstall then
   begin
+    IniFileName := ExpandConstant('{app}\Anwendung\KiiTree.ini');
     if GetPreviousData('UsageMode', '') = 'Server' then
     begin
-      InputServerPath( 'ServerPath', GetPreviousData('ServerDir', '') );
+      SetIniString('App', 'ServerUsed', InputDirWizardPage.Values[0], IniFileName);
     end;
   end;
 end;

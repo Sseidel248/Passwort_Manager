@@ -2,7 +2,7 @@ unit MPW_Change_PWM;
 
 {******************************************************************************
 Masterpasswort Änderungsdialog "KiiTree"
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 Dient dem Wechsel des Masterpasswortes
 *******************************************************************************}
@@ -10,19 +10,21 @@ Dient dem Wechsel des Masterpasswortes
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  GradientPanel, Edit4User, EditWithBorder;
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Variants, System.Classes, System.UITypes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  GradientPanel,
+  EditEx;
 
 type
   TMasterPasswortChange = class(TForm)
     GradientPanelMPWChange: TGradientPanel;
     BChangeMasterPW: TButton;
-    EOldMPW: TEditWithBorder;
-    ENewMPW: TEditWithBorder;
-    ENewMPW2: TEditWithBorder;
     LStep1: TLabel;
     LStep2: TLabel;
+    EOldMPW: TEditEx;
+    ENewMPW: TEditEx;
+    ENewMPW2: TEditEx;
     procedure EOldMPWChange(Sender: TObject);
     procedure ENewMPWChange(Sender: TObject);
     procedure ENewMPW2Change(Sender: TObject);
@@ -31,12 +33,14 @@ type
     procedure EOldMPWKeyPress(Sender: TObject; var Key: Char);
     procedure ENewMPWKeyPress(Sender: TObject; var Key: Char);
     procedure FormShow(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     isStep1True : Boolean;
     isStep2True : Boolean;
     procedure CheckStep1;
     procedure CheckStep2;
     procedure ReadyToChange;
+    procedure ColorChange( Edit : TEditEx; const AColor : TColor );
     { Private-Deklarationen }
   public
     { Public-Deklarationen }
@@ -44,6 +48,9 @@ type
 
 var
   MasterPasswortChange: TMasterPasswortChange;
+
+const
+  colorNone = TColors.SysNone;
 
 implementation
 
@@ -82,12 +89,12 @@ begin
   if not isStep1True then
   begin
     LStep1.Visible := true;
-    EOldMPW.Required := true;
+    ColorChange( EOldMPW, clRed );
   end
   else
   begin
     LStep1.Visible := false;
-    EOldMPW.Required := false;
+    ColorChange( EOldMPW, clGreen );
   end;
 end;
 
@@ -105,14 +112,21 @@ begin
   if not isStep2True then
   begin
     LStep2.Visible := true;
-    ENewMPW.Required := true;
-    ENewMPW2.Required := true;
+    ColorChange( ENewMPW, clRed );
+    ColorChange( ENewMPW2, clRed );
+  end
+  else
+  if EditText1.Equals('') and EditText2.Equals('') then//Change: Seidel 2021-01-23
+  begin
+    LStep2.Visible := false;
+    ColorChange( ENewMPW, colorNone );
+    ColorChange( ENewMPW2, colorNone );
   end
   else
   begin
     LStep2.Visible := false;
-    ENewMPW.Required := false;
-    ENewMPW2.Required := false;
+    ColorChange( ENewMPW, clGreen );
+    ColorChange( ENewMPW2, clGreen );
   end;
 end;
 
@@ -124,6 +138,14 @@ begin
   BChangeMasterPW.Enabled := isStep1True and isStep2True;
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-23
+-------------------------------------------------------------------------------}
+procedure TMasterPasswortChange.ColorChange( Edit : TEditEx; const AColor : TColor );
+begin
+  Edit.Bordercolor := AColor;
+  Edit.FocusBorderColor := AColor;
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-16
@@ -131,7 +153,7 @@ Author: Seidel 2020-10-16
 procedure TMasterPasswortChange.ENewMPW2Change(Sender: TObject);
 begin
   CheckStep2;
-  ENewMPW.Invalidate;
+  ENewMPW.Invalidate; //gegenseitiges Aktualisieren
   ReadyToChange;
 end;
 
@@ -180,17 +202,25 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-01-23
+-------------------------------------------------------------------------------}
+procedure TMasterPasswortChange.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  LStep1.Visible := false;
+  ColorChange( EOldMPW, colorNone );
+
+  LStep2.Visible := false;
+  ColorChange( ENewMPW, colorNone );
+  ColorChange( ENewMPW2, colorNone );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-16
 -------------------------------------------------------------------------------}
 procedure TMasterPasswortChange.FormCreate(Sender: TObject);
 begin
-  EOldMPW.Hint := 'Ihr altes Masterpasswort';
-  ENewMPW.Hint := 'Ihr neues Masterpasswort';
-  ENewMPW2.Hint := 'Zweiteingabe des neuen Masterpasswortes';
-
-  EOldMPW.ForEmptyText := false;
-  ENewMPW.ForEmptyText := false;
-  ENewMPW2.ForEmptyText := false;
+//
 end;
 
 {------------------------------------------------------------------------------

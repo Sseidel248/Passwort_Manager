@@ -2,7 +2,7 @@ unit PWM_VST;
 
 {******************************************************************************
 Datenbank und Node Bearbeitung von "KiiTree"
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 *******************************************************************************}
 

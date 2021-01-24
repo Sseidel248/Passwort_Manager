@@ -2,7 +2,7 @@ object Login: TLogin
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsSingle
+  BorderStyle = bsDialog
   Caption = 'Anmeldung KiiTree'
   ClientHeight = 371
   ClientWidth = 344
@@ -16,6 +16,7 @@ object Login: TLogin
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  FormStyle = fsStayOnTop
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
@@ -99,26 +100,12 @@ object Login: TLogin
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      TextHint = 'Benutzername eingeben...'
+      TextHint = '<Benutzername eingeben>'
       OnChange = UsernameEditChange
       OnKeyPress = UsernameEditKeyPress
-    end
-    object UserMasterPWEdit: TEdit
-      Left = 8
-      Top = 244
-      Width = 297
-      Height = 24
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      PasswordChar = '*'
-      TabOrder = 1
-      TextHint = 'Master-Passwort eingeben...'
-      OnChange = UserMasterPWEditChange
-      OnKeyPress = UserMasterPWEditKeyPress
+      Bordercolor = clNone
+      FocusBorderColor = clNone
+      TextHintOnFocus = True
     end
     object ESavePathForKTPs: TEdit
       Left = 8
@@ -133,7 +120,7 @@ object Login: TLogin
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 2
+      TabOrder = 1
       OnChange = ESavePathForKTPsChange
     end
     object CBNewUser: TCheckBox
@@ -147,7 +134,7 @@ object Login: TLogin
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 3
+      TabOrder = 2
       OnClick = CBNewUserClick
     end
     object BGetKTPSavePath: TButton
@@ -156,7 +143,7 @@ object Login: TLogin
       Width = 32
       Height = 24
       Caption = '...'
-      TabOrder = 5
+      TabOrder = 4
       OnClick = BGetKTPSavePathClick
     end
     object AnmeldeBtn: TButton
@@ -172,7 +159,7 @@ object Login: TLogin
       Font.Name = 'Tahoma'
       Font.Style = [fsBold]
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 5
       WordWrap = True
       OnClick = AnmeldeBtnClick
     end
@@ -187,8 +174,28 @@ object Login: TLogin
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 4
+      TabOrder = 3
       OnClick = CBMerkeUserClick
+    end
+    object UserMasterPWEdit: TEditEx
+      Left = 8
+      Top = 244
+      Width = 297
+      Height = 24
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      PasswordChar = '*'
+      TabOrder = 6
+      TextHint = '<Masterpasswort>'
+      OnChange = UserMasterPWEditChange
+      OnKeyPress = UserMasterPWEditKeyPress
+      Bordercolor = clNone
+      FocusBorderColor = clNone
+      TextHintOnFocus = True
     end
   end
   object ImageList2: TImageList
