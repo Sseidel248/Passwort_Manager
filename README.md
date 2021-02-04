@@ -8,3 +8,8 @@ Dieses Programm ist freie Software. Sie können es unter den Bedingungen der GNU 
 Die Veröffentlichung dieses Programms erfolgt in der Hoffnung, daß es Ihnen von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT FÜR EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License.
 
 Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Programm erhalten haben. Falls nicht, siehe <http://www.gnu.org/licenses/>.
+
+Verwendete Komponenten, die hier nicht beiliegen:
+Delphi ZipForge von Component Ace
+Delphi Virtual Treeview von JAM Software
+Basti_Komponenten_Delphi von Mir (unter: https://github.com/Sseidel248/Basti_Komponenten_Delphi)

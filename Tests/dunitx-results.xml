@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<test-results name="D:\Delphi embarcadero\Passwort_Manager\Tests\PWM_TESTS.exe" total="5" errors="0" failures="0" ignored="0" inconclusive="0" not-run="0" skipped="0" invalid="0" date="2021-01-23" time="0.418">
+<test-results name="D:\Delphi embarcadero\Passwort_Manager\Tests\PWM_TESTS.exe" total="5" errors="0" failures="0" ignored="0" inconclusive="0" not-run="0" skipped="0" invalid="0" date="2021-02-04" time="0.606">
   <culture-info current-culture="en" current-uiculture="en" />
-  <test-suite type="Assembly" name="PWM_TESTS.exe" executed="true" result="Success" success="True" time="0.418" asserts="0">
+  <test-suite type="Assembly" name="PWM_TESTS.exe" executed="true" result="Success" success="True" time="0.606" asserts="0">
     <results>
-        <test-suite type="Namespace" name="Login_PWM_Test" executed="true" result="Success" success="True" time="0.418" asserts="0" >
+        <test-suite type="Namespace" name="Login_PWM_Test" executed="true" result="Success" success="True" time="0.605" asserts="0" >
           <results>
-              <test-suite type="Fixture" name="TMyLoginTest" executed="True" result="Success" success="True" time="0.418" >
+              <test-suite type="Fixture" name="TMyLoginTest" executed="True" result="Success" success="True" time="0.605" >
                 <results>
-                  <test-case name="LoginTest.Normaler Login User existiert" executed="True" result="Success" success="True" time="0.003" asserts="0" />
-                  <test-case name="LoginTest.Normaler Login Passwort falsch" executed="True" result="Success" success="True" time="0.002" asserts="0" />
-                  <test-case name="LoginTestNewUser.Neuer User soll erstellt werden" executed="True" result="Success" success="True" time="0.004" asserts="0" />
-                  <test-case name="WriteUserName.User existiert bereits" executed="True" result="Success" success="True" time="0.003" asserts="0" />
-                  <test-case name="WriteUserName.User existiert noch nicht" executed="True" result="Success" success="True" time="0.003" asserts="0" />
+                  <test-case name="LoginTest.Normaler Login User existiert" executed="True" result="Success" success="True" time="0.006" asserts="0" />
+                  <test-case name="LoginTest.Normaler Login Passwort falsch" executed="True" result="Success" success="True" time="0.006" asserts="0" />
+                  <test-case name="LoginTestNewUser.Neuer User soll erstellt werden" executed="True" result="Success" success="True" time="0.002" asserts="0" />
+                  <test-case name="WriteUserName.User existiert bereits" executed="True" result="Success" success="True" time="0.002" asserts="0" />
+                  <test-case name="WriteUserName.User existiert noch nicht" executed="True" result="Success" success="True" time="0.001" asserts="0" />
                 </results>
               </test-suite>
           </results>

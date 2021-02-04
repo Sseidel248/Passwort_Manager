@@ -66,7 +66,11 @@ const
 implementation
 
 uses
-  Vcl.Dialogs, Main_PWM, Global_PWM, System.StrUtils;
+  Vcl.Dialogs,
+  Main_PWM,
+  Global_PWM,
+  Messages_PWM,
+  System.StrUtils;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,13 +280,7 @@ begin
   pData := AVST.GetNodeData( pNode );
   if AVST.HasChildren[ pNode ] then
   begin
-    if MessageDlg( 'Sind Sie sich sicher, dass Sie diesen Ordner löschen wollen?' + sLineBreak
-                + 'Alle darin enthaltenden Schlüssel werden ebenfalls gelöscht!'
-                + sLineBreak + sLineBreak
-                + 'Zu löschender Ordner: "'
-                + pData^.Bezeichnung + '"',
-                mtWarning,
-                [mbYes, mbNo], 0, mbNo ) = 6 then //Ja Btn gedrückt
+    if MessageDelete( pData^.Bezeichnung ) = mrYes then
     begin
       while AVST.HasChildren[ pNode ] do
       begin
@@ -298,12 +296,7 @@ begin
   end
   else
   begin  //Change 2020-10-15 sicherheitsabfrage hinzugefügt
-    if MessageDlg( 'Sind Sie sich sicher, dass Sie diesen Ordner löschen wollen?'
-                + sLineBreak + sLineBreak
-                + 'Zu löschender Ordner: "'
-                + pData^.Bezeichnung + '"',
-                mtWarning,
-                [mbYes, mbNo], 0, mbNo ) = 6 then //Ja Btn gedrückt
+    if MessageDelete( pData^.Bezeichnung ) = mrYes then
       AVST.DeleteNode( pNode );
   end;
 end;
@@ -318,12 +311,7 @@ pData : pVTNodeData;
 begin
   pNode := AVST.FocusedNode;
   pData := AVST.GetNodeData( pNode );
-  if MessageDlg( 'Sind Sie sich sicher, dass Sie den Schlüssel löschen wollen?'
-                + sLineBreak + sLineBreak
-                + 'Zu löschender Schlüssel: "'
-                + pData^.Bezeichnung + '"',
-                mtWarning,
-                [mbYes, mbNo], 0, mbNo ) = 6 then //Ja Btn gedrückt
+  if MessageDelete( pData^.Bezeichnung, false ) = mrYes then
   begin
     Main.ClientDataSet1.Locate( 'ID', pData^.ID , [] );
     Main.ClientDataSet1.Delete;

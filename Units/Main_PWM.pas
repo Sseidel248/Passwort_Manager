@@ -16,7 +16,7 @@ uses
   Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Mask, Vcl.DBCtrls, PWM_VST,
   System.ImageList, Vcl.ImgList, System.Hash, GradientPanel, WinAPI.ActiveX, System.UITypes,
   StringGridEx, Vcl.BaseImageCollection, Vcl.ImageCollection,
-  Vcl.VirtualImageList, MyGlassButton, System.RegularExpressions;
+  Vcl.VirtualImageList, MyGlassButton, System.RegularExpressions, EditEx;
 
 type
   TMainStates = Set of (
@@ -25,7 +25,11 @@ type
     msMPW_Change,               //gerade am ändern des Masterpasswortes
     msSomethingInClipBrd,       //es wurde etwas von KiiTree in die Zwischenablage gepackt
     msEditAfterNewKiiCreate,    //nachdem ein Kii erzeugt wurde, wird gleich das Editfeld fokosiert
-    msHideAsTrayIcon            //zeigt an das die Anwendung sich in der Taskbar rechts befindet
+    msHideAsTrayIcon,           //zeigt an das die Anwendung sich in der Taskbar rechts befindet
+    msCloseByTray,              //Beenden über das Tray Icon
+    msShowMinimizeHint,         //soll Hinweise beim minimieren anzeigen
+    msMultiSel,                 //mehrfach Auswahl im Kiitree erlauben
+    msLoadUserData              //Flag zum markieren dass Userdaten geladen werden
     );
 
 type
@@ -42,25 +46,6 @@ type
          URL : String;
      end;
 
-//type
-//  TFonts = class
-//    FTitelSize : Integer;
-//    FTitelColor : TColor;
-//    FSchreibenSize : Integer;
-//    FSchreibenColor : TColor;
-//    FStandartColor : TColor;
-//  private
-//    procedure SetColor( aColor : TColor );
-//    procedure SetSize ( aSize : Integer );
-//  public
-//    property TitelSize : Integer read FTitelSize write SetSize;
-//    property TitelColor : TColor read FTitelColor write SetColor;
-//    property EditSize : Integer read FSchreibenSize write SetSize;
-//    property EditColor : TColor read FSchreibenColor write SetColor;
-//    property StandartColor : TColor read FStandartColor;
-//    constructor Create; virtual;
-//  end;
-
 type
   TMain = class(TForm)
     Panel2: TPanel;
@@ -70,13 +55,10 @@ type
     Options: TTabSheet;
     PasswortChecker: TTabSheet;
     VST: TVirtualStringTree;
-    SuchenEdit: TEdit;
     LBezeichnung: TLabel;
     LBenutzername: TLabel;
     LPasswort: TLabel;
     LInfo: TLabel;
-    SeePWBtn: TBitBtn;
-    HidePWBtn: TBitBtn;
     SaveDataBtn: TBitBtn;
     AddFolderBtn: TBitBtn;
     DelFolderBtn: TBitBtn;
@@ -128,10 +110,8 @@ type
     CBZeitImSpeicher: TComboBox;
     LZeitSpeicherErkl: TLabel;
     BMasterPWChange: TButton;
-    BErzeugeTAN: TButton;
     GBInfo: TGroupBox;
     LBtnErkl: TLabel;
-    RGSymbole: TRadioGroup;
     ILklein: TImageList;
     ILGross: TImageList;
     BDataSetCountTest: TButton;
@@ -149,14 +129,12 @@ type
     BenutzerInZwischenablage1: TMenuItem;
     Einfgen1: TMenuItem;
     PKopieren: TMenuItem;
-    BPW_Print: TButton;
     CBEditAfterCreateNewKii: TCheckBox;
     SG: TStringGridEx;
     Panel1: TPanel;
     GBPWHinweis: TGroupBox;
     LPWHinweis: TLabel;
     TrayIconKT: TTrayIcon;
-    IL_TB_Menu: TImageList;
     ImageCollection1: TImageCollection;
     VirtualImageList1: TVirtualImageList;
     VirtualImageListTB_Menu: TVirtualImageList;
@@ -174,6 +152,24 @@ type
     SBPasswortCheck: TGlassButton;
     SBEinstellungen: TGlassButton;
     SBAbout: TGlassButton;
+    SuchenEdit: TEditEx;
+    GBToogleHide: TGlassButton;//Change: Seidel 2021-01-28
+    VirtualImageList_DBDaten: TVirtualImageList;
+    CBMehrfachAuswahl: TCheckBox;
+    PopupMenuTrayIcon: TPopupMenu;
+    KiitreeOpen: TMenuItem;
+    KiitreeEinstellungen: TMenuItem;
+    ZwischenspeicherDel: TMenuItem;
+    N6: TMenuItem;
+    Beenden: TMenuItem;
+    VILPopupTrayIcon: TVirtualImageList;
+    CBHell: TCheckBox;
+    CBDunkel: TCheckBox;
+    BDelZwischenspeicher: TButton;
+    GBHinweis: TGroupBox;
+    BPW_Print: TGlassButton;
+    CBShowMessages: TCheckBox;
+    GBBeenden: TGlassButton;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -191,8 +187,6 @@ type
     procedure VSTGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
       var HintText: string);
-    procedure HidePWBtnClick(Sender: TObject);
-    procedure SeePWBtnClick(Sender: TObject);
     procedure DBMemoInfoClick(Sender: TObject);
     procedure DBEditBezeichnungExit(Sender: TObject);
     procedure DBEditBenutzerExit(Sender: TObject);
@@ -246,7 +240,6 @@ type
     procedure DBEditURLEnter(Sender: TObject);
     procedure DBMemoInfoEnter(Sender: TObject);
     procedure RGSchriftgreosseClick(Sender: TObject);
-    procedure RGSymboleClick(Sender: TObject);
     procedure BDataSetCountTestClick(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
@@ -311,8 +304,20 @@ type
     procedure CBTestDisableMenuButtonClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure PURLimBrowseOerffnenClick(Sender: TObject);
-//    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
-//      NewDPI: Integer);
+    procedure GBToogleHideClick(Sender: TObject);
+    procedure TrayIconKTDblClick(Sender: TObject);
+    procedure BeendenClick(Sender: TObject);
+    procedure KiitreeOpenClick(Sender: TObject);
+    procedure KiitreeEinstellungenClick(Sender: TObject);
+    procedure ZwischenspeicherDelClick(Sender: TObject);
+    procedure PopupMenuTrayIconPopup(Sender: TObject);
+    procedure BDelZwischenspeicherClick(Sender: TObject);
+    procedure CBHellClick(Sender: TObject);
+    procedure CBDunkelClick(Sender: TObject);
+    procedure CBShowMessagesClick(Sender: TObject);
+    procedure CBMehrfachAuswahlClick(Sender: TObject);
+    procedure GBBeendenClick(Sender: TObject);
+
   private
 //    FFonts : TFonts;
     DBTree : TDBTree;
@@ -351,6 +356,8 @@ type
     procedure FillGrid;
     procedure CheckPasswords;
     Procedure ChangePageControlToKiiTree;
+    procedure ChangeDesignColor( const DesignNr : Integer );
+    procedure CheckUserDataLoading;
     { Private-Deklarationen }
   public
     function GetMaxID : Integer;
@@ -359,7 +366,11 @@ type
     procedure AddNewFolder;
     procedure DelKii;
     procedure DelFolder;
+    procedure RestoreMain( PageIndex : Integer );
+    procedure MinimizeMain;
+    procedure InitTrayIcon( const CanSee : Boolean = true );
     property MainStates : TMainStates read FMainStates write FMainStates;
+
     { Public-Deklarationen }
   end;
 
@@ -379,7 +390,8 @@ uses
   MPW_Change_PWM,
   {$IFNDEF TESTLOGIN}Printers,{$ENDIF}
   PWCheck_PWM,
-  Vcl.Imaging.pngimage;
+  Vcl.Imaging.pngimage,
+  Messages_PWM;
 
 //*****************************************************************************
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -441,6 +453,21 @@ Author: Seidel 2020-10-15
 Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.SetThemeColor( Color1, color2, color3 : TColor );
+
+//  function Heller(farbe: TColor; prozent: Byte): TColor;//Change: Seidel 2021-02-03
+//  var c: array [0..2] of Word;
+//      i: Integer;
+//  begin
+//   c[0]:= (farbe and $FF);
+//   c[1]:= (farbe and $FF00) shr 8;
+//   c[2]:= (farbe and $FF0000) shr 16;
+//   for i:= 0 to 2 do begin
+//    c[i]:= (c[i]* (100 + prozent)) div 100;
+//    if c[i]>255 then c[i]:= 255;
+//   end;
+//   Result:= c[0] + (c[1] shl 8) + (c[2] shl 16);
+//  end;
+
 begin
   Screen.Cursor := crHourGlass;
   try
@@ -459,6 +486,7 @@ begin
     SBDelFolder.Update;
     SBAbisZ.Update;
     SBZbisA.Update;
+
 //    GradientPanelMain.Refresh;
 //    TBMenu.Refresh;
     Refresh;
@@ -534,6 +562,52 @@ Procedure TMain.ChangePageControlToKiiTree;
 begin
   if PageControl1.ActivePageIndex <> 0 then
     PageControl1.ActivePageIndex := 0;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
+procedure TMain.ChangeDesignColor( const DesignNr : Integer );
+
+  procedure SetForControls( const c1, c2 : TColor );
+  begin
+    Panel2.Color := c1;
+    DBEditBezeichnung.Color := c2;
+    DBEditBenutzer.Color := c2;
+    DBEditPasswort.Color := c2;
+    DBEditURL.Color := c2;
+    DBMemoInfo.Color := c2;
+    SuchenEdit.Color := c2;
+    SG.Color := c2;
+    VST.Color := c2;
+  end;
+
+var
+colorMain,
+colorEdits : TColor;
+begin
+  if DesignNr = 0 then
+  begin
+    colorMain := clWhite;
+    colorEdits := clWhite;
+  end
+  else
+  begin
+    colorMain := clMedGray;
+    colorEdits := $00E3E2E2;//clWebGainsboro;
+  end;
+
+  SetForControls( colorMain, colorEdits );
+  CBThemenChange( nil );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-04
+-------------------------------------------------------------------------------}
+procedure TMain.CheckUserDataLoading;
+begin
+  if not ( msLoadUserData in MainStates ) then
+    DoChangeStates( [msChanged] );
 end;
 
 {------------------------------------------------------------------------------
@@ -822,14 +896,18 @@ begin
     begin
       Main.Caption := '*KiiTree von ' + UserData.User;
       SBSaveKiiTree.Enabled := true;
-//      SaveDataBtn.Enabled := true;
     end;
   end
   else
   begin
     Main.Caption := 'KiiTree von ' + UserData.User;
     SBSaveKiiTree.Enabled := false//Change: Seidel 2020-12-25
-//    SaveDataBtn.Enabled := false;
+  end;
+
+  if msSomethingInClipBrd in MainStates then//Change: Seidel 2021-02-03
+  begin
+    BDelZwischenspeicher.Caption := 'Zwischenspeicher leeren';
+    BDelZwischenspeicher.Enabled := true;
   end;
 end;
 
@@ -879,13 +957,11 @@ Author: Seidel 2020-10-15
 procedure TMain.DelFolder;
 var
 pNode :PVirtualNode;
-Text : String;
 begin
   pNode := DBTRee.AVST.FocusedNode;
   if DBTree.IsFavFolder( pNode ) or DBtree.IsAllFolder( pNode ) then//Change: Seidel 2021-01-15
   begin
-    Text := 'Die Ordner "Alle" oder "Favoriten" sind Standartordner und können nicht gelöscht werden';
-    MessageDlg( Text, mtError, [mbOk], 0 );
+    MessageDelError;
     Exit;
   end;
 
@@ -894,6 +970,36 @@ begin
     DBtree.DelFolder;
     DoChangeStates( [msChanged] );//Change: Seidel 2020-11-18 Speichern nachdem man gelöscht hat nicht davor
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-29
+-------------------------------------------------------------------------------}
+procedure TMain.RestoreMain( PageIndex : Integer );
+begin
+  PageControl1.ActivePageIndex := PageIndex;
+  Show;
+  WindowState := wsNormal;
+  Application.BringToFront;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-30
+-------------------------------------------------------------------------------}
+procedure TMain.MinimizeMain;
+begin
+  Hide();
+  WindowState := wsMinimized;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-30
+-------------------------------------------------------------------------------}
+procedure TMain.InitTrayIcon( const CanSee : Boolean = true );
+begin
+  KiitreeOpen.Visible := CanSee;
+  KiitreeEinstellungen.Visible := CanSee;
+  ZwischenspeicherDel.Visible := CanSee;
 end;
 
 {------------------------------------------------------------------------------
@@ -918,6 +1024,14 @@ begin
     ZwischenablageTimer.Enabled := false;
     ZwischenablageTimer.Enabled := true;
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-29
+-------------------------------------------------------------------------------}
+procedure TMain.TrayIconKTDblClick(Sender: TObject);
+begin
+  RestoreMain( 0 );
 end;
 
 {------------------------------------------------------------------------------
@@ -968,7 +1082,6 @@ procedure TMain.SaveKTP;
 
 var
   archiver : TZipForge;
-  Text : String;
 //  ArchivFile : String;
   KiiTreeForArchiv : String;
   IniForArchiv : String;
@@ -1014,12 +1127,10 @@ begin
         try//Change: Seidel 2020-11-29 prüfen ob ein Speichermedium entfernt wurde
           OpenArchive( fmCreate );
         except
-          Text := 'Ihr Speicherpfad' + sLineBreak + '"' + SavePath + '"' + sLineBreak + 'existiert nicht mehr!'
-                + sLineBreak + 'Bitte prüfen Sie, ob Ihr Speichermedium vorhanden ist bevor Sie speichern.';
-          if MessageDlg( Text, mtError, [mbCancel, mbRetry], 0, mbRetry ) = mrRetry then
+          if MessageDontFindDrive( SavePath ) = mrRetry then//Change: Seidel 2021-02-04
           begin
             SaveKTP;//rekursiver aufruf
-            archiver.Free;//verhindert dass das zuvorgeöffnete Archiv offenbleibt
+            archiver.Free;//verhindert dass das zuvorgeöffnete Archiv offen bleibt
           end;
           Exit;
         end;
@@ -1034,9 +1145,6 @@ begin
         AddFromStream( KiiTreeForArchiv, stream );
         AddFromString( IniForArchiv, IniList.Text );
 
-        //Speicherdialog {Debug}
-  //      ShowMessage( FileForArchiv + ' und ' + IniForArchiv + ' wurde in ' + FileName + ' gepackt' );
-        //Speicherdialog {Debug} - Ende -
         //Testet das erstellte Archiv und repariert es ggf.
         try
           TestFiles( '*.*' );
@@ -1046,10 +1154,10 @@ begin
 
         //Speicherdialog {Debug}
         if ( not ( msAutoSave in MainStates ) ) and ( not ( msMPW_Change in MainStates ) ) then
-          ShowMessage( 'Ihr KiiTree wurde erfolgreich gespeichert!' )
+          MessageSaveSuccess( 'Ihr KiiTree wurde erfolgreich gespeichert!' )//Change: Seidel 2021-02-03
         else
         if msMPW_Change in MainStates then
-          ShowMessage( 'Ihr Masterpasswort wurde erfolgreich geändert!' );
+          MessageSaveSuccess( 'Ihr Masterpasswort wurde erfolgreich geändert!' );//Change: Seidel 2021-02-03
         //Speicherdialog {Debug} - Ende -
 
         CloseArchive();
@@ -1109,6 +1217,34 @@ Author: Seidel 2020-09-18
 //  end;
 //
 //end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-04
+-------------------------------------------------------------------------------}
+procedure TMain.GBBeendenClick(Sender: TObject);
+begin
+  Close;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-28
+-------------------------------------------------------------------------------}
+procedure TMain.GBToogleHideClick(Sender: TObject);
+var
+c : char;
+begin
+  c := DBEditPasswort.PasswordChar;
+  if c = '*' then
+  begin
+    DBEditPasswort.PasswordChar := #0;
+    GBToogleHide.ImageIdx := 1;
+  end
+  else
+  begin
+    DBEditPasswort.PasswordChar := '*';
+    GBToogleHide.ImageIdx := 0;
+  end;
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-02
@@ -1191,16 +1327,18 @@ begin
     GBFarbverlauf.Font.Size := size;
     GBInfo.Font.Size := size;
     BMasterPWChange.Font.Size := size;
-    BErzeugeTAN.Font.Size := size;
     LBtnErkl.Font.Size := size;
     CBAutoSave.Font.Size := size;
     CBZeitImSpeicher.Font.Size := size;
     LZeitSpeicherErkl.Font.Size := size;
     RGSchriftgreosse.Font.Size := size;
-    RGSymbole.Font.Size := size;
     LAutoSaveHinweis.Font.Size := size;
     CBEditAfterCreateNewKii.Font.Size := Size;
-    BPW_Print.Font.Size := Size;
+    BDelZwischenspeicher.Font.Size := size;
+    CBHell.Font.Size := Size;
+    CBDunkel.Font.Size := Size;
+    CBShowMessages.Font.Size := Size;
+    CBMehrfachAuswahl.Font.Size := Size;
     //Passwörter
     SuchenEdit.Font.Size := size;
     DBTree.AVST.Font.Size := size;
@@ -1215,6 +1353,7 @@ begin
     LPasswort.Font.Size := size;
     LInfo.Font.Size := size;
     LURL.Font.Size := size;
+
 
     //KiiChecker//Change: Seidel 2020-11-18
     SG.Font.Size := size;
@@ -1507,6 +1646,22 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-01-29
+-------------------------------------------------------------------------------}
+procedure TMain.KiitreeEinstellungenClick(Sender: TObject);
+begin
+  RestoreMain( 1 );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-29
+-------------------------------------------------------------------------------}
+procedure TMain.KiitreeOpenClick(Sender: TObject);
+begin
+  RestoreMain( 0 );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-19
 -------------------------------------------------------------------------------}
 procedure TMain.PKopierenClick(Sender: TObject);
@@ -1632,6 +1787,36 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
+procedure TMain.BDelZwischenspeicherClick(Sender: TObject);
+begin
+  if msSomethingInClipBrd in MainStates then
+  begin
+    DoChangeStates( [], [msSomethingInClipBrd] );
+    {$IFNDEF TESTLOGIN}
+    Clipboard.Clear;
+    {$ENDIF}
+    BDelZwischenspeicher.Caption := 'Zwischenspeicher geleert';
+    BDelZwischenspeicher.Enabled := false;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-14
+-------------------------------------------------------------------------------}
+procedure TMain.BeendenClick(Sender: TObject);
+begin
+  if Main.Visible then//wenn es nicht sichtbar ist dann befindet es sich im Login
+  begin
+    DoChangeStates( [msCloseByTray] );
+    Close;
+  end
+  else
+    Application.Terminate;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
 procedure TMain.BenutzerInZwischenablage1Click(Sender: TObject);
@@ -1677,10 +1862,8 @@ end;
 Author: Seidel 2020-10-**
 -------------------------------------------------------------------------------}
 procedure TMain.BMasterPWChangeClick(Sender: TObject);
-var
-MasterPW_Ch : TMasterPasswortChange;
 begin
-  MasterPW_Ch := TMasterPasswortChange.Create( nil );
+  MasterPasswortChange := TMasterPasswortChange.Create( Main );
   try
     DoChangeStates( [msMPW_Change] );
 
@@ -1691,7 +1874,7 @@ begin
   finally
     DoChangeStates( [], [msMPW_Change, msChanged] );
     ZwischenablageTimer.Enabled := true;
-    MasterPW_Ch.Free;
+    MasterPasswortChange.Free;
   end;
 end;
 
@@ -1896,6 +2079,8 @@ Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
 procedure TMain.CBAutoSaveClick(Sender: TObject);
 begin
+  CheckUserDataLoading;
+
   if CBAutoSave.Checked then
   begin
     DoChangeStates( [msAutoSave] );
@@ -1907,6 +2092,23 @@ begin
     LAutoSaveHinweis.Visible := false;
   end;
   UserData.AutoSaveChecked := BoolToStr( CBAutoSave.Checked );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
+procedure TMain.CBDunkelClick(Sender: TObject);
+begin
+  CheckUserDataLoading;
+
+  CBHell.Checked := not CBDunkel.Checked;
+  if CBDunkel.Checked then
+  begin
+    UserData.DesignNr := 1;
+    ChangeDesignColor( UserData.DesignNr );
+  end
+  else
+    UserData.DesignNr := 0;
 end;
 
 {------------------------------------------------------------------------------
@@ -1932,22 +2134,71 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
+procedure TMain.CBHellClick(Sender: TObject);
+begin
+  CheckUserDataLoading;
+
+  CBDunkel.Checked := not CBHell.Checked;
+  if CBHell.Checked then
+  begin
+    UserData.DesignNr := 0;
+    ChangeDesignColor( UserData.DesignNr );
+  end
+  else
+    UserData.DesignNr := 1;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
+procedure TMain.CBMehrfachAuswahlClick(Sender: TObject);
+begin
+  CheckUserDataLoading;
+
+  if CBMehrfachAuswahl.Checked then//Change: Seidel 2021-02-03
+    DoChangeStates( [msMultiSel] )
+  else
+    DoChangeStates( [], [msMultiSel] );
+
+  UserData.MultiSelect := CBMehrfachAuswahl.Checked;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
+procedure TMain.CBShowMessagesClick(Sender: TObject);
+begin
+  CheckUserDataLoading;
+
+  if CBShowMessages.Checked then//Change: Seidel 2021-02-03
+    DoChangeStates( [msShowMinimizeHint] )
+  else
+    DoChangeStates( [], [msShowMinimizeHint] );
+
+  UserData.ShowHints := CBShowMessages.Checked;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-15
 -------------------------------------------------------------------------------}
 procedure TMain.CBThemenChange(Sender: TObject);
 var
  TeamOrange,
  grau_50P,
- TeamRot : TColor;
+ TeamRot,
+ DesignColor : TColor;
 begin
  TeamOrange := $006bff;
- grau_50P   := $7F7F7F;
+ grau_50P   := clMedGray;//$7F7F7F;
  TeamRot    := RGB( 229, 50, 18 );
+ DesignColor:= Panel2.Color;//Change: Seidel 2021-02-03
   case CBThemen.ItemIndex of
-    0: SetThemeColor( clGreen, clMoneyGreen, clWhite );
-    1: SetThemeColor( clWebGoldenRod, clWebMoccasin, clWhite );
-    2: SetThemeColor( clWebOrangeRed, clWebYellow, clWhite );
-    3: SetThemeColor( clWebRoyalBlue, clWebSkyBlue, clWhite );
+    0: SetThemeColor( clGreen, clMoneyGreen, DesignColor );
+    1: SetThemeColor( clWebGoldenRod, clWebMoccasin, DesignColor );
+    2: SetThemeColor( clWebOrangeRed, {clWebYellow}$0000A5FF, DesignColor );
+    3: SetThemeColor( clWebRoyalBlue, clWebSkyBlue, DesignColor );
     4: SetThemeColor( TeamOrange, TeamOrange, grau_50P );//Change: Seidel 2021-01-12 TeamOrange Design
     5: SetThemeColor( TeamRot, TeamRot, grau_50P );//Change: Seidel 2021-01-12 Team Rot Design
   end;
@@ -1960,6 +2211,8 @@ Author: Seidel 2020-10-28
 -------------------------------------------------------------------------------}
 procedure TMain.CBEditAfterCreateNewKiiClick(Sender: TObject);
 begin
+  CheckUserDataLoading;
+
   UserData.FocusEditAfterNewKii := BoolToStr( CBEditAfterCreateNewKii.Checked );
   if CBEditAfterCreateNewKii.Checked then
     DoChangeStates( [msEditAfterNewKiiCreate] )
@@ -2356,57 +2609,76 @@ Author: Seidel 2020-11-25
 -------------------------------------------------------------------------------}
 procedure TMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
-Text : String;
 MResult : Integer;
 begin
   if ( msChanged in MainStates ) then
   begin
-    if not ( msAutoSave in MainStates ) then
-    begin
-      Text := 'Es sind Änderungen vorhanden.'
-      + sLineBreak
-      + 'Sollen die Änderungen an Ihrem KiiTree gespeichert werden?';
-      MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
-    end
+    if msAutoSave in MainStates then
+      MResult := mrYes
     else
-      MResult := mrYes;
+      MResult := MessageSave;
+
     if MResult = mrYes then
       SaveKTP;
+
+    DoChangeStates( [], [msChanged] );
   end;
   MainIni.SaveSetting;
-  if msSomethingInClipBrd in MainStates then//Change: Seidel 2020-11-04
-  begin
-    Text := 'Soll die Zwischenablage geleert werden bevor Sie die Anwendung schließen?';
-    MResult := MessageDlg( Text, mtWarning, [mbYes, mbNo], 0, mbYes );
-    if MResult = mrYes then
-    {$IFNDEF TESTLOGIN}
-      Clipboard.Clear;
-    {$ENDIF}
-  end;
+  TrayIconKT.Visible := false;
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-11-25
 -------------------------------------------------------------------------------}
 procedure TMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-//var
-//Text : String;
+var
+MResult : Integer;
 begin
-  //TODO: SystemTrayIcon
-//  Text := 'Anwendung Schließen oder Minimieren?';
-//  if MessageDlg then
+  if msCloseByTray in MainStates then//Change: Seidel 2021-02-03
+  begin
+    DoChangeStates( [], [msCloseByTray] );
+    {$IFNDEF TESTLOGIN}
+    Clipboard.Clear;
+    {$ENDIF}
+    CanClose := true;
+    Exit;
+  end;
+
+  if msSomethingInClipBrd in MainStates then//Change: Seidel 2021-01-30
+    MResult := MessageMinClearOrClose
+  else
+    MResult := MessageMinOrClose;
+
+  if MResult = mrMini then//Change: Seidel 2021-01-30
+  begin
+    MinimizeMain;
+    CanClose := false;
+
+    if msShowMinimizeHint in MainStates then//Change: Seidel 2021-02-03
+      TrayIconKT.ShowBalloonHint;
+  end
+  else
+  if MResult = mrCloseNClear then//Change: Seidel 2021-01-30
+  begin
+    {$IFNDEF TESTLOGIN}
+      Clipboard.Clear;
+    {$ENDIF}
+    CanClose := true;
+  end
+  else
+  if MResult = mrClose then//Change: Seidel 2021-01-30
+    CanClose := true
+  else                     //Change: Seidel 2021-01-30
+    CanClose := false;
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.FormCreate(Sender: TObject);
-//var
-//opendialog : TFileOpenDialog;
-//PersonalFolder : String;
-//I:Integer;
 begin
-  //TODO: aufblitzen des MainMenüs verhindern
+  TrayIconKT.Visible := true;
+  InitTrayIcon( false );
 
   Application.HintHidePause := 10000;
   PPI_at_start := GetCurrentPPI;
@@ -2414,18 +2686,14 @@ begin
   {$IFDEF DEBUG}
   DB_Tabelle.TabVisible := true;
   CBTestDisableMenuButton.Visible := true;
+  CBMehrfachAuswahl.Visible := true;
   {$ENDIF}
-  //TODO: für den Beta Installer; alles was false ist wurde noch nicht implementiert
-  BErzeugeTAN.Visible := false;
-//  SBPasswortCheck.Enabled := false;
-  //Beta Installer - Ende -
-  //hole den Pfad zu Eigene Dateien/Dokumente
-//  PersonalFolder := GetSpecialFolder( Handle, IC_GET_PERSONAL_FOLDER ) + 'Documents\KiiTree\';
 
-  DefaultSettings.Init( handle );
   //prüft auch ob Schreibrecht vorhanden sind
   if not MainIni.CreateIfNotExist then
     Application.Terminate;
+
+  DefaultSettings.Init( handle );
 
   //setzen der maximalen Länge
   DBEditBezeichnung.MaxLength := ClientDataSet1Bezeichnung.Size;
@@ -2444,22 +2712,17 @@ begin
 
   Login := TLogin.Create(Main);
   try
-    //StandartOrdner auswählen,jedoch wenn der User einen Speziellen Pfad will dann nim diesen
-//    Login.ESavePathForKTPs.Text := PersonalFolder;
-//    MainIni.CreateIfNotExist;
     //Login Formular anzeigen und auf Modalresult warten
     Login.ShowModal;
-    //Speichern ob first Start
-//    FFirstNewUser := Login.CBNewUser.Checked;
-//    EmptyXMLFile := AppSettings.DefaultDBPath + 'EmtyTable.xml';
     if Login.ModalResult = mrCancel then // schließen der kompletten anwendung
     begin
-//      Application.Minimize;
       FApp_LoginAbort := true;
+      WindowState := wsMinimized;
       Application.Terminate;
     end
     else
     begin
+      InitTrayIcon;
       ClientDataSet1.LoadFromFile( DefaultSettings.DefaultDBPath );
       if Login.ModalResult = mrRetry then //erzeugen einer neuen DB ( neuer User )
         DoChangeStates( [msChanged] )  //Change 2020-10-10 Damit gespeichert werden kann
@@ -2483,8 +2746,6 @@ end;
 Author: Seidel 2020-09-28
 -------------------------------------------------------------------------------}
 procedure TMain.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-//var
-//pNode : PVirtualNode;
 begin
   if ( Key = 70 ) and ( Shift = [ssCtrl] ) then //Strg + F
   begin
@@ -2496,7 +2757,6 @@ begin
   begin
     if not ( msEditAfterNewKiiCreate in MainStates ) then//Change: Seidel 2020-11-19
     begin
-//      pNode := DBTree.GetSelectedNode;
       if ( not DBTree.AVST.Focused ) and ( DBTree.AVST.SelectedCount = 1 ) then
         DBtree.AVST.SetFocus;
     end;
@@ -2526,19 +2786,8 @@ Author: Seidel 2021-01-23
 -------------------------------------------------------------------------------}
 procedure TMain.FormShow(Sender: TObject);
 begin
-//  MessageDlg( 'hallo', mtInformation, [mbOK],0 );
-    if not FApp_LoginAbort then
-      Main.WindowState := wsNormal;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-09-16
--------------------------------------------------------------------------------}
-procedure TMain.HidePWBtnClick(Sender: TObject);
-begin
-  DBEditPasswort.PasswordChar := '*';
-  SeePWBtn.Enabled := true;
-  HidePWBtn.Enabled := false;
+  if not FApp_LoginAbort then
+    Main.WindowState := wsNormal;
 end;
 
 {------------------------------------------------------------------------------
@@ -2645,6 +2894,23 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-01-30
+-------------------------------------------------------------------------------}
+procedure TMain.PopupMenuTrayIconPopup(Sender: TObject);
+begin
+  if msSomethingInClipBrd in MainStates then
+  begin
+    ZwischenspeicherDel.Caption := 'Zwischenspeicher löschen';
+    ZwischenspeicherDel.Enabled := true;
+  end
+  else
+  begin
+    ZwischenspeicherDel.Caption := 'Zwischenspeicher leer';
+    ZwischenspeicherDel.Enabled := false;
+  end;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2021-01-20
 -------------------------------------------------------------------------------}
 procedure TMain.PURLimBrowseOerffnenClick(Sender: TObject);
@@ -2682,9 +2948,7 @@ begin
   if regex.IsMatch( URLStr ) then
     ShellExecute(Handle, 'open', PWideChar( URLStr ), nil, nil, SW_SHOWNORMAL)
   else
-    MessageDlg( 'URL konnte nicht geöffnet werden, bitte überprüfen sie Ihre URL.',
-    mtError, [mbOK], 0 );
-
+    MessageOpenURLError;
 end;
 
 {------------------------------------------------------------------------------
@@ -2786,22 +3050,6 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-10-04
--------------------------------------------------------------------------------}
-procedure TMain.RGSymboleClick(Sender: TObject);
-begin
-  //Bildgröße wird über VirtualImageList geregelt
-  //RGSymbole deaktiviert //Change: Seidel 2020-12-18
-  case RGSymbole.ItemIndex of
-    0: SetTreeImageListForSize( 0 );
-    1: SetTreeImageListForSize( 1 );
-    2: SetTreeImageListForSize( 2 );
-  end;
-  if not (Sender = nil) then//Change: Seidel 2021-01-15
-    UserData.SymbolSize := IntToStr( RGSymbole.ItemIndex );
-end;
-
-{------------------------------------------------------------------------------
 Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.SaveDataBtnClick(Sender: TObject);
@@ -2819,12 +3067,22 @@ begin
   DBtree.AVST.SortTree( -1, sdAscending );
 end;
 
-
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-03
+-------------------------------------------------------------------------------}
 procedure TMain.SBAboutClick(Sender: TObject);
 begin
-  About_Dlg.Show;
+  About_Dlg := TAbout_Dlg.Create( Main );//Change: Seidel 2021-02-03
+  try
+    About_Dlg.ShowModal;
+  finally
+    About_Dlg.Free;
+  end;
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-15
+-------------------------------------------------------------------------------}
 procedure TMain.SBAddNewFolderClick(Sender: TObject);
 begin
   ChangePageControlToKiiTree;
@@ -2921,16 +3179,6 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-09-16
--------------------------------------------------------------------------------}
-procedure TMain.SeePWBtnClick(Sender: TObject);
-begin
-  DBEditPasswort.PasswordChar := #0;
-  SeePWBtn.Enabled := false;
-  HidePWBtn.Enabled := true;
-end;
-
-{------------------------------------------------------------------------------
 Author: Seidel 2020-09-21
 -------------------------------------------------------------------------------}
 procedure TMain.SuchenEditChange(Sender: TObject);
@@ -2956,9 +3204,20 @@ procedure TMain.VSTBeforeItemErase(Sender: TBaseVirtualTree;
   var ItemColor: TColor; var EraseAction: TItemEraseAction);
 begin
   if DBTree.AVST.AbsoluteIndex(Node) mod 2 = 0 then
-    ItemColor := clCream
+  begin
+    if DBTree.AVST.Color = clWhite then//Change: Seidel 2021-02-03
+      ItemColor := clCream
+    else
+      ItemColor := clLtGray;
+  end
   else
-    ItemColor := clWhite;
+  begin
+    if DBTree.AVST.Color = clWhite then//Change: Seidel 2021-02-03
+      ItemColor := clWhite
+    else
+      ItemColor := clWebGainsboro;
+  end;
+
 end;
 
 procedure TMain.VSTBeforePaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas);
@@ -3337,6 +3596,17 @@ begin
   {$ENDIF}
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-30
+-------------------------------------------------------------------------------}
+procedure TMain.ZwischenspeicherDelClick(Sender: TObject);
+begin
+  if msSomethingInClipBrd in MainStates then
+    DoChangeStates( [], [msSomethingInClipBrd] );
+  {$IFNDEF TESTLOGIN}
+    Clipboard.Clear;
+  {$ENDIF}
+end;
 
 end.
 

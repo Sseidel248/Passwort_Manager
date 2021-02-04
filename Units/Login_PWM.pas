@@ -13,7 +13,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   System.ImageList, Vcl.ImgList, Vcl.Buttons, GradientPanel, System.UITypes,
   Edit4User, U_USB, Vcl.VirtualImageList, Vcl.BaseImageCollection,
-  Vcl.ImageCollection, EditEx;
+  Vcl.ImageCollection, EditEx, Vcl.ComCtrls, MyGlassButton;
 
 type
   TLoginState = Set of (
@@ -27,10 +27,7 @@ type
     CBNewUser: TCheckBox;
     ImageList2: TImageList;
     ImageList3: TImageList;
-    SBToogleHide: TSpeedButton;
     Label1: TLabel;
-    ESavePathForKTPs: TEdit;
-    BGetKTPSavePath: TButton;
     UsernameEdit: TEdit4User;
     GradientPanel2: TGradientPanel;
     USBInput: TComponentUSB;
@@ -40,6 +37,10 @@ type
     ImageCollection1: TImageCollection;
     VirtualImageList1: TVirtualImageList;
     UserMasterPWEdit: TEditEx;
+    ESavePathForKTPs: TComboBoxEx;
+    VirtualImageList2: TVirtualImageList;
+    BGetKTPSavePath: TGlassButton;//Change: Seidel 2021-01-28
+    SBToogleHide: TGlassButton;//Change: Seidel 2021-01-28
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -57,9 +58,11 @@ type
     procedure USBInputUSBRemove(Sender: TObject);
     procedure CBMerkeUserClick(Sender: TObject);
     procedure AnmeldeTimerTimer(Sender: TObject);
-    procedure ESavePathForKTPsChange(Sender: TObject);
     procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI,
       NewDPI: Integer);
+    procedure ESavePathForKTPsChange(Sender: TObject);
+    procedure ESavePathForKTPsEndEdit(Sender: TObject);
+    procedure ESavePathForKTPsBeginEdit(Sender: TObject);
   private
 //    LoginStates : TLoginStates;                                             //erstmal nicht benutzt
 //    property LoginState : TLoginStates read LoginStates write LoginStates;  //erstmal nicht benutzt
@@ -71,6 +74,7 @@ type
     procedure EnableAnmeldeBtn;
     function CheckKTPExistPlus( SaveFile : String ) : Boolean;
     procedure DoChangeState( Enter : TLoginState; Leave : TLoginState = [] );
+    procedure InitSavePathes;
 //    function Check4FirstStart: Boolean;
 
 
@@ -95,8 +99,15 @@ var
 implementation
 
 uses
-  IdHashMessageDigest, IdHash, Main_PWM, Global_PWM, IniFiles,
-  System.Zip, ZipForge, Hash_Functions;
+  IdHashMessageDigest,
+  IdHash,
+  Main_PWM,
+  Global_PWM,
+  IniFiles,
+  Messages_PWM,
+  System.Zip,
+  ZipForge,
+  Hash_Functions;
 
 {$R *.dfm}
 
@@ -131,6 +142,24 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-01-26
+-------------------------------------------------------------------------------}
+procedure TLogin.InitSavePathes;
+begin
+  ESavePathForKTPs.Items.Add( '<Lokaler Speicherpfad>' );
+  ESavePathForKTPs.Items.Add( DefaultSettings.DefaultUserSavePath );
+  if not MainIni.ServerSavePath.Equals( '' ) then
+  begin
+    ESavePathForKTPs.Items.Add( '<Server Speicherpfad>' );
+    ESavePathForKTPs.Items.Add( MainIni.ServerSavePath );
+  end;
+  ESavePathForKTPs.Items.Add( '<Zuletzt geladener Pfad>' );
+  ESavePathForKTPs.Items.Add( MainIni.LastLoadPath );
+
+  ESavePathForKTPs.ItemIndex := Mainini.GetUserPathIndex;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-22
 -------------------------------------------------------------------------------}
 function TLogin.CheckKTPExistPlus( SaveFile : String ) : Boolean;
@@ -140,7 +169,7 @@ function TLogin.CheckKTPExistPlus( SaveFile : String ) : Boolean;
   FileStream: TFileStream;
   ZipFile : TZipFile;
   begin
-    //teste 0 Bate Dateien
+    //teste 0 Byte Dateien
     FileStream := TFileStream.Create( SaveFile, fmOpenRead or fmShareDenyNone );
     try
       try
@@ -164,28 +193,22 @@ function TLogin.CheckKTPExistPlus( SaveFile : String ) : Boolean;
     end;
   end;
 
-var
-sText : String;
 begin
+  Result := false;
   if FileExists( SaveFile ) then
   begin
-    if not IsFileValid( SaveFile ) then
-    begin
-      Result := false;
-      //TODO: Datei statt Benutzername wählen können
-//      sText := 'Ihre Datei ist möglicherweise defekt. Bitte wählen Sie eine anderen Benutzer oder eine andere Datei.';
-      sText := 'Ihre Datei ist möglicherweise defekt. Bitte wählen Sie eine anderen Benutzer.';
-      MessageDlg( sText, mtError, [mbOk], 0 );
-    end
+    if IsFileValid( SaveFile ) then
+      Result := true
     else
-      Result := true;
+    begin
+      //TODO: Datei statt Benutzername wählen können
+      MessageFileCurrpt();
+    end;
   end
   else
   begin
-    sText := 'Ihr Datei konnte in dem von Ihnen gewählten Verzeichnis nicht gefunden werden!' + sLineBreak + sLineBreak
-    + 'Prüfe Sie bitte, ob der richtige Pfad gewählt wurde oder wählen Sie einen anderes Verzeichnis.';
+    MessageFileCurrpt( false );
     Result := false;
-    MessageDlg( sText, mtError, [mbOK], 0 );
     BGetKTPSavePath.SetFocus;
   end;
 end;
@@ -203,40 +226,31 @@ begin
   if Usertext.Equals( '' ) or PwText.Equals( '' ) then
   begin
     AnmeldeBtn.Enabled := false;
-    SBToogleHide.Enabled := false;
+    SBToogleHide.Visible := false;
   end
   else
   if ( not UsernameEdit.UserExist ) and ( CBNewUser.Checked ) then
   begin
     AnmeldeBtn.Enabled := true;
-    SBToogleHide.Enabled := true;
+    SBToogleHide.Visible := true;
   end
   else
   if UsernameEdit.UserExist and ( CBNewUser.Checked ) then
   begin
     AnmeldeBtn.Enabled := false;
-    SBToogleHide.Enabled := false;
+    SBToogleHide.Visible := false;
   end
   else
   if UsernameEdit.UserExist and ( not CBNewUser.Checked ) then
   begin
     AnmeldeBtn.Enabled := true;
-    SBToogleHide.Enabled := true;
+    SBToogleHide.Visible := true;
   end
   else
   begin
     AnmeldeBtn.Enabled := true;
-    SBToogleHide.Enabled := true;
+    SBToogleHide.Visible := true;
   end;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-12-03
--------------------------------------------------------------------------------}
-procedure TLogin.ESavePathForKTPsChange(Sender: TObject);
-begin
-  //fügt den manuell veränderten Pfad in die MainIni hinzu, dieser wird dann kontrolliert
-  MainIni.LastLoadPath := ESavePathForKTPs.Text;
 end;
 
 {------------------------------------------------------------------------------
@@ -291,6 +305,77 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-01-26
+-------------------------------------------------------------------------------}
+procedure TLogin.ESavePathForKTPsBeginEdit(Sender: TObject);
+begin
+  ESavePathForKTPs.ItemIndex := MainIni.GetUserPathIndex;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-27
+-------------------------------------------------------------------------------}
+procedure TLogin.ESavePathForKTPsChange(Sender: TObject);
+var
+s : String;
+begin
+  if ESavePathForKTPs.Items.Count = 0 then
+    Exit;
+
+  s := ESavePathForKTPs.Text;
+  if not DirectoryExists( s ) then
+  begin
+    AnmeldeBtn.Enabled := false;
+    if s.Equals( '' ) then
+    begin
+      ESavePathForKTPs.Hint := 'Pfad darf nicht leer sein!';
+    end
+    else
+    begin
+      ESavePathForKTPs.Hint := '"' + s + '" existiert nicht!' + sLineBreak + 'Bitte wählen Sie einen Anderen.';
+    end;
+    ESavePathForKTPs.Font.Color := clRed;
+    Exit;
+  end
+  else
+  begin
+    AnmeldeBtn.Enabled := true;
+    case ESavePathForKTPs.ItemIndex of
+      0: ESavePathForKTPs.ItemIndex := 1;
+      2: ESavePathForKTPs.ItemIndex := 3;
+      4: ESavePathForKTPs.ItemIndex := 5;
+    end;
+
+    ESavePathForKTPs.Hint := s;
+    ESavePathForKTPs.Font.Color := clWindowText;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-26
+-------------------------------------------------------------------------------}
+procedure TLogin.ESavePathForKTPsEndEdit(Sender: TObject);
+var
+text : String;
+  I: Integer;
+begin
+  text := ESavePathForKTPs.Text;
+  if not DirectoryExists( Text ) then
+  begin
+    ESavePathForKTPs.ItemIndex := 1;
+    Exit;
+  end;
+
+  i := MainIni.GetUserPathIndex;
+
+  ESavePathForKTPs.Items.Delete( I );
+  ESavePathForKTPs.Items.Insert( I, text );
+
+  //fügt den manuell veränderten Pfad in die MainIni hinzu, dieser wird dann kontrolliert
+  MainIni.LastLoadPath := ESavePathForKTPs.Items[I];
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-11-24
 -------------------------------------------------------------------------------}
 procedure TLogin.AnmeldeTimerTimer(Sender: TObject);
@@ -319,6 +404,7 @@ Author: Seidel 2020-10-07
 procedure TLogin.BGetKTPSavePathClick(Sender: TObject);
 var
 OpenDialog : TFileOpenDialog;
+i : Integer;
 begin
   OpenDialog := TFileOpenDialog.Create( nil );
   try
@@ -327,7 +413,9 @@ begin
     if OpenDialog.Execute then //Pfad wird NUR gesetzt wenn ein Ordner erfolgreich gewählt wurde
     begin
       MainIni.LastLoadPath := OpenDialog.FileName + '\';
-      ESavePathForKTPs.Text := OpenDialog.FileName + '\';
+      i := MainIni.GetUserPathIndex;
+      ESavePathForKTPs.items[I] := OpenDialog.FileName + '\';
+      ESavePathForKTPs.ItemIndex := I;
     end
   finally
     OpenDialog.Free;
@@ -444,9 +532,7 @@ begin
       else //Benutzer existiert nicht
       begin
         {$IFNDEF TESTLOGIN}
-        if MessageDlg( 'Benutzername existiert noch nicht, soll dieser angelegt werden?',
-                    mtInformation,
-                    [mbYes, mbNo], 0 ) = mrYes then
+        if MessageUserNotExist = mrYes then
         begin
           VirtualImageList1.GetIcon( 1, Image1.Picture.Icon );
           ImageIndex := 1;
@@ -500,18 +586,22 @@ procedure TLogin.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   // abschalten der USB Erkennung
   USBInput.Required := false;
+  MainIni.SaveSetting;
+
 end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-20
 -------------------------------------------------------------------------------}
 procedure TLogin.FormCreate(Sender: TObject);
-
 begin
-  ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
-  SBToogleHide.Flat := true;
+//  ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
+//  SBToogleHide.Flat := true;
   ESavePathForKTPs.Hint := 'Speicherverzeichnis von KiiTree';
   AnmeldeSek := 5;
+  ESavePathForKTPs.Items.Clear;
+  ESavePathForKTPs.ItemIndex := 1;
+  ESavePathForKTPs.Hint := 'Der angebene Pfad existiert nicht.';
 end;
 
 {------------------------------------------------------------------------------
@@ -529,6 +619,8 @@ procedure TLogin.FormShow(Sender: TObject);
 var
 EditText : String;
 begin
+  InitSavePathes;
+
   VirtualImageList1.GetIcon( 0, Image1.Picture.Icon );
   ImageIndex := 0;
 
@@ -567,15 +659,17 @@ procedure TLogin.SBToogleHideClick(Sender: TObject);
 begin
   if UserMasterPWEdit.PasswordChar = '*' then
   begin
-    SBToogleHide.Glyph := nil;
+//    SBToogleHide.Glyph := nil;
     UserMasterPWEdit.PasswordChar := #0;
-    ImageList2.GetBitmap( 1, SBToogleHide.Glyph );
+//    ImageList2.GetBitmap( 1, SBToogleHide.Glyph );
+    SBToogleHide.ImageIdx := 2;
   end
   else
   begin
-    SBToogleHide.Glyph := nil;
+//    SBToogleHide.Glyph := nil;
     UserMasterPWEdit.PasswordChar := '*';
-    ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
+//    ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
+    SBToogleHide.ImageIdx := 1;
   end;
 end;
 
@@ -584,14 +678,8 @@ Author: Seidel 2020-10-23
 -------------------------------------------------------------------------------}
 procedure TLogin.USBInputUSBGetDriveLetter(Sender: TObject;
   const DrivePath: string);
-var
-sText : String;
-mResult : Integer;
 begin
-  sText := 'Es wurde ein USB Gerät eingesteckt!' + sLineBreak
-          + 'Wollen Sie diesen USB verwenden?';
-  MResult := MessageDlg( sText, mtInformation, [mbYes, mbNo], 0, mbYes );
-  if MResult = mrYes then
+  if MessageFindDrive = mrYes then
   begin
     MainIni.LastLoadPath := DrivePath;
     ESavePathForKTPs.Text := DrivePath;

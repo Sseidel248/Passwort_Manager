@@ -52,9 +52,11 @@ Author: Seidel 2020-10-16
 procedure TAbout_Dlg.FormCreate(Sender: TObject);
 begin
   LVersion.Caption := 'Version: ' + GetVersion;// +  ' (beta)';
-  LInfo.Caption := 'Dieses Programm ist ein Open Source Ein-Mann Projekt unter Verwendung von ZipForge von Component Ace. Vorschläge für Verbesserungen oder Anmerkungen sind Herzlich willkommen.';
+  LInfo.Caption := 'Dieses Programm ist ein Open Source Ein-Mann Projekt unter Verwendung von '
+  +'ZipForge von Component Ace, TVirtualTreeView von JAM Software und InstanceCheck von Daniel Pauli.'
+  +' Vorschläge für Verbesserungen oder Anmerkungen sind Herzlich willkommen.';
   LOrtProg.Caption := 'Besucht: https://github.com/Sseidel248/KiiTree für weitere Informtionen.';
-  LCopyright.Caption := 'Copyright © 2021 Sebastian Seidel. Alle Rechte sind vorbehalten.';
+  LCopyright.Caption := 'Copyright © 2021 Sebastian Seidel';
 end;
 
 {------------------------------------------------------------------------------

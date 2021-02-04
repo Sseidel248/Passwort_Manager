@@ -1,4 +1,5 @@
-+----------------------------------------------------------------------------------------------------+		Kiitree v1.0.0.6
++----------------------------------------------------------------------------------------------------+
+	KiiTree
 	Copyleft 2020-2021 Sebastian Seidel
 				
 	NEW - Neue Funktionalität				
@@ -6,6 +7,25 @@
 	CHG - Änderungen einer Funtkionalität			
 	FIX - Behöbene Fehler				
 +----------------------------------------------------------------------------------------------------+
+V1.0.2.1 (04.02.2021)
+- NEW : KT-59 es wird geprüft das immer nur eine Instance offen ist
+- NEW : KT-55 Option zwischen Serverablage oder lokaler Ablage, immer min. eine Standartpfad und einen der zuletzt gespeicherte Pfad
+- NEW : KT-46 TrayIcon hinzugefügt
+- NEW : KT-62 Zwischenspeicher kann seperat in den Einstellungen gelöscht werden, zusätzlich zur Automatik
+- NEW : KT-65 Hinweise beim Minimieren können deaktiviert werden
+- NEW : Vorbereitung der Checkbox für Multiselect
+- NEW : KT-67 Es kann zusätzlich zwischen den Farben noch das Design geändert werden (Hell, Dunkel), geändertes Design wird in der Userini gespeichert
+- NEW : KT-45 Beendenbutton auf dem Hauptmenü
+- NEW : verwaltet alle Dialoge (Taskdialog WIN Vista und neuer)
+- NEW : Abfrage ob eine Datei schreibgeschützt ist IsFileReadOnly
+- NEW : Schreibgeschützte Dateien können gespeichert werden (Ini-Datei)
+- CHG : Tooglebutton (Speedbutton) für Sichtbar/nicht Sichtbar machen vom Passwort und Laden eines Pfadeswurden mit GlassButton ersetzt
+- CHG : Tooglebutton von sichtbar/nicht sichtbar ist ein Glassbutton, dafür wurden die beiden einzelnen SpeedButton entfernt
+- CHG : Art udn Reihenfolge der Erzeugung der Forms wurde geändert
+- CHG : KT-63 Neue Taskdialoge wurden eingebaut (Messages_PWM)
+- CHG : Gelbton des Themas "Sonne" geändert
+- FIX : KT-61 - Pfade ohne "\" konnten nicht geöffnet werden
+
 V1.0.0.6 (24.01.2021)
 - NEW: Neue EditEx eingefügt für bessere Interaktion
 - UPD: Gespeicherte URL kann geöffnet werden
