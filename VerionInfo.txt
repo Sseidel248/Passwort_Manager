@@ -7,6 +7,11 @@
 	CHG - Änderungen einer Funtkionalität			
 	FIX - Behöbene Fehler				
 +----------------------------------------------------------------------------------------------------+
+V1.0.2.2 (10.02.2021)
+- CHG : In der GroupBox "Allgemein" wird ein passender Hinweis zu der jeweiligen Checkbox angezeigt, wenn man die Maus über die Checkbox bewegt
+- FIX : KT-68 Fehler bei den laden der Benutzereinstellungen
+- FIX : KT-69 Fehlende Benachrichtigung wenn die Anwendung miniert wird, obwohl Benachrichtigung aktiviert ist
+
 V1.0.2.1 (04.02.2021)
 - NEW : KT-59 es wird geprüft das immer nur eine Instance offen ist
 - NEW : KT-55 Option zwischen Serverablage oder lokaler Ablage, immer min. eine Standartpfad und einen der zuletzt gespeicherte Pfad

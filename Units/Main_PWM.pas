@@ -123,7 +123,7 @@ type
     PURLimBrowseOerffnen: TMenuItem;
     ZwischenablageTimer: TTimer;
     GradientPanelMain: TGradientPanel;
-    LAutoSaveHinweis: TLabel;
+    LCBHinweise: TLabel;
     N5: TMenuItem;
     PasswortinZwischenablage1: TMenuItem;
     BenutzerInZwischenablage1: TMenuItem;
@@ -170,6 +170,8 @@ type
     BPW_Print: TGlassButton;
     CBShowMessages: TCheckBox;
     GBBeenden: TGlassButton;
+    Userdata_List: TTabSheet;
+    LBUserdata: TListBox;
     procedure PasswortBtnClick(Sender: TObject);
     procedure EinstellBtnClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -287,8 +289,6 @@ type
     procedure SBDelFolderClick(Sender: TObject);
     procedure SBAbisZClick(Sender: TObject);
     procedure SBZbisAClick(Sender: TObject);
-    procedure CBFarbeNachDrawItem(Control: TWinControl; Index: Integer;
-      Rect: TRect; State: TOwnerDrawState);
     procedure CBThemenChange(Sender: TObject);
     procedure SBAboutClick(Sender: TObject);
     procedure Einfgen1Click(Sender: TObject);
@@ -317,6 +317,13 @@ type
     procedure CBShowMessagesClick(Sender: TObject);
     procedure CBMehrfachAuswahlClick(Sender: TObject);
     procedure GBBeendenClick(Sender: TObject);
+    procedure Userdata_ListShow(Sender: TObject);
+    procedure CBAutoSaveMouseEnter(Sender: TObject);
+    procedure CBAutoSaveMouseLeave(Sender: TObject);
+    procedure CBShowMessagesMouseEnter(Sender: TObject);
+    procedure CBShowMessagesMouseLeave(Sender: TObject);
+    procedure CBEditAfterCreateNewKiiMouseEnter(Sender: TObject);
+    procedure CBEditAfterCreateNewKiiMouseLeave(Sender: TObject);
 
   private
 //    FFonts : TFonts;
@@ -742,6 +749,27 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-02-09
+-------------------------------------------------------------------------------}
+procedure TMain.Userdata_ListShow(Sender: TObject);
+begin
+  {$IFDEF DEBUG}
+  LBUserData.Items.Clear;
+  LBUserdata.Items.Add( 'User: ' + UserData.User );
+  LBUserdata.Items.Add( 'Passwort: ' + UserData.PW_Str );
+  LBUserdata.Items.Add( 'Datei: ' + UserData.KTP_Name_MD5 );
+  LBUserdata.Items.Add( 'Thema: ' + IntToStr( UserData.UserTheme ) );
+  LBUserdata.Items.Add( 'Fontsize: ' + IntToStr( UserData.FontSize ) );
+  LBUserdata.Items.Add( 'DesignNr: ' + IntToStr( UserData.DesignNr ) );
+  LBUserdata.Items.Add( 'ZeitImSpeicher: ' + IntToStr( UserData.ZeitImSpeicher ) );
+  LBUserdata.Items.Add( 'AutoSave: ' + BoolToStr( UserData.AutoSaveChecked, true ) );
+  LBUserdata.Items.Add( 'FocusAfterNewKii: ' + BoolToStr( UserData.FocusEditAfterNewKii, true ) );
+  LBUserdata.Items.Add( 'MultiSelect: ' + BoolToStr( UserData.MultiSelect, true ) );
+  LBUserdata.Items.Add( 'ShowHints: ' +  BoolToStr( UserData.ShowHints, true ) );
+  {$ENDIF}
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-18
 -------------------------------------------------------------------------------}
 procedure TMain.LoadKTP( ArchivFileName : String );
@@ -797,9 +825,11 @@ begin
           ExtractToStream( archivItem.FileName, stream );
           stream.Position := 0;
           iniList.LoadFromStream( stream );
-          UserData.LoadUserData( iniList );
+          UserData.LoadUserSettings( iniList );
         end;
-      end;
+      end
+      else
+        UserData.LoadUserSettings();
       CloseArchive();
     end;
   finally
@@ -1113,7 +1143,7 @@ begin
     iniList := TStringList.Create;
     try
       //speichern der user daten
-      UserData.SaveUserData( IniList );
+      UserData.AddInKTP( IniList );
       //ini-ende
 
       // Create an instance of the TZipForge class
@@ -1332,7 +1362,7 @@ begin
     CBZeitImSpeicher.Font.Size := size;
     LZeitSpeicherErkl.Font.Size := size;
     RGSchriftgreosse.Font.Size := size;
-    LAutoSaveHinweis.Font.Size := size;
+    LCBHinweise.Font.Size := size;
     CBEditAfterCreateNewKii.Font.Size := Size;
     BDelZwischenspeicher.Font.Size := size;
     CBHell.Font.Size := Size;
@@ -1552,14 +1582,12 @@ begin
   BPW_Print.Hint := 'Druckt Ihre Passwörter als Liste im Querformat aus';
   CBEditAfterCreateNewKii.Hint := 'Nachdem Sie ein Kii erstellt haben, werden die Editierfelder fokosiert';
 
-  //Caption vom AutoSave Hinweis 2020-11-19
-  LAutoSaveHinweis.Caption := 'Achtung!' + sLineBreak + 'Das automatisierte speichern beginnt erst bei der nächsten Änderung an ihren KiiTree!';
   LBtnErkl.Visible := false;
   LPWHinweis.Caption := 'Mindestens 8 Zeichen' + sLineBreak
                        +'Mindestens eine Zahl enthalten' + sLineBreak
                        +'Groß und Kleinbuchstaben beinhalten' + sLineBreak
                        +'Mindestens ein Sonderzeichen ( $, %, §, #, +, u.a. ) enthalten';
-
+  LCBHinweise.Caption := '';
 end;
 
 {------------------------------------------------------------------------------
@@ -2079,26 +2107,42 @@ Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
 procedure TMain.CBAutoSaveClick(Sender: TObject);
 begin
+  MessageTest( 'CBAutoSave' );
+
   CheckUserDataLoading;
 
   if CBAutoSave.Checked then
-  begin
-    DoChangeStates( [msAutoSave] );
-    LAutoSaveHinweis.Visible := true;
-  end
+    DoChangeStates( [msAutoSave] )
   else
-  begin
     DoChangeStates( [], [msAutoSave] );
-    LAutoSaveHinweis.Visible := false;
-  end;
-  UserData.AutoSaveChecked := BoolToStr( CBAutoSave.Checked );
+  UserData.AutoSaveChecked := CBAutoSave.Checked;
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2021-02-03
+Author: Seidel 2021-02-10
+-------------------------------------------------------------------------------}
+procedure TMain.CBAutoSaveMouseEnter(Sender: TObject);
+begin
+   LCBHinweise.Caption := 'Automatisiertes Speichern' + sLineBreak + sLineBreak
+   + 'Alle Änderungen an ihren KiiTree und den Einstellungen werden sofort gespeichert! Dadurch wird das Speichersymbol in der oberen Menüleiste deaktiviert.';
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10
+-------------------------------------------------------------------------------}
+procedure TMain.CBAutoSaveMouseLeave(Sender: TObject);
+begin
+  LCBHinweise.Caption := '';
+end;
+
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10
 -------------------------------------------------------------------------------}
 procedure TMain.CBDunkelClick(Sender: TObject);
 begin
+//  MessageTest( 'CBDunkel' );
+
   CheckUserDataLoading;
 
   CBHell.Checked := not CBDunkel.Checked;
@@ -2112,32 +2156,11 @@ begin
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2020-10-15
--------------------------------------------------------------------------------}
-procedure TMain.CBFarbeNachDrawItem(Control: TWinControl; Index: Integer;
-  Rect: TRect; State: TOwnerDrawState);
-begin
-//  case index of
-//    0: CBFarbeNach.Canvas.Brush.Color := clMoneyGreen;
-//    1: CBFarbeNach.Canvas.Brush.Color := clWebLightSkyBlue;
-//    2: CBFarbeNach.Canvas.Brush.Color := clWebSalmon;
-//    3: CBFarbeNach.Canvas.Brush.Color := clWebLightSalmon;
-//    4: CBFarbeNach.Canvas.Brush.Color := clWebLightYellow;
-//  end;
-//  CBFarbeNach.Canvas.fillrect(Rect);
-//
-//      0: GradientPanel2.Color := clGreen;
-//    1: GradientPanel2.Color := clWebMediumBlue;
-//    2: GradientPanel2.Color := clWebRed;
-//    3: GradientPanel2.Color := clWebDarkOrange;
-//    4: GradientPanel2.Color := clWebGold;
-end;
-
-{------------------------------------------------------------------------------
 Author: Seidel 2021-02-03
 -------------------------------------------------------------------------------}
 procedure TMain.CBHellClick(Sender: TObject);
 begin
+//  MessageTest( 'CBHell' );
   CheckUserDataLoading;
 
   CBDunkel.Checked := not CBHell.Checked;
@@ -2155,6 +2178,7 @@ Author: Seidel 2021-02-03
 -------------------------------------------------------------------------------}
 procedure TMain.CBMehrfachAuswahlClick(Sender: TObject);
 begin
+  MessageTest( 'CBMehrfachAuswahl' );
   CheckUserDataLoading;
 
   if CBMehrfachAuswahl.Checked then//Change: Seidel 2021-02-03
@@ -2170,6 +2194,7 @@ Author: Seidel 2021-02-03
 -------------------------------------------------------------------------------}
 procedure TMain.CBShowMessagesClick(Sender: TObject);
 begin
+  MessageTest( 'CBShowMessages' );
   CheckUserDataLoading;
 
   if CBShowMessages.Checked then//Change: Seidel 2021-02-03
@@ -2178,6 +2203,24 @@ begin
     DoChangeStates( [], [msShowMinimizeHint] );
 
   UserData.ShowHints := CBShowMessages.Checked;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10
+-------------------------------------------------------------------------------}
+procedure TMain.CBShowMessagesMouseEnter(Sender: TObject);
+begin
+  LCBHinweise.Caption := 'Benachrichtigung anzeigen' + sLineBreak + sLineBreak
+  + 'Durch Aktivierung wird eine Benachrichtigung angezeigt, wo sich die minimierte Anwendnung'
+  + ' befindet und welche Funktionen das Taskleistensymbol noch hat.';
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10
+-------------------------------------------------------------------------------}
+procedure TMain.CBShowMessagesMouseLeave(Sender: TObject);
+begin
+  LCBHinweise.Caption := '';
 end;
 
 {------------------------------------------------------------------------------
@@ -2202,8 +2245,9 @@ begin
     4: SetThemeColor( TeamOrange, TeamOrange, grau_50P );//Change: Seidel 2021-01-12 TeamOrange Design
     5: SetThemeColor( TeamRot, TeamRot, grau_50P );//Change: Seidel 2021-01-12 Team Rot Design
   end;
-  if not (Sender = nil) then
-    UserData.SetUserTheme( IntToStr( CBThemen.ItemIndex ) );
+  //TODO: implmentieren
+//  if not (Sender = nil) then
+//    UserData.SetUserTheme( IntToStr( CBThemen.ItemIndex ) );
 end;
 
 {------------------------------------------------------------------------------
@@ -2211,13 +2255,33 @@ Author: Seidel 2020-10-28
 -------------------------------------------------------------------------------}
 procedure TMain.CBEditAfterCreateNewKiiClick(Sender: TObject);
 begin
+  MessageTest( 'EditAfterCreateNewKii' );
+
   CheckUserDataLoading;
 
-  UserData.FocusEditAfterNewKii := BoolToStr( CBEditAfterCreateNewKii.Checked );
+  UserData.FocusEditAfterNewKii := CBEditAfterCreateNewKii.Checked;
   if CBEditAfterCreateNewKii.Checked then
     DoChangeStates( [msEditAfterNewKiiCreate] )
   else
     DoChangeStates( [], [msEditAfterNewKiiCreate] );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10
+-------------------------------------------------------------------------------}
+procedure TMain.CBEditAfterCreateNewKiiMouseEnter(Sender: TObject);
+begin
+  LCBHinweise.Caption := 'Direkte Bearbeitung' + sLineBreak + sLineBreak
+  + 'Durch Aktivierung springt der Focus nach dem Erzeugen eines neues Kiis in das Dateneingabefeld,'
+  + ' wodurch mit die Eingabe begonnen werden kann.';
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10
+-------------------------------------------------------------------------------}
+procedure TMain.CBEditAfterCreateNewKiiMouseLeave(Sender: TObject);
+begin
+  LCBHinweise.Caption := '';
 end;
 
 {------------------------------------------------------------------------------
@@ -2244,7 +2308,7 @@ begin
     3:
       ZwischenablageTimer.Enabled := false;
   end;
-  UserData.ZeitImSpeicher := IntToStr( CBZeitImSpeicher.ItemIndex );
+  UserData.ZeitImSpeicher := CBZeitImSpeicher.ItemIndex;
 end;
 
 {------------------------------------------------------------------------------
@@ -2685,6 +2749,7 @@ begin
 
   {$IFDEF DEBUG}
   DB_Tabelle.TabVisible := true;
+  Userdata_List.TabVisible := true;
   CBTestDisableMenuButton.Visible := true;
   CBMehrfachAuswahl.Visible := true;
   {$ENDIF}
@@ -2725,7 +2790,10 @@ begin
       InitTrayIcon;
       ClientDataSet1.LoadFromFile( DefaultSettings.DefaultDBPath );
       if Login.ModalResult = mrRetry then //erzeugen einer neuen DB ( neuer User )
-        DoChangeStates( [msChanged] )  //Change 2020-10-10 Damit gespeichert werden kann
+      begin
+        DoChangeStates( [msChanged] );  //Change 2020-10-10 Damit gespeichert werden kann
+        UserData.LoadUserSettings();//Change: Seidel 2021-02-10 damit die Standartwert geladen werden
+      end
       else if Login.ModalResult = mrOk then//laden einer alten DB
       begin
         LoadKTP( UserData.KTP_Name_MD5 );
@@ -3042,11 +3110,12 @@ begin
     1: Size := MulDiv( 10, FCurrentPPI, PPI_at_start );//Change: Seidel 2021-01-20
     2: Size := MulDiv( 8, FCurrentPPI, PPI_at_start );//Change: Seidel 2021-01-20
   end;
-  if not (Sender = nil) then//Change: Seidel 2021-01-15
-  begin
-    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
-    SetFontSizes( Size );
-  end;
+  //TODO: implementieren
+//  if not (Sender = nil) then//Change: Seidel 2021-01-15
+//  begin
+//    UserData.SetFontSize( IntToStr( RGSchriftgreosse.ItemIndex ) );
+//    SetFontSizes( Size );
+//  end;
 end;
 
 {------------------------------------------------------------------------------

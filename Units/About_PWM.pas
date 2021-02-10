@@ -25,7 +25,6 @@ type
     LCopyright: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    function GetVersion: string;
     procedure LOrtProgMouseEnter(Sender: TObject);
     procedure LOrtProgMouseLeave(Sender: TObject);
     procedure LOrtProgClick(Sender: TObject);
@@ -41,8 +40,9 @@ var
 implementation
 
 uses
+  ShellApi,
   Main_PWM,
-  ShellApi;
+  Global_PWM;
 
 {$R *.dfm}
 
@@ -51,7 +51,7 @@ Author: Seidel 2020-10-16
 -------------------------------------------------------------------------------}
 procedure TAbout_Dlg.FormCreate(Sender: TObject);
 begin
-  LVersion.Caption := 'Version: ' + GetVersion;// +  ' (beta)';
+  LVersion.Caption := 'Version: ' + GetMyVersion;// +  ' (beta)';
   LInfo.Caption := 'Dieses Programm ist ein Open Source Ein-Mann Projekt unter Verwendung von '
   +'ZipForge von Component Ace, TVirtualTreeView von JAM Software und InstanceCheck von Daniel Pauli.'
   +' Vorschläge für Verbesserungen oder Anmerkungen sind Herzlich willkommen.';
@@ -67,34 +67,6 @@ begin
   //Change 2020-10-17
   GradientPanelAboutDlg.Color := Main.GradientPanelMain.Color;
   GradientPanelAboutDlg.ColorTo := Main.GradientPanelMain.ColorTo;
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-10-17
-von: www.swissdelphicenter.ch
--------------------------------------------------------------------------------}
-function TAbout_Dlg.GetVersion: string;
-var
-  VerInfoSize: DWORD;
-  VerInfo: Pointer;
-  VerValueSize: DWORD;
-  VerValue: PVSFixedFileInfo;
-  Dummy: DWORD;
-begin
-  Result := '';
-  VerInfoSize := GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
-  if VerInfoSize = 0 then Exit;
-  GetMem(VerInfo, VerInfoSize);
-  GetFileVersionInfo(PChar(ParamStr(0)), 0, VerInfoSize, VerInfo);
-  VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
-  with VerValue^ do
-  begin
-    Result := IntToStr(dwFileVersionMS shr 16);
-    Result := Result + '.' + IntToStr(dwFileVersionMS and $FFFF);
-    Result := Result + '.' + IntToStr(dwFileVersionLS shr 16);
-    Result := Result + '.' + IntToStr(dwFileVersionLS and $FFFF);
-  end;
-  FreeMem(VerInfo, VerInfoSize);
 end;
 
 {------------------------------------------------------------------------------

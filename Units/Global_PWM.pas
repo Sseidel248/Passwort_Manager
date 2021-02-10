@@ -14,23 +14,39 @@ uses
 
 type
   TUserData = record
+  public
+    //Userbezogen
     User : string;
     PW_Str : string;
     KTP_Name_MD5 : String;
-    AutoSaveChecked : string;
-    SymbolSize : String;
-    ZeitImSpeicher : String;
-    FocusEditAfterNewKii : String;//Change: Seidel 2020-10-28
+    //Darstellung
+    UserTheme : Integer;
+    FontSize : Integer;
+    DesignNr : Integer;
+    //Allgemein
+    ZeitImSpeicher : Integer;
+    AutoSaveChecked : Boolean;
+    FocusEditAfterNewKii : Boolean;//Change: Seidel 2020-10-28
     MultiSelect : Boolean;//Change: Seidel 2021-02-03
     ShowHints : Boolean;//Change: Seidel 2021-02-03
-    DesignNr : Integer;
-    procedure SaveUserData( Ini : TStringlist );
-    procedure SetUserTheme( Value : String );
-    procedure SetFontSize( Value : String );
-    procedure LoadUserData( ini : TStringList );
+    procedure InitUserData( const Name, PW, KTPFile : String );
+    procedure AddInKTP( var Ini : TStringlist );
+    procedure LoadUserSettings( var ini : TStringlist ); overload;
+    procedure LoadUserSettings( ); overload;
+
+//    procedure SaveUserData( Ini : TStringlist );
+//    procedure SetUserTheme( Value : String );
+//    procedure SetFontSize( Value : String );
+//    procedure LoadUserData( ini : TStringList );
   private
-    UserTheme : String;
-    FontSize : String;
+    Version : String;
+    function CheckVersionNr( const Now : String ) : Boolean;
+    procedure UpdateUserIni( var ini : TStringlist );
+    procedure ReadIni( const Ini : TStringlist );
+    procedure SetEntryInVars( var Var1 : String; const Key : String; const ini : TStringList ); overload;
+    procedure SetEntryInVars( var Var1 : Integer; const Key : String; const ini : TStringList ); overload;
+    procedure SetEntryInVars( var Var1 : Boolean; const Key : String; const ini : TStringList ); overload;
+    function CheckEntry( const Key : String; var ini : TStringList ) : Boolean;
   end;
 
 type
@@ -62,6 +78,7 @@ type
 
 const
   PM_PW = 'pW!M3Pw1gH,A!<3D';
+  SC_EXT            = '.KTP';
 
   IC_ROW_HEAD       = 0;
   IC_COL_BEZ        = 0;
@@ -69,19 +86,20 @@ const
   IC_COL_ERG        = 2;
 
   //ini des Users
-  SC_USER           = 'User';
-  SC_PW             = 'Password';
-  SC_KTP            = 'KTP-File';
-  SC_EXT            = '.KTP';
-  SC_AUTOSAVE       = 'AutoSave';
-  SC_SHOWHINTS      = 'ShowHints';
-  SC_MULITSEL       = 'MultiSel';
-  SC_DESIGN         = 'Design';
-//  SC_SYMBOLSIZE     = 'SymbolSIze';
-  SC_THEMEN         = 'Themen';
-  SC_ZEITIMSPEICHER = 'TimeInClipBrd';
-  SC_WORKWITHKIIS   = 'FocusEditAfterCreate';
+  SC_VERSION          = 'Version';
+  SC_USER             = 'User';
+  SC_PW               = 'Password';
+  SC_KTP              = 'KTP-File';
+  SC_AUTOSAVE         = 'AutoSave';
+  SC_SHOWHINTS        = 'ShowHints';
+  SC_MULITSEL         = 'MultiSel';
+  SC_DESIGN           = 'Design';
+  SC_FONTSIZE         = 'FontSize';
+  SC_THEMEN           = 'Themen';
+  SC_ZEITIMSPEICHER   = 'TimeInClipBrd';
+  SC_FOCUSAFTERCREATE = 'FocusEditAfterCreate';
   //ini des Users - Ende -
+
   //ini vom programm
   SC_SEC            = '[App]';
   SC_FIRSTSTART     = 'First_Start';
@@ -92,6 +110,7 @@ const
   SC_NOT_USED       = 'Not_Used';
   SC_SERVERUSED     = 'ServerUsed';
   //ini vom programm - Ende -
+
   //Feste Node Ordner
   SC_FAVORITEN    = 'Favoriten';
   SC_ALLE         = 'Alle';
@@ -112,6 +131,8 @@ const
 function GetActualSaveFile( AFileName : String ): String;
 
 function GetActualSavePath : String;
+
+function GetMyVersion: string;
 
 var
   UserData    : TUserData;
@@ -168,54 +189,122 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2020-10-17
+von: www.swissdelphicenter.ch
+-------------------------------------------------------------------------------}
+function GetMyVersion: string;
+var
+  VerInfoSize: DWORD;
+  VerInfo: Pointer;
+  VerValueSize: DWORD;
+  VerValue: PVSFixedFileInfo;
+  Dummy: DWORD;
+begin
+  Result := '';
+  VerInfoSize := GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
+  if VerInfoSize = 0 then Exit;
+  GetMem(VerInfo, VerInfoSize);
+  GetFileVersionInfo(PChar(ParamStr(0)), 0, VerInfoSize, VerInfo);
+  VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
+  with VerValue^ do
+  begin
+    Result := IntToStr(dwFileVersionMS shr 16);
+    Result := Result + '.' + IntToStr(dwFileVersionMS and $FFFF);
+    Result := Result + '.' + IntToStr(dwFileVersionLS shr 16);
+    Result := Result + '.' + IntToStr(dwFileVersionLS and $FFFF);
+  end;
+  FreeMem(VerInfo, VerInfoSize);
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.InitUserData( const Name, PW, KTPFile : String );
+begin
+  //Aktuelle Version von Kiitree
+  Version := GetMyVersion;
+  //Benutzerbezogen
+  User := Name;
+  PW_Str := PW;
+  KTP_Name_MD5 := KTPFile;
+  //Einstellungen
+  UserTheme := 0;
+  FontSize := 1;
+  DesignNr := 0;
+  //Allgemein
+  ZeitImSpeicher := 3;
+  AutoSaveChecked := false;
+  FocusEditAfterNewKii := false;
+  MultiSelect := false;
+  ShowHints := true;
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-10-19
 -------------------------------------------------------------------------------}
-procedure TUserData.SaveUserData( Ini : TStringlist );
+//procedure TUserData.SaveUserData( Ini : TStringlist );
+//begin
+//  //Aktuelle Version von Kiitree
+//  Ini.Values[SC_VERSION] := Version;
+//  //Benutzerbezogen
+//  Ini.Values[SC_USER] := User;
+//  Ini.Values[SC_PW] := PW_Str;
+//  Ini.Values[SC_KTP] := KTP_Name_MD5;
+//  //Einstellungen
+//  Ini.Values[SC_THEMEN] := IntToStr( UserTheme );
+//  Ini.Values[SC_DESIGN] := IntToStr( DesignNr );
+//  Ini.Values[SC_FONTSIZE] := IntToStr( FontSize );
+//  //Allgemein
+//  Ini.Values[SC_ZEITIMSPEICHER] := IntToStr( ZeitImSpeicher );
+//  Ini.Values[SC_FOCUSAFTERCREATE] := BoolToStr( FocusEditAfterNewKii, true );
+//  Ini.Values[SC_AUTOSAVE] := BoolToStr( AutoSaveChecked, true );
+//  Ini.Values[SC_SHOWHINTS] := BoolToStr( ShowHints, true );
+//  Ini.Values[SC_MULITSEL] := BoolToStr( MultiSelect, true );
+//end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.AddInKTP( var Ini : TStringlist );
 begin
+  //Aktuelle Version von Kiitree
+  Ini.Values[SC_VERSION] := Version;
+  //Benutzerbezogen
   Ini.Values[SC_USER] := User;
   Ini.Values[SC_PW] := PW_Str;
   Ini.Values[SC_KTP] := KTP_Name_MD5;
-  Ini.Values[SC_AUTOSAVE] := AutoSaveChecked;
+  //Einstellungen
+  Ini.Values[SC_THEMEN] := IntToStr( UserTheme );
+  Ini.Values[SC_DESIGN] := IntToStr( DesignNr );
+  Ini.Values[SC_FONTSIZE] := IntToStr( FontSize );
+  //Allgemein
+  Ini.Values[SC_ZEITIMSPEICHER] := IntToStr( ZeitImSpeicher );
+  Ini.Values[SC_AUTOSAVE] := BoolToStr( AutoSaveChecked, true );
+  Ini.Values[SC_FOCUSAFTERCREATE] := BoolToStr( FocusEditAfterNewKii, true );
   Ini.Values[SC_SHOWHINTS] := BoolToStr( ShowHints, true );
   Ini.Values[SC_MULITSEL] := BoolToStr( MultiSelect, true );
-  Ini.Values[SC_DESIGN] := IntToStr( DesignNr );
-//  Ini.Values[SC_SYMBOLSIZE] := SymbolSize;
-  Ini.Values[SC_THEMEN] := UserTheme;
-//    IniList.Values[SC_LASTKTPPATH] := LastKTPPath;
-  Ini.Values[SC_ZEITIMSPEICHER] := ZeitImSpeicher;
-  Ini.Values[SC_WORKWITHKIIS] := FocusEditAfterNewKii;
 end;
 
 {------------------------------------------------------------------------------
-Author: Seidel 2021-01-15
+Author: Seidel 2021-02-05
 -------------------------------------------------------------------------------}
-procedure TUserData.SetUserTheme( Value : String );
+procedure TUserData.LoadUserSettings( var ini : TStringlist );
+var
+VersionNow : String;
+States : TMainStates;
 begin
-  Self.UserTheme := Value;
-  Main.DoChangeStates( [msChanged] );
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2021-01-15
--------------------------------------------------------------------------------}
-procedure TUserData.SetFontSize( Value : String );
-begin
-  Self.FontSize := Value;
-  Main.DoChangeStates( [msChanged] );
-end;
-
-{------------------------------------------------------------------------------
-Author: Seidel 2020-10-19
--------------------------------------------------------------------------------}
-procedure TUserData.LoadUserData( ini : TStringList );
-begin
+  VersionNow := GetMyVersion;
   with Main do
   begin
     DoChangeStates( [msLoadUserData] );
-    CBAutoSave.Checked := StrToBoolDef( Ini.Values[SC_AUTOSAVE], false );
-//    RGSymbole.ItemIndex := StrToIntDef( Ini.Values[SC_SYMBOLSIZE], 1 );
-    CBMehrfachAuswahl.Checked := StrToBoolDef( Ini.Values[SC_MULITSEL], false );
-    CBShowMessages.Checked := StrToBoolDef( Ini.Values[SC_SHOWHINTS], true );
+    //Ini Einträge in die Userdata Variablen packen
+    ReadIni( ini );
+
+    //Aktuelle Version von Kiitree mit Userdata Version vergleichen
+    if CheckVersionNr( VersionNow ) then
+      UpdateUserIni( ini );
+
+    //Einstellungen
     if StrToIntDef( Ini.Values[SC_DESIGN], 0 ) = 0 then
     begin
       CBDunkel.Checked := false;
@@ -228,11 +317,248 @@ begin
     end;
     CBThemen.ItemIndex := StrToIntDef( Ini.Values[SC_THEMEN], 0 );
     CBThemenChange( nil );
+    //FONTSIZE hinzufügen
+
+    //Allgemein
     CBZeitImSpeicher.ItemIndex := StrToIntDef( Ini.Values[SC_ZEITIMSPEICHER], 3 );
-    CBEditAfterCreateNewKii.Checked := StrToBoolDef( Ini.Values[SC_WORKWITHKIIS], false );
-    DoChangeStates( [], [msLoadUserData] );
+
+    CBAutoSave.Checked := StrToBoolDef( Ini.Values[SC_AUTOSAVE], false );
+    if CBAutoSave.Checked then
+      States := States + [msAutoSave];
+
+    CBEditAfterCreateNewKii.Checked := StrToBoolDef( Ini.Values[SC_FOCUSAFTERCREATE], false );
+    if CBEditAfterCreateNewKii.Checked then
+      States := States + [msEditAfterNewKiiCreate];
+
+    CBMehrfachAuswahl.Checked := StrToBoolDef( Ini.Values[SC_MULITSEL], false );
+    if CBMehrfachAuswahl.Checked then
+      States := States + [msMultiSel];
+
+    CBShowMessages.Checked := StrToBoolDef( Ini.Values[SC_SHOWHINTS], true );
+    if CBShowMessages.Checked then
+      States := States + [msShowMinimizeHint];
+
+    DoChangeStates( States, [msLoadUserData] );
   end;
 end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-10 laden der Initialisierungwerte
+-------------------------------------------------------------------------------}
+procedure TUserData.LoadUserSettings( );
+var
+States : TMainStates;
+begin
+  with Main do
+  begin
+    DoChangeStates( [msLoadUserData] );
+
+    //Einstellungen
+    if Self.DesignNr = 0 then
+    begin
+      CBDunkel.Checked := false;
+      CBHell.Checked := true;
+    end
+    else
+    begin
+      CBDunkel.Checked := true;
+      CBHell.Checked := false;
+    end;
+    CBThemen.ItemIndex := Self.UserTheme;
+    CBThemenChange( nil );
+    //FONTSIZE hinzufügen
+
+    //Allgemein
+    CBZeitImSpeicher.ItemIndex := Self.ZeitImSpeicher;
+
+    CBAutoSave.Checked := Self.AutoSaveChecked;
+    if CBAutoSave.Checked then
+      States := States + [msAutoSave];
+
+    CBEditAfterCreateNewKii.Checked := Self.FocusEditAfterNewKii;
+    if CBEditAfterCreateNewKii.Checked then
+      States := States + [msEditAfterNewKiiCreate];
+
+    CBMehrfachAuswahl.Checked := Self.MultiSelect;
+    if CBMehrfachAuswahl.Checked then
+      States := States + [msMultiSel];
+
+    CBShowMessages.Checked := Self.ShowHints;
+    if CBShowMessages.Checked then
+      States := States + [msShowMinimizeHint];
+
+    DoChangeStates( States, [msLoadUserData] );
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+function TUserData.CheckVersionNr( const Now : String ) : Boolean;
+begin
+  if Version.Equals( Now ) then //Version gleich
+    Result := false
+  else
+  if Version.Equals( '' ) then  //Version noch nicht gesetzt
+    Result := true
+  else
+  if Version < Now then         //Userini älter
+    Result := true
+  else                          //Userini neuer
+    Result := false;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.UpdateUserIni( var ini : TStringlist );
+begin
+  //Einstellungen
+  if CheckEntry( SC_THEMEN, ini ) then
+    Ini.Values[SC_THEMEN] := IntToStr( UserTheme );
+  if CheckEntry( SC_DESIGN, ini ) then
+    Ini.Values[SC_DESIGN] := IntToStr( DesignNr );
+  if CheckEntry( SC_FONTSIZE, ini ) then
+    Ini.Values[SC_FONTSIZE] := IntToStr( FontSize );
+  //Allgemein
+  if CheckEntry( SC_ZEITIMSPEICHER, ini ) then
+    Ini.Values[SC_ZEITIMSPEICHER] := IntToStr( ZeitImSpeicher );
+  if CheckEntry( SC_AUTOSAVE, ini ) then
+    Ini.Values[SC_AUTOSAVE] := BoolToStr( AutoSaveChecked, true );
+  if CheckEntry( SC_FOCUSAFTERCREATE, ini ) then
+    Ini.Values[SC_FOCUSAFTERCREATE] := BoolToStr( FocusEditAfterNewKii, true );
+  if CheckEntry( SC_SHOWHINTS, ini ) then
+   Ini.Values[SC_SHOWHINTS] := BoolToStr( ShowHints, true );
+  if CheckEntry( SC_MULITSEL, ini ) then
+   Ini.Values[SC_MULITSEL] := BoolToStr( MultiSelect, true );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.ReadIni( const Ini : TStringlist );
+begin
+  //Aktuelle Version von Kiitree
+  SetEntryInVars( Version, SC_VERSION, ini );
+  //Benutzerbezogen
+  SetEntryInVars( User, SC_USER, ini );
+  SetEntryInVars( PW_Str, SC_PW, ini );
+  SetEntryInVars( KTP_Name_MD5, SC_KTP, ini );
+  //Einstellungen
+  SetEntryInVars( UserTheme, SC_THEMEN, ini );
+  SetEntryInVars( DesignNr, SC_DESIGN, ini );
+  SetEntryInVars( FontSize, SC_FONTSIZE, ini );
+  //Allgemein
+  SetEntryInVars( ZeitImSpeicher, SC_ZEITIMSPEICHER, ini );
+  SetEntryInVars( AutoSaveChecked, SC_AUTOSAVE, ini );
+  SetEntryInVars( FocusEditAfterNewKii, SC_FOCUSAFTERCREATE, ini );
+  SetEntryInVars( ShowHints, SC_SHOWHINTS, ini );
+  SetEntryInVars( MultiSelect, SC_MULITSEL, ini );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.SetEntryInVars( var Var1 : String; const Key : String; const ini : TStringList );
+begin
+  if not Ini.IndexOfName( Key ) = -1 then//ist der Eintrag vorhanden, dann
+  begin
+    if not ini.Values[Key].Equals('') then//ist der Eintrag nicht leer, dann
+    begin
+      Var1 := Ini.Values[Key];//schreibe den Eintrag in die Variable
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.SetEntryInVars( var Var1 : Integer; const Key : String; const ini : TStringList );
+begin
+  if not Ini.IndexOfName( Key ) = -1 then
+  begin
+    if not ini.Values[Key].Equals('') then
+    begin
+      Var1 := StrToInt( Ini.Values[Key] );
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+procedure TUserData.SetEntryInVars( var Var1 : Boolean; const Key : String; const ini : TStringList );
+begin
+  if not Ini.IndexOfName( Key ) = -1 then
+  begin
+    if not ini.Values[Key].Equals('') then
+    begin
+      Var1 := StrToBool( Ini.Values[Key] );
+    end;
+  end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-05
+-------------------------------------------------------------------------------}
+function TUserData.CheckEntry( const Key : String; var ini : TStringList ) : Boolean;
+begin
+  Result := true; //muss neu gesetzt werden
+  if not Ini.IndexOfName( Key ) = -1 then//Eintrag existiert
+  begin
+    if not ini.Values[Key].Equals('') then//Eintrag ist nicht leer
+    begin
+      Result := false;
+    end;
+  end;
+end;
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-15
+-------------------------------------------------------------------------------}
+//procedure TUserData.SetUserTheme( Value : String );
+//begin
+//  Self.UserTheme := Value;
+//  Main.DoChangeStates( [msChanged] );
+//end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-01-15
+-------------------------------------------------------------------------------}
+//procedure TUserData.SetFontSize( Value : String );
+//begin
+//  Self.FontSize := Value;
+//  Main.DoChangeStates( [msChanged] );
+//end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2020-10-19
+-------------------------------------------------------------------------------}
+//procedure TUserData.LoadUserData( ini : TStringList );
+//begin
+//  with Main do
+//  begin
+//    DoChangeStates( [msLoadUserData] );
+//    CBAutoSave.Checked := StrToBoolDef( Ini.Values[SC_AUTOSAVE], false );
+////    RGSymbole.ItemIndex := StrToIntDef( Ini.Values[SC_SYMBOLSIZE], 1 );
+//    CBMehrfachAuswahl.Checked := StrToBoolDef( Ini.Values[SC_MULITSEL], false );
+//    CBShowMessages.Checked := StrToBoolDef( Ini.Values[SC_SHOWHINTS], true );
+//    if StrToIntDef( Ini.Values[SC_DESIGN], 0 ) = 0 then
+//    begin
+//      CBDunkel.Checked := false;
+//      CBHell.Checked := true;
+//    end
+//    else
+//    begin
+//      CBDunkel.Checked := true;
+//      CBHell.Checked := false;
+//    end;
+//    CBThemen.ItemIndex := StrToIntDef( Ini.Values[SC_THEMEN], 0 );
+//    CBThemenChange( nil );
+//    CBZeitImSpeicher.ItemIndex := StrToIntDef( Ini.Values[SC_ZEITIMSPEICHER], 3 );
+//    CBEditAfterCreateNewKii.Checked := StrToBoolDef( Ini.Values[SC_FOCUSAFTERCREATE], false );
+//    DoChangeStates( [], [msLoadUserData] );
+//  end;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-14

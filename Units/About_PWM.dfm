@@ -35,8 +35,6 @@ object About_Dlg: TAbout_Dlg
     ColorGradient = cgHorizontal
     RGB_Gradient = rgbLinear
     ColorTo = clMoneyGreen
-    ExplicitWidth = 494
-    ExplicitHeight = 221
     object Image1: TImage
       Left = 16
       Top = 8

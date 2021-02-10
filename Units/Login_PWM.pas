@@ -489,9 +489,11 @@ SaveStr : String;
 begin
   USer := Trim( UsernameEdit.Text );
   PwStr := UserMasterPWEdit.Text;
-  UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
-  UserData.User := User;
-  UserData.PW_Str := PwStr;
+  //initialisierung des Benutzers mit den Defaultwerten
+  UserData.InitUserData( User, PwStr, GetMD5String( User ) + SC_EXT );
+//  UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
+//  UserData.User := User;
+//  UserData.PW_Str := PwStr;
   SaveStr := GetActualSaveFile( UserData.KTP_Name_MD5 );
 
   //Imagelist 0 = start; 1 = OK; 2 = fail
@@ -537,9 +539,10 @@ begin
           VirtualImageList1.GetIcon( 1, Image1.Picture.Icon );
           ImageIndex := 1;
           ModalResult := mrRetry; //retry = 4 neuer Benutzer
-          UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
-          UserData.User := User;
-          UserData.PW_Str := PwStr;
+//          UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
+//          UserData.User := User;
+//          UserData.PW_Str := PwStr;
+
           Login.Refresh;
           Sleep(500);
         end;
@@ -555,9 +558,9 @@ begin
       VirtualImageList1.GetIcon( 1, Image1.Picture.Icon );
       ImageIndex := 1;
       {$IFNDEF TESTLOGIN}
-        UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
-        UserData.User := User;
-        UserData.PW_Str := PwStr;
+//        UserData.KTP_Name_MD5 := GetMD5String( User ) + SC_EXT;
+//        UserData.User := User;
+//        UserData.PW_Str := PwStr;
         Login.Refresh;
         Sleep(500);
       {$ENDIF}

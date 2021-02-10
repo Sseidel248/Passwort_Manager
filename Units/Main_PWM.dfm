@@ -882,6 +882,8 @@ object Main: TMain
             ParentFont = False
             TabOrder = 0
             OnClick = CBAutoSaveClick
+            OnMouseEnter = CBAutoSaveMouseEnter
+            OnMouseLeave = CBAutoSaveMouseLeave
           end
           object CBZeitImSpeicher: TComboBox
             Left = 15
@@ -921,9 +923,11 @@ object Main: TMain
             Font.Style = []
             ParentFont = False
             ParentShowHint = False
-            ShowHint = True
+            ShowHint = False
             TabOrder = 1
             OnClick = CBEditAfterCreateNewKiiClick
+            OnMouseEnter = CBEditAfterCreateNewKiiMouseEnter
+            OnMouseLeave = CBEditAfterCreateNewKiiMouseLeave
           end
           object CBMehrfachAuswahl: TCheckBox
             Left = 15
@@ -974,7 +978,7 @@ object Main: TMain
             Font.Style = []
             ParentFont = False
             TabOrder = 5
-            object LAutoSaveHinweis: TLabel
+            object LCBHinweise: TLabel
               AlignWithMargins = True
               Left = 12
               Top = 28
@@ -986,14 +990,13 @@ object Main: TMain
               Margins.Bottom = 10
               Align = alClient
               AutoSize = False
-              Caption = 'LAutoSaveHinweis'
+              Caption = 'LCBHinweise'
               Font.Charset = DEFAULT_CHARSET
-              Font.Color = clMaroon
+              Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Tahoma'
               Font.Style = []
               ParentFont = False
-              Visible = False
               WordWrap = True
               ExplicitLeft = 342
               ExplicitTop = 32
@@ -1006,17 +1009,17 @@ object Main: TMain
             Top = 19
             Width = 422
             Height = 17
-            Caption = 'Hinweis beim minimieren anzeigen'
-            Checked = True
+            Caption = 'Benachrichtigung beim minimieren anzeigen'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
             Font.Name = 'Tahoma'
             Font.Style = []
             ParentFont = False
-            State = cbChecked
             TabOrder = 6
             OnClick = CBShowMessagesClick
+            OnMouseEnter = CBShowMessagesMouseEnter
+            OnMouseLeave = CBShowMessagesMouseLeave
           end
         end
         object GBSicherheit: TGroupBox
@@ -1185,6 +1188,20 @@ object Main: TMain
           TitleFont.Height = -13
           TitleFont.Name = 'Tahoma'
           TitleFont.Style = []
+        end
+      end
+      object Userdata_List: TTabSheet
+        Caption = 'Userdata_List'
+        ImageIndex = 4
+        TabVisible = False
+        OnShow = Userdata_ListShow
+        object LBUserdata: TListBox
+          Left = 0
+          Top = 0
+          Width = 921
+          Height = 667
+          Align = alClient
+          TabOrder = 0
         end
       end
     end

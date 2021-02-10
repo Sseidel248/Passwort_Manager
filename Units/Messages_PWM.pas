@@ -23,6 +23,7 @@ interface
   function MessageFileCurrpt( Found : Boolean = true ): Integer;
   function MessageUserNotExist(): Integer;
   function MessageCantWriteAccessAndSaveIni( forCreate : Boolean = false ): Integer;
+  procedure MessageTest( const Str : String);
 
 const
   mrMini = 15;
@@ -443,8 +444,16 @@ begin
   finally
     TD.Free;
   end
-
-
-
 end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-02-09
+-------------------------------------------------------------------------------}
+procedure MessageTest( const Str : String);
+begin
+  {$IFDEF DEBUG}
+  MessageDlg( Str, mtInformation, [mbOK], 0 );
+  {$ENDIF}
+end;
+
 end.
