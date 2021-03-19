@@ -146,15 +146,15 @@ Author: Seidel 2021-01-26
 -------------------------------------------------------------------------------}
 procedure TLogin.InitSavePathes;
 begin
-  ESavePathForKTPs.Items.Add( '<Lokaler Speicherpfad>' );
+  ESavePathForKTPs.Items.Add( SC_LOKAL );
   ESavePathForKTPs.Items.Add( DefaultSettings.DefaultUserSavePath );
   if not MainIni.ServerSavePath.Equals( '' ) then
   begin
-    ESavePathForKTPs.Items.Add( '<Server Speicherpfad>' );
+    ESavePathForKTPs.Items.Add( SC_SERVER );
     ESavePathForKTPs.Items.Add( MainIni.ServerSavePath );
   end;
-  ESavePathForKTPs.Items.Add( '<Zuletzt geladener Pfad>' );
-  ESavePathForKTPs.Items.Add( MainIni.LastLoadPath );
+  ESavePathForKTPs.Items.Add( SC_LASTPATHUSED );
+  ESavePathForKTPs.Items.Add( MainIni.LastPathUsed );
 
   ESavePathForKTPs.ItemIndex := Mainini.GetUserPathIndex;
 end;
@@ -322,6 +322,12 @@ begin
   if ESavePathForKTPs.Items.Count = 0 then
     Exit;
 
+  case ESavePathForKTPs.ItemIndex of//Change: Seidel 2021-02-11
+    0: ESavePathForKTPs.ItemIndex := 1;
+    2: ESavePathForKTPs.ItemIndex := 3;
+    4: ESavePathForKTPs.ItemIndex := 5;
+  end;
+
   s := ESavePathForKTPs.Text;
   if not DirectoryExists( s ) then
   begin
@@ -340,12 +346,6 @@ begin
   else
   begin
     AnmeldeBtn.Enabled := true;
-    case ESavePathForKTPs.ItemIndex of
-      0: ESavePathForKTPs.ItemIndex := 1;
-      2: ESavePathForKTPs.ItemIndex := 3;
-      4: ESavePathForKTPs.ItemIndex := 5;
-    end;
-
     ESavePathForKTPs.Hint := s;
     ESavePathForKTPs.Font.Color := clWindowText;
   end;
@@ -372,7 +372,7 @@ begin
   ESavePathForKTPs.Items.Insert( I, text );
 
   //fügt den manuell veränderten Pfad in die MainIni hinzu, dieser wird dann kontrolliert
-  MainIni.LastLoadPath := ESavePathForKTPs.Items[I];
+  MainIni.LastPathUsed := ESavePathForKTPs.Items[I];
 end;
 
 {------------------------------------------------------------------------------
@@ -412,7 +412,7 @@ begin
     OpenDialog.Title := 'Wählen Sie den Ordner in dem Ihr KiiTree gespeichert wurde';
     if OpenDialog.Execute then //Pfad wird NUR gesetzt wenn ein Ordner erfolgreich gewählt wurde
     begin
-      MainIni.LastLoadPath := OpenDialog.FileName + '\';
+      MainIni.LastPathUsed := OpenDialog.FileName + '\';
       i := MainIni.GetUserPathIndex;
       ESavePathForKTPs.items[I] := OpenDialog.FileName + '\';
       ESavePathForKTPs.ItemIndex := I;
@@ -666,6 +666,7 @@ begin
     UserMasterPWEdit.PasswordChar := #0;
 //    ImageList2.GetBitmap( 1, SBToogleHide.Glyph );
     SBToogleHide.ImageIdx := 2;
+    SBToogleHide.Hint := 'Masterpaswort verstecken';//Change: Seidel 2021-03-19
   end
   else
   begin
@@ -673,6 +674,7 @@ begin
     UserMasterPWEdit.PasswordChar := '*';
 //    ImageList2.GetBitmap( 0, SBToogleHide.Glyph );
     SBToogleHide.ImageIdx := 1;
+    SBToogleHide.Hint := 'Masterpaswort zeigen';//Change: Seidel 2021-03-19
   end;
 end;
 
@@ -684,7 +686,7 @@ procedure TLogin.USBInputUSBGetDriveLetter(Sender: TObject;
 begin
   if MessageFindDrive = mrYes then
   begin
-    MainIni.LastLoadPath := DrivePath;
+    MainIni.LastPathUsed := DrivePath;
     ESavePathForKTPs.Text := DrivePath;
   end;
 end;
@@ -694,7 +696,7 @@ Author: Seidel 2020-10-23
 -------------------------------------------------------------------------------}
 procedure TLogin.USBInputUSBRemove(Sender: TObject);
 begin
-  MainIni.LastLoadPath := DefaultSettings.DefaultUserSavePath;
+  MainIni.LastPathUsed := DefaultSettings.DefaultUserSavePath;
   ESavePathForKTPs.Text := DefaultSettings.DefaultUserSavePath;
 end;
 

@@ -7,6 +7,18 @@
 	CHG - Änderungen einer Funtkionalität			
 	FIX - Behöbene Fehler				
 +----------------------------------------------------------------------------------------------------+
+V1.0.4.1 (19.03.2021)
+- NEW : es gibt in jederm User *.KTP eine Ini mit einem Versionseintrag, sollter dieser nicht verhanden oder älter als die aktuelle sein, wird die Ini geupdatet, d.h. es wird nach noch nicht existierenden Einträgen gesucht
+- NEW : ComboBox eingefügt der den Serverpfad, Lokalen Standartpfad und zuletzt verwendeten Pfad speichert
+- UPD : Auswahl des einziges Eintrages nach der Suche
+- CHG : KT-74 Anpassen der Prüfung für den Aufruf einer Internetseite, da einige Internetseiten mit speziellen Aufbau nicht funktionierten
+- CHG : Shortcut bei der Speicherung in die Zwischenablage geändert Strg+Alt+C -> Strg+A
+- CHG : bei dem Editfeld der URL erscheint ein Hinweis "Strg+O zum Internetseite zu öffnen"
+- CHG : bei dem Tooglebutton für Sichtbarkeit der Passworter erscheint einen Hinweise "Passwort zeigen" oder "Passwort verstecken"
+- CHG : bei dem Tooglebutton für Sichtbarkeit des Masterpasswortes erscheint einen Hinweise "Masterpasswort zeigen" oder "Masterpasswort verstecken"
+- FIX : Wenn man gerade im Editfeld etwas geändert hat und man die Anwendung beendet wurde die Änderung nicht gespeichert
+- FIX : Autosave hatte die letzten Änderungen nicht gespeichert
+
 V1.0.2.2 (10.02.2021)
 - CHG : In der GroupBox "Allgemein" wird ein passender Hinweis zu der jeweiligen Checkbox angezeigt, wenn man die Maus über die Checkbox bewegt
 - FIX : KT-68 Fehler bei den laden der Benutzereinstellungen

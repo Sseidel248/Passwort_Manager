@@ -56,7 +56,7 @@ begin
   +'ZipForge von Component Ace, TVirtualTreeView von JAM Software und InstanceCheck von Daniel Pauli.'
   +' Vorschläge für Verbesserungen oder Anmerkungen sind Herzlich willkommen.';
   LOrtProg.Caption := 'Besucht: https://github.com/Sseidel248/KiiTree für weitere Informtionen.';
-  LCopyright.Caption := 'Copyright © 2021 Sebastian Seidel';
+  LCopyright.Caption := 'Copyright © 2020-2021 Sebastian Seidel';
 end;
 
 {------------------------------------------------------------------------------

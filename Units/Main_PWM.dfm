@@ -43,12 +43,11 @@ object Main: TMain
     TabOrder = 0
     object PageControl1: TPageControl
       Left = 0
-      Top = 48
-      Width = 929
-      Height = 677
-      ActivePage = Options
-      Align = alCustom
-      Anchors = [akLeft, akTop, akRight, akBottom]
+      Top = 50
+      Width = 927
+      Height = 675
+      ActivePage = PW_Manager
+      Align = alClient
       MultiLine = True
       Style = tsFlatButtons
       TabOrder = 0
@@ -57,13 +56,13 @@ object Main: TMain
         Caption = 'PasswortMTab'
         TabVisible = False
         DesignSize = (
-          921
-          667)
+          919
+          665)
         object VST: TVirtualStringTree
           Left = 6
           Top = 33
-          Width = 450
-          Height = 631
+          Width = 448
+          Height = 629
           Anchors = [akLeft, akTop, akRight, akBottom]
           AutoScrollDelay = 500
           AutoScrollInterval = 250
@@ -88,7 +87,7 @@ object Main: TMain
           ParentShowHint = False
           PopupMenu = PopupMenuKiiTree
           ShowHint = True
-          TabOrder = 0
+          TabOrder = 1
           TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toWheelPanning, toEditOnDblClick]
           TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect]
@@ -112,8 +111,8 @@ object Main: TMain
           Columns = <>
         end
         object SaveDataBtn: TBitBtn
-          Left = 839
-          Top = 620
+          Left = 837
+          Top = 618
           Width = 51
           Height = 34
           Anchors = [akRight, akBottom]
@@ -248,13 +247,13 @@ object Main: TMain
             000000000000001036414141414141410000413B2B0C00000000000000000000
             0000000000000000000000000000000000000000000000000000000000022539
             41414141414141410000}
-          TabOrder = 1
+          TabOrder = 2
           Visible = False
           OnClick = SaveDataBtnClick
         end
         object DelFolderBtn: TBitBtn
-          Left = 684
-          Top = 619
+          Left = 682
+          Top = 617
           Width = 150
           Height = 34
           Anchors = [akRight, akBottom]
@@ -318,13 +317,13 @@ object Main: TMain
             0404040404040404040404040404040404040404040404040404040404040404
             0404040404040404040404040404040404040404040404040404}
           ParentFont = False
-          TabOrder = 2
+          TabOrder = 3
           Visible = False
           OnClick = DelFolderBtnClick
         end
         object AddFolderBtn: TBitBtn
           Left = 564
-          Top = 541
+          Top = 539
           Width = 150
           Height = 34
           Anchors = [akLeft, akBottom]
@@ -388,7 +387,7 @@ object Main: TMain
             0800090909090909090909090909090909090900050101010800090909090909
             0909090909090909090909000000000000000909090909090909}
           ParentFont = False
-          TabOrder = 3
+          TabOrder = 4
           Visible = False
           OnClick = AddFolderBtnClick
         end
@@ -398,7 +397,7 @@ object Main: TMain
           Width = 113
           Height = 33
           Caption = 'Neuer Datensatz'
-          TabOrder = 4
+          TabOrder = 5
           Visible = False
           OnClick = AddNewDatasetBtnClick
         end
@@ -408,12 +407,12 @@ object Main: TMain
           Width = 111
           Height = 33
           Caption = 'Node Add test'
-          TabOrder = 5
+          TabOrder = 6
           Visible = False
           OnClick = AddNodeTestClick
         end
         object GBDaten: TGroupBox
-          Left = 459
+          Left = 457
           Top = 3
           Width = 459
           Height = 438
@@ -425,7 +424,7 @@ object Main: TMain
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
-          TabOrder = 6
+          TabOrder = 7
           DesignSize = (
             459
             438)
@@ -622,7 +621,9 @@ object Main: TMain
             Font.Name = 'Tahoma'
             Font.Style = []
             ParentFont = False
+            ParentShowHint = False
             PopupMenu = PopupMenuDaten
+            ShowHint = True
             TabOrder = 3
             OnClick = DBEditURLClick
             OnDblClick = DBEditURLDblClick
@@ -635,12 +636,13 @@ object Main: TMain
             Top = 120
             Width = 30
             Height = 24
+            Hint = 'Passwort verstecken'
             Transparent = False
             Caption = ''
             ColorMouseOver = clWhite
             ColorPressed = clBlack
             ColorFrame = clGray
-            ImageIdx = 0
+            ImageIdx = 1
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
@@ -648,6 +650,7 @@ object Main: TMain
             Font.Style = []
             Images = VirtualImageList_DBDaten
             ImageAlignment = iaCenter
+            ShowHint = True
             TabOrder = 6
             OnClick = GBToogleHideClick
           end
@@ -658,7 +661,7 @@ object Main: TMain
           Width = 113
           Height = 33
           Caption = 'Datensatz l'#246'schen'
-          TabOrder = 7
+          TabOrder = 8
           Visible = False
           OnClick = DelDataSetBtnClick
         end
@@ -668,7 +671,7 @@ object Main: TMain
           Width = 149
           Height = 32
           Caption = 'Test: Laden'
-          TabOrder = 8
+          TabOrder = 9
           Visible = False
           OnClick = loadTestClick
         end
@@ -678,7 +681,7 @@ object Main: TMain
           Width = 150
           Height = 36
           Caption = 'Test: Speicher in Stream'
-          TabOrder = 9
+          TabOrder = 10
           Visible = False
           OnClick = saveTestClick
         end
@@ -688,7 +691,7 @@ object Main: TMain
           Width = 111
           Height = 36
           Caption = 'DataSetMengenTest'
-          TabOrder = 10
+          TabOrder = 11
           Visible = False
           WordWrap = True
           OnClick = BDataSetCountTestClick
@@ -699,7 +702,7 @@ object Main: TMain
           Width = 53
           Height = 33
           Caption = 'A->Z'
-          TabOrder = 11
+          TabOrder = 12
           Visible = False
           OnClick = BAbisZSortTestClick
         end
@@ -709,20 +712,20 @@ object Main: TMain
           Width = 53
           Height = 33
           Caption = 'Z->A'
-          TabOrder = 12
+          TabOrder = 13
           Visible = False
           OnClick = BZbisASortTestClick
         end
         object SuchenEdit: TEditEx
           Left = 6
           Top = 3
-          Width = 450
+          Width = 448
           Height = 24
           Anchors = [akLeft, akTop, akRight]
           Color = clWhite
           DoubleBuffered = True
           ParentDoubleBuffered = False
-          TabOrder = 13
+          TabOrder = 0
           TextHint = 'Suchen nach...'
           OnChange = SuchenEditChange
           Bordercolor = clNone
@@ -734,10 +737,14 @@ object Main: TMain
         Caption = 'EinstellTab'
         ImageIndex = 1
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object GBDarstellung: TGroupBox
           Left = 0
           Top = 0
-          Width = 921
+          Width = 919
           Height = 185
           Align = alTop
           Caption = 'Darstellung'
@@ -774,7 +781,7 @@ object Main: TMain
             AlignWithMargins = True
             Left = 449
             Top = 21
-            Width = 467
+            Width = 465
             Height = 159
             Align = alClient
             Caption = 'Design'
@@ -840,7 +847,7 @@ object Main: TMain
         object GBAllgemein: TGroupBox
           Left = 0
           Top = 185
-          Width = 921
+          Width = 919
           Height = 208
           Align = alTop
           Caption = 'Allgemein'
@@ -873,7 +880,7 @@ object Main: TMain
             Width = 423
             Height = 25
             Align = alCustom
-            Caption = 'Automatisch nach jeder '#196'nderung speichern'
+            Caption = 'Automatisch speichern'
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
@@ -966,7 +973,7 @@ object Main: TMain
             AlignWithMargins = True
             Left = 443
             Top = 21
-            Width = 473
+            Width = 471
             Height = 182
             Align = alRight
             Anchors = [akLeft, akTop, akRight, akBottom]
@@ -982,7 +989,7 @@ object Main: TMain
               AlignWithMargins = True
               Left = 12
               Top = 28
-              Width = 449
+              Width = 447
               Height = 142
               Margins.Left = 10
               Margins.Top = 10
@@ -1025,8 +1032,8 @@ object Main: TMain
         object GBSicherheit: TGroupBox
           Left = 0
           Top = 393
-          Width = 921
-          Height = 274
+          Width = 919
+          Height = 272
           Align = alClient
           Caption = 'Sicherheit'
           Font.Charset = DEFAULT_CHARSET
@@ -1056,8 +1063,8 @@ object Main: TMain
           object GBInfo: TGroupBox
             AlignWithMargins = True
             Left = 5
-            Top = 71
-            Width = 911
+            Top = 69
+            Width = 909
             Height = 198
             Align = alBottom
             Caption = 'Info'
@@ -1073,7 +1080,7 @@ object Main: TMain
               AlignWithMargins = True
               Left = 12
               Top = 28
-              Width = 887
+              Width = 885
               Height = 158
               Margins.Left = 10
               Margins.Top = 10
@@ -1101,10 +1108,14 @@ object Main: TMain
         Caption = 'PWCheckTab'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object SG: TStringGridEx
           Left = 0
           Top = 0
-          Width = 921
+          Width = 919
           Height = 521
           Align = alTop
           Color = clWhite
@@ -1134,15 +1145,15 @@ object Main: TMain
         object Panel1: TPanel
           Left = 0
           Top = 521
-          Width = 921
-          Height = 146
+          Width = 919
+          Height = 144
           Align = alClient
           TabOrder = 1
           object GBPWHinweis: TGroupBox
             Left = 1
             Top = 1
-            Width = 919
-            Height = 144
+            Width = 917
+            Height = 142
             Align = alClient
             Caption = 'Hinweise f'#252'r ein starkes Passwort'
             Font.Charset = DEFAULT_CHARSET
@@ -1155,8 +1166,8 @@ object Main: TMain
             object LPWHinweis: TLabel
               Left = 2
               Top = 18
-              Width = 915
-              Height = 124
+              Width = 69
+              Height = 16
               Align = alClient
               Caption = 'LPWHinweis'
               Font.Charset = DEFAULT_CHARSET
@@ -1165,8 +1176,6 @@ object Main: TMain
               Font.Name = 'Tahoma'
               Font.Style = []
               ParentFont = False
-              ExplicitWidth = 69
-              ExplicitHeight = 16
             end
           end
         end
@@ -1175,11 +1184,15 @@ object Main: TMain
         Caption = 'DB_Tabelle'
         ImageIndex = 3
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
-          Width = 921
-          Height = 667
+          Width = 919
+          Height = 665
           Align = alClient
           DataSource = DataSource1
           TabOrder = 0
@@ -1195,221 +1208,226 @@ object Main: TMain
         ImageIndex = 4
         TabVisible = False
         OnShow = Userdata_ListShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object LBUserdata: TListBox
           Left = 0
           Top = 0
-          Width = 921
-          Height = 667
+          Width = 919
+          Height = 665
           Align = alClient
           TabOrder = 0
         end
       end
     end
-  end
-  object Menu_Panel: TGradientPanel
-    Left = 185
-    Top = 0
-    Width = 927
-    Height = 50
-    BevelOuter = bvNone
-    Caption = 'Menu_Panel'
-    Color = clMoneyGreen
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    TabOrder = 1
-    ColorGradient = cgVertical
-    RGB_Gradient = rgbLinear
-    ColorTo = clWhite
-    object CBTestDisableMenuButton: TCheckBox
-      Left = 816
-      Top = 13
-      Width = 97
-      Height = 17
-      Caption = 'enable toggel'
-      Checked = True
-      Enabled = False
-      State = cbChecked
-      TabOrder = 0
-      Visible = False
-      OnClick = CBTestDisableMenuButtonClick
-    end
-    object SBSaveKiiTree: TGlassButton
-      Left = 6
+    object Menu_Panel: TGradientPanel
+      Left = 0
       Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 0
-      DisableImageIdx = 7
-      Enabled = False
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
+      Width = 927
+      Height = 50
+      Align = alTop
+      BevelOuter = bvNone
+      Caption = 'Menu_Panel'
+      Color = clMoneyGreen
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
       TabOrder = 1
-      OnClick = SBSaveKiiTreeClick
-    end
-    object SBAddNewKii: TGlassButton
-      Left = 60
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 1
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 2
-      OnClick = SBAddNewKiiClick
-    end
-    object SBAddNewFolder: TGlassButton
-      Left = 114
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 2
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 3
-      OnClick = SBAddNewFolderClick
-    end
-    object SBDelKii: TGlassButton
-      Left = 168
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 3
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 4
-      OnClick = SBDelKiiClick
-    end
-    object SBDelFolder: TGlassButton
-      Left = 222
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 4
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 5
-      OnClick = SBDelFolderClick
-    end
-    object SBAbisZ: TGlassButton
-      Left = 276
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 5
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 6
-      OnClick = SBAbisZClick
-    end
-    object SBZbisA: TGlassButton
-      Left = 330
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 6
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 7
-      OnClick = SBZbisAClick
-    end
-    object BPW_Print: TGlassButton
-      Left = 384
-      Top = 0
-      Width = 48
-      Height = 48
-      Transparent = True
-      Caption = ''
-      ColorMouseOver = clWhite
-      ColorPressed = clBlack
-      ColorFrame = clGray
-      ImageIdx = 8
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Images = VirtualImageListTB_Menu
-      ImageAlignment = iaCenter
-      ShowHint = True
-      TabOrder = 8
-      OnClick = BPW_PrintClick
+      ColorGradient = cgVertical
+      RGB_Gradient = rgbLinear
+      ColorTo = clWhite
+      object CBTestDisableMenuButton: TCheckBox
+        Left = 816
+        Top = 13
+        Width = 97
+        Height = 17
+        Caption = 'enable toggel'
+        Checked = True
+        Enabled = False
+        State = cbChecked
+        TabOrder = 0
+        Visible = False
+        OnClick = CBTestDisableMenuButtonClick
+      end
+      object SBSaveKiiTree: TGlassButton
+        Left = 6
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 0
+        DisableImageIdx = 7
+        Enabled = False
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 1
+        OnClick = SBSaveKiiTreeClick
+      end
+      object SBAddNewKii: TGlassButton
+        Left = 60
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 1
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 2
+        OnClick = SBAddNewKiiClick
+      end
+      object SBAddNewFolder: TGlassButton
+        Left = 114
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 2
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 3
+        OnClick = SBAddNewFolderClick
+      end
+      object SBDelKii: TGlassButton
+        Left = 168
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 3
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 4
+        OnClick = SBDelKiiClick
+      end
+      object SBDelFolder: TGlassButton
+        Left = 222
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 4
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 5
+        OnClick = SBDelFolderClick
+      end
+      object SBAbisZ: TGlassButton
+        Left = 276
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 5
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 6
+        OnClick = SBAbisZClick
+      end
+      object SBZbisA: TGlassButton
+        Left = 330
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 6
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 7
+        OnClick = SBZbisAClick
+      end
+      object BPW_Print: TGlassButton
+        Left = 384
+        Top = 0
+        Width = 48
+        Height = 48
+        Transparent = True
+        Caption = ''
+        ColorMouseOver = clWhite
+        ColorPressed = clBlack
+        ColorFrame = clGray
+        ImageIdx = 8
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Images = VirtualImageListTB_Menu
+        ImageAlignment = iaCenter
+        ShowHint = True
+        TabOrder = 8
+        OnClick = BPW_PrintClick
+      end
     end
   end
   object GradientPanelMain: TGradientPanel
@@ -1423,7 +1441,7 @@ object Main: TMain
     Color = clGreen
     DoubleBuffered = True
     ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 1
     ColorGradient = cgVertical
     RGB_Gradient = rgbLinear
     ColorTo = clMoneyGreen
@@ -3701,7 +3719,7 @@ object Main: TMain
     Top = 452
     object PZwischenspeichern: TMenuItem
       Caption = 'Etwas in die Zwischenablage'
-      ShortCut = 49219
+      ShortCut = 16449
       OnClick = PZwischenspeichernClick
     end
     object PKopieren: TMenuItem

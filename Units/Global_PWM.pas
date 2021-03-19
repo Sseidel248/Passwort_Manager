@@ -61,7 +61,7 @@ type
   TMainINI = record
     IniPath : String;
     IsNewUserChecked : Boolean;
-    LastLoadPath : String;
+    LastPathUsed : String;
     LastUser : String;
     IsLastUserAgainChecked : Boolean;
     ServerSavePath : String;
@@ -110,6 +110,12 @@ const
   SC_NOT_USED       = 'Not_Used';
   SC_SERVERUSED     = 'ServerUsed';
   //ini vom programm - Ende -
+
+  //ComboBox Login
+  SC_LOKAL          ='<Lokaler Speicherpfad>';
+  SC_SERVER         ='<Server Speicherpfad>';
+  SC_LASTPATHUSED   ='<Zuletzt verwendeter Pfad>';
+  //ComboBoc Login -Ende-
 
   //Feste Node Ordner
   SC_FAVORITEN    = 'Favoriten';
@@ -168,15 +174,15 @@ Author: Seidel 2020-09-21
 -------------------------------------------------------------------------------}
 function GetActualSaveFile( AFileName : String ): String;
 begin
-  if MainIni.LastLoadPath.Equals( SC_NOT_USED ) or MainIni.LastLoadPath.Equals( '' ) then
+  if MainIni.LastPathUsed.Equals( SC_NOT_USED ) or MainIni.LastPathUsed.Equals( '' ) then
     Result := Concat( DefaultSettings.DefaultUserSavePath, AFileName )
   else
   begin
     //Change: Seidel 2021-01-28
-    if pos( MainIni.LastLoadPath, '\', Length( MainIni.LastLoadPath )-2 ) = Length( MainIni.LastLoadPath ) then
-      Result := Concat( MainIni.LastLoadPath, AFileName )
+    if pos( MainIni.LastPathUsed, '\', Length( MainIni.LastPathUsed )-2 ) = Length( MainIni.LastPathUsed ) then
+      Result := Concat( MainIni.LastPathUsed, AFileName )
     else
-      Result := Concat( MainIni.LastLoadPath, '\', AFileName )
+      Result := Concat( MainIni.LastPathUsed, '\', AFileName )
   end;
 end;
 
@@ -297,12 +303,15 @@ begin
   with Main do
   begin
     DoChangeStates( [msLoadUserData] );
-    //Ini Einträge in die Userdata Variablen packen
+    //hole bereits existierende Ini Einträge und packe sie in den Userdata Variablen
     ReadIni( ini );
 
     //Aktuelle Version von Kiitree mit Userdata Version vergleichen
     if CheckVersionNr( VersionNow ) then
+    begin
       UpdateUserIni( ini );
+      Version := VersionNow;//Change: Seidel 2021-03-02 Update der VersionNummer
+    end;
 
     //Einstellungen
     if StrToIntDef( Ini.Values[SC_DESIGN], 0 ) = 0 then
@@ -413,6 +422,9 @@ Author: Seidel 2021-02-05
 -------------------------------------------------------------------------------}
 procedure TUserData.UpdateUserIni( var ini : TStringlist );
 begin
+  //Aktuelle Version von Kiitree
+  if CheckEntry( SC_VERSION, ini ) then
+    Ini.Values[SC_VERSION] := Version;
   //Einstellungen
   if CheckEntry( SC_THEMEN, ini ) then
     Ini.Values[SC_THEMEN] := IntToStr( UserTheme );
@@ -461,7 +473,7 @@ Author: Seidel 2021-02-05
 -------------------------------------------------------------------------------}
 procedure TUserData.SetEntryInVars( var Var1 : String; const Key : String; const ini : TStringList );
 begin
-  if not Ini.IndexOfName( Key ) = -1 then//ist der Eintrag vorhanden, dann
+  if Ini.IndexOfName( Key ) <> -1 then//ist der Eintrag vorhanden, dann
   begin
     if not ini.Values[Key].Equals('') then//ist der Eintrag nicht leer, dann
     begin
@@ -475,7 +487,7 @@ Author: Seidel 2021-02-05
 -------------------------------------------------------------------------------}
 procedure TUserData.SetEntryInVars( var Var1 : Integer; const Key : String; const ini : TStringList );
 begin
-  if not Ini.IndexOfName( Key ) = -1 then
+  if Ini.IndexOfName( Key ) <> -1 then
   begin
     if not ini.Values[Key].Equals('') then
     begin
@@ -489,7 +501,7 @@ Author: Seidel 2021-02-05
 -------------------------------------------------------------------------------}
 procedure TUserData.SetEntryInVars( var Var1 : Boolean; const Key : String; const ini : TStringList );
 begin
-  if not Ini.IndexOfName( Key ) = -1 then
+  if Ini.IndexOfName( Key ) <> -1 then
   begin
     if not ini.Values[Key].Equals('') then
     begin
@@ -612,7 +624,7 @@ begin
   //Eigenschaften der MainINI
   IsNewUserChecked := true;
   IsLastUserAgainChecked := false;
-  LastLoadPath := SC_NOT_USED;
+  LastPathUsed := SC_NOT_USED;
   LastUser := SC_NOT_USED;
   ServerSavePath := SC_NOT_USED;
 
@@ -623,7 +635,7 @@ begin
       ini.LoadFromFile( IniPath );
       IsNewUserChecked := StrToBoolDef( ini.Values[SC_FIRSTSTART], true );
       IsLastUserAgainChecked := StrToBoolDef( ini.Values[SC_ISLASTUSERCHK], true );
-      LastLoadPath := ini.Values[SC_LASTKTPPATH];
+      LastPathUsed := ini.Values[SC_LASTKTPPATH];
       LastUser := ini.Values[SC_LASTUSER];
       ServerSavePath := ini.Values[SC_SERVERUSED];
     end
@@ -632,7 +644,7 @@ begin
       ini.Insert( 0 , SC_SEC );
       ini.Values[SC_FIRSTSTART] := BoolToStr( IsNewUserChecked, true );  //standart auf neuer User = true
       ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );
-      ini.Values[SC_LASTKTPPATH] := LastLoadPath;             //standart Not_Used
+      ini.Values[SC_LASTKTPPATH] := LastPathUsed;             //standart Not_Used
       ini.Values[SC_LASTUSER] := LastUser;
       ini.Values[SC_SERVERUSED] := ServerSavePath;
 //    prüft ob Schreibrechte vorhanden sind und gibt Msg an den User
@@ -682,7 +694,7 @@ begin
     else //wenn der Pfad nicht mehr existiert dann setze den Pfad auf Standart zurück
     begin
       ComboBoxExPath.Items[1] := DefaultSettings.DefaultUserSavePath;
-      LastLoadPath := DefaultSettings.DefaultUserSavePath;
+      LastPathUsed := DefaultSettings.DefaultUserSavePath;
     end;
 
     LastUserStr := ini.Values[ SC_LASTUSER ];
@@ -710,8 +722,8 @@ begin
     if ini.IndexOf( SC_SEC ) = -1 then//Change: Seidel 2021-01-20
       ini.insert( 0 , SC_SEC );
     ini.Values[SC_FIRSTSTART] := BoolToStr( IsNewUserChecked, true );
-    if not LastLoadPath.equals( SC_NOT_USED ) then
-      ini.Values[SC_LASTKTPPATH] := LastLoadPath;
+    if not LastPathUsed.equals( SC_NOT_USED ) then
+      ini.Values[SC_LASTKTPPATH] := LastPathUsed;
     ini.Values[SC_LASTUSER] := LastUser;//Change: Seidel 2020-11-23 speicherplatz zuletzt eingegebenen User
     ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );//Change: Seidel 2020-11-23 Zustand der CheckBox
     CheckWriteAccessAndSave( ini );

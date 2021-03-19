@@ -208,6 +208,7 @@ object Login: TLogin
       Top = 244
       Width = 30
       Height = 24
+      Hint = 'Masterpasswort zeigen'
       Transparent = True
       Caption = ''
       ColorMouseOver = clWhite
@@ -221,6 +222,7 @@ object Login: TLogin
       Font.Style = []
       Images = VirtualImageList2
       ImageAlignment = iaCenter
+      ShowHint = True
       TabOrder = 7
       OnClick = SBToogleHideClick
     end

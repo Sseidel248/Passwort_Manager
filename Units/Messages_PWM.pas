@@ -3,7 +3,7 @@ unit Messages_PWM;
 {******************************************************************************
 Messages_PWM "KiiTree"
 
-Author: Sebastian Seidel
+Author: Copyleft 2020 - 2021 Sebastian Seidel
 
 Hier befinden sich alle Taskdialogs welches KiiTree benutzt.
 

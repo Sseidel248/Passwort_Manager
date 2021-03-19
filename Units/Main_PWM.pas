@@ -1268,11 +1268,13 @@ begin
   begin
     DBEditPasswort.PasswordChar := #0;
     GBToogleHide.ImageIdx := 1;
+    GBToogleHide.Hint := 'Passwort verstecken';//Change: Seidel 2021-03-19
   end
   else
   begin
     DBEditPasswort.PasswordChar := '*';
     GBToogleHide.ImageIdx := 0;
+    GBToogleHide.Hint := 'Passwort zeigen';//Change: Seidel 2021-03-19
   end;
 end;
 
@@ -1588,6 +1590,7 @@ begin
                        +'Groß und Kleinbuchstaben beinhalten' + sLineBreak
                        +'Mindestens ein Sonderzeichen ( $, %, §, #, +, u.a. ) enthalten';
   LCBHinweise.Caption := '';
+  DBEditURL.Hint := 'Klicken und Strg+O um Internetseite zu öffnen';//Change: Seidel 2021-03-05
 end;
 
 {------------------------------------------------------------------------------
@@ -2110,12 +2113,16 @@ begin
   MessageTest( 'CBAutoSave' );
 
   CheckUserDataLoading;
+  UserData.AutoSaveChecked := CBAutoSave.Checked;//Change: Seidel 2021-03-02 Reihenfolge geändert
 
   if CBAutoSave.Checked then
+  begin
+    if msChanged in MainStates then//Change: Seidel 2021-02-24 wenn Änderungen vorhanden sind
+      SBSaveKiiTreeClick( Sender );//dann wird es gespeichert bevor Auto-Save aktiviert wird
     DoChangeStates( [msAutoSave] )
+  end
   else
     DoChangeStates( [], [msAutoSave] );
-  UserData.AutoSaveChecked := CBAutoSave.Checked;
 end;
 
 {------------------------------------------------------------------------------
@@ -2181,12 +2188,12 @@ begin
   MessageTest( 'CBMehrfachAuswahl' );
   CheckUserDataLoading;
 
+  UserData.MultiSelect := CBMehrfachAuswahl.Checked;//Change: Seidel 2021-03-02 Reihenfolge geändert
+
   if CBMehrfachAuswahl.Checked then//Change: Seidel 2021-02-03
     DoChangeStates( [msMultiSel] )
   else
     DoChangeStates( [], [msMultiSel] );
-
-  UserData.MultiSelect := CBMehrfachAuswahl.Checked;
 end;
 
 {------------------------------------------------------------------------------
@@ -2698,6 +2705,7 @@ procedure TMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
 MResult : Integer;
 begin
+  DBTree.AVST.SetFocus;//Change: Seidel 2021-03-19 wechselt des Focus, damit msChanged gesetzt wird
   if msCloseByTray in MainStates then//Change: Seidel 2021-02-03
   begin
     DoChangeStates( [], [msCloseByTray] );
@@ -2990,18 +2998,19 @@ procedure TMain.PURLimBrowseOerffnenClick(Sender: TObject);
   begin
     Result := Trim( Value );
     len := Length( Result );
-    pattern := '^([a-z0-9][a-z0-9\-]*)\.{1}+[a-z0-9][a-z0-9\-]*$'; //findet nur <wort>.<Endung>//Change: Seidel 2021-01-21
+    pattern := '^(https?:\/\/)?(www\.)?';//Change: Seidel 2021-02-24 KT-74
 
     //alles klein schreiben
     Result := LowerCase( Result );
 
+    // / am Ende hängen
     if ( Pos( '/', Result ) = len ) or ( Pos( '\', Result ) = len ) then
       Result := Copy( Result, 1, len-1 );
 
-    if TRegex.IsMatch( Result, pattern ) then
+    //wenn kein "www."; "http://" oder "https://" davor ist dann hänge "https://" ran
+    if not TRegex.IsMatch( Result, pattern ) then
     begin
-      if ( Pos( 'www', Result ) <> 1 ) then
-        Result := Concat( 'www.', Result );
+      Result := Concat( 'https://', Result );
     end;
   end;
 
@@ -3009,7 +3018,7 @@ var
 regex : TRegex;
 URLStr : String;
 const
-Pattern = '^(http\:\/\/|https\:\/\/)?([a-z0-9][a-z0-9\-]*\.)+[a-z0-9][a-z0-9\-]*$';
+pattern = '^(https?:\/\/)?(www\.)?([a-zA-Z0-9]+(-?[a-zA-Z0-9])*\.)+[\w]{2,}(\/\S*)?$';//Change: Seidel 2021-02-24 KT-74
 begin
   regex := TRegex.Create( Pattern );
   URLStr := PrepareStr( ClientDataSet1URL.AsString );
@@ -3065,6 +3074,7 @@ end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-10
+Change: Seidel 2021-03-01 Strg+Alt+C -> Strg+A
 -------------------------------------------------------------------------------}
 procedure TMain.PZwischenspeichernClick(Sender: TObject);
 begin
@@ -3075,21 +3085,21 @@ begin
   begin
     DBEditBenutzer.SelectAll;
     DBEditBenutzer.CopyToClipboard;
-    DBEditBenutzer.SelStart := 0;
+//    DBEditBenutzer.SelStart := 0;//Change: Seidel 2021-03-01
   end
   else
   if DBEditPasswort.Focused then
   begin
     DBEditPasswort.SelectAll;
     DBEditPasswort.CopyToClipboard;
-    DBEditPasswort.SelStart := 0;
+//    DBEditPasswort.SelStart := 0;//Change: Seidel 2021-03-01
   end
   else
   if DBEditURL.Focused then
   begin
     DBEditURL.SelectAll;
     DBEditURL.CopyToClipboard;
-    DBEditURL.SelStart := 0;
+//    DBEditURL.SelStart := 0;//Change: Seidel 2021-03-01
   end;
   {$ENDIF}
 end;
@@ -3253,15 +3263,24 @@ Author: Seidel 2020-09-21
 procedure TMain.SuchenEditChange(Sender: TObject);
 var
 SucheText : String;
+LastNode : PVirtualNode;
+pLastNodeData : pVTNodeData;
 begin
   SucheText := SuchenEdit.Text;
+  LastNode := nil;
   if SucheText.Equals( '' ) then
   begin
     DBTree.UnfilterAllTree;
   end
   else
   begin
-    DBTree.FilterTree( SucheText );
+    LastNode := DBTree.FilterTree( SucheText );
+    if LastNode <> nil then
+    begin
+      pLastNodeData := DBTree.AVST.GetNodeData( LastNode );
+      if ClientDataSet1.Locate( 'ID', pLastNodeData^.ID , [] ) then
+        EnableDBFields( true );
+    end;
   end;
 end;
 

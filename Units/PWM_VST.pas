@@ -45,7 +45,7 @@ Type
       procedure LoadNodes( Nodes : TVTVirtualNodeEnumeration;
                              FolderNameList : TStringList;
                              CDS : TClientDataSet );
-      procedure FilterTree( const Bezeichnung : String);
+      function FilterTree( const Bezeichnung : String) : PVirtualNode;//Change: Seidel 2021-03-06
       procedure UnfilterAllTree;
   end;
 
@@ -451,14 +451,18 @@ end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-21
+Change: Seidel 2021-03-06
 -------------------------------------------------------------------------------}
-procedure TDBTree.FilterTree( const Bezeichnung : String );
+function TDBTree.FilterTree( const Bezeichnung : String ): PVirtualNode;
 var
 Nodes, Children : TVTVirtualNodeEnumeration;
-pNode, pChild : PVirtualNode;
+pNode, pChild, pSelectedNode: PVirtualNode;
 pChildData : pVTNodeData;
+VisibleChildrenCount  : Integer;
 begin
   Nodes := AVST.Nodes();
+  VisibleChildrenCount := 0;
+  Result := nil;
   for pNode in Nodes do
   begin
     if AVST.GetNodeLevel( pNode ) = 1 then
@@ -471,9 +475,23 @@ begin
         if not ContainsText( pChildData^.Bezeichnung, Bezeichnung ) then //Change 2020-10-12
           AVST.IsVisible[pChild] := false
         else
+        begin
           AVST.IsVisible[pChild] := true;
+          Result := pChild;
+          Inc(VisibleChildrenCount);
+        end;
       end;
     end;
+  end;
+  if VisibleChildrenCount=1 then//Change: Seidel 2021-03-06  Wenn nur noch ein Node Sichtbar ist dann wird dieser ausgewählt
+  begin
+    AVST.Selected[Result] := true;
+  end
+  else//Change: Seidel 2021-03-06 Wenn mehrere sichtbar sind wird die Auswahl abgewählt
+  begin
+    pSelectedNode := Self.GetSelectedNode;
+    AVST.Selected[pSelectedNode] := false;
+    Result := nil;
   end;
   AVST.Refresh;
 end;
