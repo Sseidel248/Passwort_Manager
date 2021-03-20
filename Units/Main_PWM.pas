@@ -324,6 +324,13 @@ type
     procedure CBShowMessagesMouseLeave(Sender: TObject);
     procedure CBEditAfterCreateNewKiiMouseEnter(Sender: TObject);
     procedure CBEditAfterCreateNewKiiMouseLeave(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure DBEditBenutzerMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure DBEditPasswortMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure DBEditURLMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
 
   private
 //    FFonts : TFonts;
@@ -398,7 +405,8 @@ uses
   {$IFNDEF TESTLOGIN}Printers,{$ENDIF}
   PWCheck_PWM,
   Vcl.Imaging.pngimage,
-  Messages_PWM;
+  Messages_PWM,
+  DnD_TextInOtherApp_PWM;
 
 //*****************************************************************************
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2407,6 +2415,15 @@ begin
 end;
 
 {------------------------------------------------------------------------------
+Author: Seidel 2021-03-20
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditBenutzerMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  CheckAndExecute( DBEditBenutzer.Text, Shift, Sender );
+end;
+
+{------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
 -------------------------------------------------------------------------------}
 procedure TMain.DBEditBezeichnungClick(Sender: TObject);
@@ -2517,6 +2534,14 @@ begin
   DBTree.AVST.Refresh;
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2021-03-20
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditPasswortMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  CheckAndExecute( DBEditPasswort.Text, Shift, Sender );
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-03
@@ -2572,6 +2597,14 @@ begin
   DBTree.AVST.Refresh;
 end;
 
+{------------------------------------------------------------------------------
+Author: Seidel 2021-03-20
+-------------------------------------------------------------------------------}
+procedure TMain.DBEditURLMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  CheckAndExecute( DBEditURL.Text, Shift, Sender );
+end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-09-16
@@ -2749,6 +2782,8 @@ Author: Seidel 2020-09-06
 -------------------------------------------------------------------------------}
 procedure TMain.FormCreate(Sender: TObject);
 begin
+  CreateDropTextSource( Self );
+
   TrayIconKT.Visible := true;
   InitTrayIcon( false );
 
@@ -2816,6 +2851,14 @@ begin
   finally
     Login.Free;
   end;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-03-20
+-------------------------------------------------------------------------------}
+procedure TMain.FormDestroy(Sender: TObject);
+begin
+  FreeDropTextSource;
 end;
 
 {------------------------------------------------------------------------------
@@ -3697,4 +3740,3 @@ begin
 end;
 
 end.
-

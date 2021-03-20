@@ -1596,7 +1596,7 @@ object About_Dlg: TAbout_Dlg
     end
     object LOrtProg: TLabel
       Left = 271
-      Top = 160
+      Top = 176
       Width = 314
       Height = 35
       Alignment = taCenter

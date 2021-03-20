@@ -20,6 +20,7 @@ object Main: TMain
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow
@@ -542,6 +543,7 @@ object Main: TMain
             OnEnter = DBEditPasswortEnter
             OnExit = DBEditPasswortExit
             OnKeyPress = DBEditPasswortKeyPress
+            OnMouseDown = DBEditPasswortMouseDown
           end
           object DBEditBenutzer: TDBEdit
             Left = 112
@@ -564,6 +566,7 @@ object Main: TMain
             OnEnter = DBEditBenutzerEnter
             OnExit = DBEditBenutzerExit
             OnKeyPress = DBEditBenutzerKeyPress
+            OnMouseDown = DBEditBenutzerMouseDown
           end
           object DBCBFavorit: TDBCheckBox
             Left = 124
@@ -630,6 +633,7 @@ object Main: TMain
             OnEnter = DBEditURLEnter
             OnExit = DBEditURLExit
             OnKeyPress = DBEditURLKeyPress
+            OnMouseDown = DBEditURLMouseDown
           end
           object GBToogleHide: TGlassButton
             Left = 426
@@ -737,10 +741,6 @@ object Main: TMain
         Caption = 'EinstellTab'
         ImageIndex = 1
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object GBDarstellung: TGroupBox
           Left = 0
           Top = 0
@@ -1108,10 +1108,6 @@ object Main: TMain
         Caption = 'PWCheckTab'
         ImageIndex = 2
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object SG: TStringGridEx
           Left = 0
           Top = 0
@@ -1166,8 +1162,8 @@ object Main: TMain
             object LPWHinweis: TLabel
               Left = 2
               Top = 18
-              Width = 69
-              Height = 16
+              Width = 913
+              Height = 122
               Align = alClient
               Caption = 'LPWHinweis'
               Font.Charset = DEFAULT_CHARSET
@@ -1176,6 +1172,8 @@ object Main: TMain
               Font.Name = 'Tahoma'
               Font.Style = []
               ParentFont = False
+              ExplicitWidth = 69
+              ExplicitHeight = 16
             end
           end
         end
@@ -1184,10 +1182,6 @@ object Main: TMain
         Caption = 'DB_Tabelle'
         ImageIndex = 3
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
@@ -1208,10 +1202,6 @@ object Main: TMain
         ImageIndex = 4
         TabVisible = False
         OnShow = Userdata_ListShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object LBUserdata: TListBox
           Left = 0
           Top = 0

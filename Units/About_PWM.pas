@@ -48,12 +48,13 @@ uses
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-16
+Change: zusätzlicher Autor "Drag and Drop Component Suite"
 -------------------------------------------------------------------------------}
 procedure TAbout_Dlg.FormCreate(Sender: TObject);
 begin
   LVersion.Caption := 'Version: ' + GetMyVersion;// +  ' (beta)';
   LInfo.Caption := 'Dieses Programm ist ein Open Source Ein-Mann Projekt unter Verwendung von '
-  +'ZipForge von Component Ace, TVirtualTreeView von JAM Software und InstanceCheck von Daniel Pauli.'
+  +'ZipForge von Component Ace, TVirtualTreeView von JAM Software, InstanceCheck von Daniel Pauli und Drag and Drop Component Suite von Sven Harazim.'
   +' Vorschläge für Verbesserungen oder Anmerkungen sind Herzlich willkommen.';
   LOrtProg.Caption := 'Besucht: https://github.com/Sseidel248/KiiTree für weitere Informtionen.';
   LCopyright.Caption := 'Copyright © 2020-2021 Sebastian Seidel';
