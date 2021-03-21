@@ -74,7 +74,7 @@ type
     procedure EnableAnmeldeBtn;
     function CheckKTPExistPlus( SaveFile : String ) : Boolean;
     procedure DoChangeState( Enter : TLoginState; Leave : TLoginState = [] );
-    procedure InitSavePathes;
+//    procedure InitSavePathes;
 //    function Check4FirstStart: Boolean;
 
 
@@ -144,20 +144,20 @@ end;
 {------------------------------------------------------------------------------
 Author: Seidel 2021-01-26
 -------------------------------------------------------------------------------}
-procedure TLogin.InitSavePathes;
-begin
-  ESavePathForKTPs.Items.Add( SC_LOKAL );
-  ESavePathForKTPs.Items.Add( DefaultSettings.DefaultUserSavePath );
-  if not MainIni.ServerSavePath.Equals( '' ) then
-  begin
-    ESavePathForKTPs.Items.Add( SC_SERVER );
-    ESavePathForKTPs.Items.Add( MainIni.ServerSavePath );
-  end;
-  ESavePathForKTPs.Items.Add( SC_LASTPATHUSED );
-  ESavePathForKTPs.Items.Add( MainIni.LastPathUsed );
-
-  ESavePathForKTPs.ItemIndex := Mainini.GetUserPathIndex;
-end;
+//procedure TLogin.InitSavePathes;
+//begin
+//  ESavePathForKTPs.Items.Add( SC_LOKAL );
+//  ESavePathForKTPs.Items.Add( DefaultSettings.DefaultUserSavePath );
+//  if not MainIni.ServerSavePath.Equals( '' ) or not MainIni.ServerSavePath.Equals( SC_NOT_USED ) then
+//  begin
+//    ESavePathForKTPs.Items.Add( SC_SERVER );
+//    ESavePathForKTPs.Items.Add( MainIni.ServerSavePath );
+//  end;
+//  ESavePathForKTPs.Items.Add( SC_LASTPATHUSED );
+//  ESavePathForKTPs.Items.Add( MainIni.LastPathUsed );
+//
+//  ESavePathForKTPs.ItemIndex := Mainini.GetUserPathIndex;
+//end;
 
 {------------------------------------------------------------------------------
 Author: Seidel 2020-10-22
@@ -321,6 +321,11 @@ s : String;
 begin
   if ESavePathForKTPs.Items.Count = 0 then
     Exit;
+
+  if MainIni.ServerSavePath.Equals( SC_NOT_USED ) then
+    if ESavePathForKTPs.ItemIndex > 3 then
+      Exit;
+
 
   case ESavePathForKTPs.ItemIndex of//Change: Seidel 2021-02-11
     0: ESavePathForKTPs.ItemIndex := 1;
@@ -622,8 +627,6 @@ procedure TLogin.FormShow(Sender: TObject);
 var
 EditText : String;
 begin
-  InitSavePathes;
-
   VirtualImageList1.GetIcon( 0, Image1.Picture.Icon );
   ImageIndex := 0;
 

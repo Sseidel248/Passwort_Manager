@@ -7,8 +7,12 @@
 	CHG - Änderungen einer Funtkionalität			
 	FIX - Behöbene Fehler				
 +----------------------------------------------------------------------------------------------------+
+V1.0.4.3 (21.03.2021)
+- FIX : KT-71 wenn keine INI vorhanden ist, werden fehlerhaft Pfade angezeigt
+
 V1.0.4.2 (20.03.2021)
 - NEW : KT-73 Passwörter, Benutzernamen und URL können mit Strg + linker Maus via Drag'n'Drop in andere Eingabefelder gezogen werden
+
 V1.0.4.1 (19.03.2021)
 - NEW : es gibt in jederm User *.KTP eine Ini mit einem Versionseintrag, sollter dieser nicht verhanden oder älter als die aktuelle sein, wird die Ini geupdatet, d.h. es wird nach noch nicht existierenden Einträgen gesucht
 - NEW : ComboBox eingefügt der den Serverpfad, Lokalen Standartpfad und zuletzt verwendeten Pfad speichert

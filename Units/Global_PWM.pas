@@ -74,6 +74,7 @@ type
   private
     function CheckWriteAccessAndSave( const ini : TStringList; forCreate : Boolean = false ): Boolean;
     procedure SaveReadOnly( const ini : TStringList );
+    function InitSavePathes( var ComboBoxExPath: TComboBoxEx ) : Integer ;
   end;
 
 const
@@ -622,11 +623,11 @@ begin
   Result := true;
   IniPath := ExtractFilePath( ParamStr( 0 ) ) + 'KiiTree.ini';
   //Eigenschaften der MainINI
+  ServerSavePath := SC_NOT_USED;
   IsNewUserChecked := true;
-  IsLastUserAgainChecked := false;
   LastPathUsed := SC_NOT_USED;
   LastUser := SC_NOT_USED;
-  ServerSavePath := SC_NOT_USED;
+  IsLastUserAgainChecked := false;
 
   ini := TStringList.Create;
   try
@@ -644,9 +645,9 @@ begin
       ini.Insert( 0 , SC_SEC );
       ini.Values[SC_FIRSTSTART] := BoolToStr( IsNewUserChecked, true );  //standart auf neuer User = true
       ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );
-      ini.Values[SC_LASTKTPPATH] := LastPathUsed;             //standart Not_Used
-      ini.Values[SC_LASTUSER] := LastUser;
-      ini.Values[SC_SERVERUSED] := ServerSavePath;
+      ini.Values[SC_LASTKTPPATH] := LastPathUsed;
+      ini.Values[SC_LASTUSER] :=  LastUser;
+      ini.Values[SC_SERVERUSED] :=  ServerSavePath;
 //    prüft ob Schreibrechte vorhanden sind und gibt Msg an den User
       if not CheckWriteAccessAndSave( ini, true ) then
         Result := false;
@@ -661,7 +662,7 @@ Author: Seidel 2021-01-26
 -------------------------------------------------------------------------------}
 function TMainINI.GetUserPathIndex: Integer;
 begin
-  if ServerSavePath.Equals( '' ) then
+  if ServerSavePath.Equals( SC_NOT_USED ) or ServerSavePath.Equals( '' ) then
     Result := 3
   else
     Result := 5;
@@ -673,6 +674,15 @@ Author: Seidel 2020-10-20
 procedure TMainINI.LoadSetting( var CBNewUser, CBMerkeUser : TCheckBox;
                                 var ComboBoxExPath: TComboBoxEx;
                                 var EditUser: TEdit4User );
+
+  function LoadValueOrDefault( const Value : String ) : String;//Change: Seidel 2021-03-21
+  begin
+    if Value.Equals( SC_NOT_USED ) then
+      Result := ''
+    else
+      Result := Value;
+  end;
+
 var
 LastPath, LastUserStr : String;
 ini : TStringList;
@@ -684,23 +694,27 @@ begin
   //für die Checkbox fpr neue Benutzer, immer wenn nichts drinsteht -> neuer User
     CBNewUser.Checked := StrToBoolDef( ini.Values[ SC_FIRSTSTART ], true );
 
-    i := GetUserPathIndex;
+    i := InitSavePathes( ComboBoxExPath );//Change: Seidel 2021-03-21
 
   //für den zuletzt gewählten Pfad
-    LastPath := ini.Values[ SC_LASTKTPPATH ];
+    LastPath := LoadValueOrDefault( ini.Values[ SC_LASTKTPPATH ] );
     //prüfe ob der Pfad noch existiert
     if DirectoryExists( LastPath ) then
-      ComboBoxExPath.Items[i] := LastPath
+    begin
+      ComboBoxExPath.Items[i] := LastPath;
+      ComboBoxExPath.ItemIndex := i;
+    end
     else //wenn der Pfad nicht mehr existiert dann setze den Pfad auf Standart zurück
     begin
-      ComboBoxExPath.Items[1] := DefaultSettings.DefaultUserSavePath;
+      ComboBoxExPath.ItemIndex := 1;
+      //ComboBoxExPath.Items[1] := DefaultSettings.DefaultUserSavePath; //!verusacht Stack Overflow
       LastPathUsed := DefaultSettings.DefaultUserSavePath;
     end;
 
-    LastUserStr := ini.Values[ SC_LASTUSER ];
+    LastUserStr := LoadValueOrDefault( ini.Values[ SC_LASTUSER ] );
     if ( not LastUserStr.Equals( SC_NOT_USED ) ) and ( not LastUserStr.Equals( '' ) )
-    and ( IsLastUserAgainChecked ) then
-      EditUser.Text := LastUserStr;
+      and ( IsLastUserAgainChecked ) then
+      EditUser.Text := LoadValueOrDefault( LastUserStr );
 
     CBMerkeUser.Checked := StrToBoolDef( ini.Values[ SC_ISLASTUSERCHK ], true );//Change: Seidel 2020-11-23
 
@@ -713,6 +727,15 @@ end;
 Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
 procedure TMainINI.SaveSetting;
+
+  function IsEmptySetDefault( const Value : String ) : String;
+  begin
+    if Value.Equals( '' ) then
+      Result := SC_NOT_USED
+    else
+      Result := Value;
+  end;
+
 var
 ini : TStringList;
 begin
@@ -721,11 +744,12 @@ begin
     ini.LoadFromFile( IniPath );
     if ini.IndexOf( SC_SEC ) = -1 then//Change: Seidel 2021-01-20
       ini.insert( 0 , SC_SEC );
-    ini.Values[SC_FIRSTSTART] := BoolToStr( IsNewUserChecked, true );
+    ini.Values[SC_FIRSTSTART] := BoolToStr( Self.IsNewUserChecked, true );
     if not LastPathUsed.equals( SC_NOT_USED ) then
-      ini.Values[SC_LASTKTPPATH] := LastPathUsed;
-    ini.Values[SC_LASTUSER] := LastUser;//Change: Seidel 2020-11-23 speicherplatz zuletzt eingegebenen User
-    ini.Values[SC_ISLASTUSERCHK] := BoolToStr( IsLastUserAgainChecked, true );//Change: Seidel 2020-11-23 Zustand der CheckBox
+      ini.Values[SC_LASTKTPPATH] := IsEmptySetDefault( Self.LastPathUsed );
+    ini.Values[SC_LASTUSER] := IsEmptySetDefault( Self.LastUser );//Change: Seidel 2020-11-23 speicherplatz zuletzt eingegebenen User
+    ini.Values[SC_ISLASTUSERCHK] := BoolToStr( Self.IsLastUserAgainChecked, true );//Change: Seidel 2020-11-23 Zustand der CheckBox
+    ini.Values[SC_SERVERUSED] := IsEmptySetDefault( Self.ServerSavePath );
     CheckWriteAccessAndSave( ini );
   finally
     ini.Free;
@@ -759,6 +783,24 @@ begin
 
   if not IsFileReadOnly( IniPath ) then
     FileSetAttr( IniPath, faReadOnly );
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-03-21
+-------------------------------------------------------------------------------}
+function TMainINI.InitSavePathes( var ComboBoxExPath: TComboBoxEx ) : Integer ;
+begin
+  ComboBoxExPath.Items.Add( SC_LOKAL );
+  ComboBoxExPath.Items.Add( DefaultSettings.DefaultUserSavePath );
+  if not Self.ServerSavePath.Equals( '' ) and not Self.ServerSavePath.Equals( SC_NOT_USED ) then//Change: Seidel 2021-03-21
+  begin
+    ComboBoxExPath.Items.Add( SC_SERVER );
+    ComboBoxExPath.Items.Add( Self.ServerSavePath );
+  end;
+  ComboBoxExPath.Items.Add( SC_LASTPATHUSED );
+  ComboBoxExPath.Items.Add( Self.LastPathUsed );
+
+  Result := Self.GetUserPathIndex;
 end;
 end.
 

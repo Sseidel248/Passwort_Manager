@@ -2798,8 +2798,8 @@ begin
   {$ENDIF}
 
   //prüft auch ob Schreibrecht vorhanden sind
-  if not MainIni.CreateIfNotExist then
-    Application.Terminate;
+//  if not MainIni.CreateIfNotExist then
+//    Application.Terminate;
 
   DefaultSettings.Init( handle );
 

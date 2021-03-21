@@ -1108,6 +1108,10 @@ object Main: TMain
         Caption = 'PWCheckTab'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object SG: TStringGridEx
           Left = 0
           Top = 0
@@ -1162,8 +1166,8 @@ object Main: TMain
             object LPWHinweis: TLabel
               Left = 2
               Top = 18
-              Width = 913
-              Height = 122
+              Width = 69
+              Height = 16
               Align = alClient
               Caption = 'LPWHinweis'
               Font.Charset = DEFAULT_CHARSET
@@ -1172,8 +1176,6 @@ object Main: TMain
               Font.Name = 'Tahoma'
               Font.Style = []
               ParentFont = False
-              ExplicitWidth = 69
-              ExplicitHeight = 16
             end
           end
         end
@@ -1182,6 +1184,10 @@ object Main: TMain
         Caption = 'DB_Tabelle'
         ImageIndex = 3
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DBGrid1: TDBGrid
           Left = 0
           Top = 0
