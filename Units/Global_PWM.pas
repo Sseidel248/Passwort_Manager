@@ -75,6 +75,9 @@ type
     function CheckWriteAccessAndSave( const ini : TStringList; forCreate : Boolean = false ): Boolean;
     procedure SaveReadOnly( const ini : TStringList );
     function InitSavePathes( var ComboBoxExPath: TComboBoxEx ) : Integer ;
+    function LoadValueOrDefault( const Value : String ) : String;//Change: Seidel 2021-03-21
+    function IsEmptySetDefault( const Value : String ) : String;
+
   end;
 
 const
@@ -674,15 +677,6 @@ Author: Seidel 2020-10-20
 procedure TMainINI.LoadSetting( var CBNewUser, CBMerkeUser : TCheckBox;
                                 var ComboBoxExPath: TComboBoxEx;
                                 var EditUser: TEdit4User );
-
-  function LoadValueOrDefault( const Value : String ) : String;//Change: Seidel 2021-03-21
-  begin
-    if Value.Equals( SC_NOT_USED ) then
-      Result := ''
-    else
-      Result := Value;
-  end;
-
 var
 LastPath, LastUserStr : String;
 ini : TStringList;
@@ -727,15 +721,6 @@ end;
 Author: Seidel 2020-10-14
 -------------------------------------------------------------------------------}
 procedure TMainINI.SaveSetting;
-
-  function IsEmptySetDefault( const Value : String ) : String;
-  begin
-    if Value.Equals( '' ) then
-      Result := SC_NOT_USED
-    else
-      Result := Value;
-  end;
-
 var
 ini : TStringList;
 begin
@@ -795,12 +780,34 @@ begin
   if not Self.ServerSavePath.Equals( '' ) and not Self.ServerSavePath.Equals( SC_NOT_USED ) then//Change: Seidel 2021-03-21
   begin
     ComboBoxExPath.Items.Add( SC_SERVER );
-    ComboBoxExPath.Items.Add( Self.ServerSavePath );
+    ComboBoxExPath.Items.Add( LoadValueOrDefault( Self.ServerSavePath ) );
   end;
-  ComboBoxExPath.Items.Add( SC_LASTPATHUSED );
-  ComboBoxExPath.Items.Add( Self.LastPathUsed );
+  ComboBoxExPath.Items.Add(  SC_LASTPATHUSED );
+  ComboBoxExPath.Items.Add( LoadValueOrDefault( Self.LastPathUsed ) );
 
   Result := Self.GetUserPathIndex;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-03-21
+-------------------------------------------------------------------------------}
+function TMainIni.LoadValueOrDefault( const Value : String ) : String;//Change: Seidel 2021-03-21
+begin
+  if Value.Equals( SC_NOT_USED ) then
+    Result := ''
+  else
+    Result := Value;
+end;
+
+{------------------------------------------------------------------------------
+Author: Seidel 2021-03-21
+-------------------------------------------------------------------------------}
+function TMainIni.IsEmptySetDefault( const Value : String ) : String;
+begin
+  if Value.Equals( '' ) then
+    Result := SC_NOT_USED
+  else
+    Result := Value;
 end;
 end.
 
